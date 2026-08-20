@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
+import type { IncomingMessage } from 'node:http';
 import path from 'node:path';
 
 import { Module } from '@nestjs/common';
@@ -18,14 +18,11 @@ import { HealthCheckerModule } from './modules/health-checker/health-checker.mod
 import { UserModule } from './modules/user/user.module.ts';
 import { ContextProvider } from './providers/context.provider.ts';
 import { ApiConfigService } from './shared/services/api-config.service.ts';
+import { GeneratorService } from './shared/services/generator.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
 
 function resolveI18nPath(): string {
-  const candidates = [
-    path.join(process.cwd(), 'src/i18n/'),
-    path.join(process.cwd(), 'dist/i18n/'),
-    path.join(process.cwd(), 'dist/src/i18n/'),
-  ];
+  const candidates = [path.join(process.cwd(), 'src/i18n/'), path.join(process.cwd(), 'dist/i18n/'), path.join(process.cwd(), 'dist/src/i18n/')];
 
   const found = candidates.find((candidate) => fs.existsSync(candidate));
 
@@ -34,6 +31,24 @@ function resolveI18nPath(): string {
   }
 
   return found;
+}
+
+const SENSITIVE_BODY_FIELDS = ['password', 'oldPassword', 'newPassword', 'confirmPassword', 'token', 'accessToken', 'refreshToken'];
+
+function redactSensitiveFields(body: unknown): unknown {
+  if (!body || typeof body !== 'object') {
+    return body;
+  }
+
+  const redacted: Record<string, unknown> = { ...(body as Record<string, unknown>) };
+
+  for (const field of SENSITIVE_BODY_FIELDS) {
+    if (field in redacted) {
+      redacted[field] = '[REDACTED]';
+    }
+  }
+
+  return redacted;
 }
 
 @Module({
@@ -45,7 +60,7 @@ function resolveI18nPath(): string {
       middleware: {
         mount: true,
         setup: (_cls, req: { headers: Record<string, string | string[] | undefined> }) => {
-          const requestId = (req.headers['x-request-id'] as string | undefined) ?? randomUUID();
+          const requestId = (req.headers['x-request-id'] as string | undefined) ?? GeneratorService.getInstance().uuid();
 
           ContextProvider.setRequestId(requestId);
         },
@@ -71,6 +86,13 @@ function resolveI18nPath(): string {
           pinoHttp: {
             level: 'trace', // per-stream levels below decide what each output receives
             autoLogging: true,
+            redact: {
+              paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+              censor: '[REDACTED]',
+            },
+            // customProps runs again at request completion (after body-parser has run),
+            // so this is the only point where req.body is populated
+            customProps: (req: IncomingMessage & { body?: unknown }) => ({ body: redactSensitiveFields(req.body) }),
             mixin: () => {
               const requestId = ContextProvider.getRequestId();
 

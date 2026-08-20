@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { plainToClass } from 'class-transformer';
 import type { FindOptionsWhere, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
@@ -69,7 +68,6 @@ export class UserService {
     // if (file) {
     //   user.avatar = await this.awsS3Service.uploadImage(file);
     // }
-    console.log('userRegisterDto', userRegisterDto);
 
     await this.userRepository.save(user);
 
