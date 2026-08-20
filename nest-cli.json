@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json.schemastore.org/nest-cli",
+    "language": "ts",
+    "collection": "@nestjs/schematics",
+    "sourceRoot": "src",
+    "compilerOptions": {
+        "builder": {
+            "type": "swc",
+            "options": {
+                "swcrcPath": ".swcrc"
+            }
+        },
+        "deleteOutDir": true,
+        "typeCheck": true,
+        "plugins": [
+            "@nestjs/swagger/plugin"
+        ],
+        "assets": [
+            {
+                "include": "i18n/**/*",
+                "outDir": "dist/i18n",
+                "watchAssets": true
+            }
+        ]
+    }
+}
