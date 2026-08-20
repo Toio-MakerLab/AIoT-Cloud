@@ -5,7 +5,6 @@ import type { Response } from 'express';
 import { QueryFailedError } from 'typeorm';
 
 import { ResponseCore } from '../common/dto/response-core.dto.ts';
-import type { ErrorCode } from '../constants/error-code.ts';
 import { constraintErrors } from './constraint-errors.ts';
 
 @Catch(QueryFailedError)
@@ -19,6 +18,6 @@ export class QueryFailedFilter implements ExceptionFilter<QueryFailedError> {
     const status = exception.constraint?.startsWith('UQ') ? HttpStatus.CONFLICT : HttpStatus.INTERNAL_SERVER_ERROR;
     const message = (exception.constraint && constraintErrors[exception.constraint]) || 'error.internalServerError';
 
-    response.status(status).json(new ResponseCore(status as ErrorCode, null, message));
+    response.status(status).json(new ResponseCore(status as any, null, message));
   }
 }

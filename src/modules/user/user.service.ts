@@ -8,8 +8,6 @@ import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import type { IFile } from '../../interfaces/IFile.ts';
-import { AwsS3Service } from '../../shared/services/aws-s3.service.ts';
-import { ValidatorService } from '../../shared/services/validator.service.ts';
 import type { Reference } from '../../types.ts';
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
 import { CreateSettingsCommand } from './commands/create-settings.command.ts';
@@ -24,8 +22,6 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    private validatorService: ValidatorService,
-    private awsS3Service: AwsS3Service,
     private commandBus: CommandBus,
   ) {}
 
@@ -55,7 +51,7 @@ export class UserService {
   }
 
   @Transactional()
-  async createUser(userRegisterDto: UserRegisterDto, file?: Reference<IFile>): Promise<ResponseCore<UserEntity>> {
+  async createUser(userRegisterDto: UserRegisterDto, _?: Reference<IFile>): Promise<ResponseCore<UserEntity>> {
     const user = this.userRepository.create({
       ...userRegisterDto,
       username: userRegisterDto.email.split('@')[0],

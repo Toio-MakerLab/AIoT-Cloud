@@ -15,7 +15,9 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
 
 import { AuthModule } from './modules/auth/auth.module.ts';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module.ts';
+import { MqttModule } from './modules/mqtt/mqtt.module.ts';
 import { UserModule } from './modules/user/user.module.ts';
+import { WebsocketModule } from './modules/websocket/websocket.module.ts';
 import { ContextProvider } from './providers/context.provider.ts';
 import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { GeneratorService } from './shared/services/generator.service.ts';
@@ -55,6 +57,8 @@ function redactSensitiveFields(body: unknown): unknown {
   imports: [
     AuthModule,
     UserModule,
+    MqttModule,
+    WebsocketModule,
     ClsModule.forRoot({
       global: true,
       middleware: {

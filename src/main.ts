@@ -58,7 +58,17 @@ export async function bootstrap(): Promise<NestExpressApplication> {
         queue: 'main_service',
       },
     });
+  }
 
+  // only start mqtt if it is enabled
+  if (configService.mqttEnabled) {
+    app.connectMicroservice({
+      transport: Transport.MQTT,
+      options: configService.mqttConfig,
+    });
+  }
+
+  if (configService.natsEnabled || configService.mqttEnabled) {
     await app.startAllMicroservices();
   }
 

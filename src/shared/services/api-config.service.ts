@@ -121,6 +121,18 @@ export class ApiConfigService {
     };
   }
 
+  get mqttEnabled(): boolean {
+    return this.getBoolean('MQTT_ENABLED');
+  }
+
+  get mqttConfig() {
+    return {
+      url: this.getString('MQTT_URL'),
+      username: this.configService.get<string>('MQTT_USERNAME'),
+      password: this.configService.get<string>('MQTT_PASSWORD'),
+    };
+  }
+
   get authConfig() {
     return {
       privateKey: this.getString('JWT_PRIVATE_KEY'),
