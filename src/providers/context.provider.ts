@@ -10,6 +10,8 @@ export class ContextProvider {
 
   private static readonly languageKey = 'language_key';
 
+  private static readonly requestIdKey = 'request_id_key';
+
   private static get<T>(key: string) {
     const store = ClsServiceManager.getClsService();
 
@@ -41,5 +43,13 @@ export class ContextProvider {
 
   static getAuthUser(): UserEntity | undefined {
     return ContextProvider.get<UserEntity>(ContextProvider.authUserKey);
+  }
+
+  static getRequestId(): string | undefined {
+    return ContextProvider.get<string>(ContextProvider.requestIdKey);
+  }
+
+  static setRequestId(requestId: string): void {
+    ContextProvider.set(ContextProvider.requestIdKey, requestId);
   }
 }

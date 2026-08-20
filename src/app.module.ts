@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -15,6 +16,7 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
 import { AuthModule } from './modules/auth/auth.module.ts';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module.ts';
 import { UserModule } from './modules/user/user.module.ts';
+import { ContextProvider } from './providers/context.provider.ts';
 import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
 
@@ -42,6 +44,11 @@ function resolveI18nPath(): string {
       global: true,
       middleware: {
         mount: true,
+        setup: (_cls, req: { headers: Record<string, string | string[] | undefined> }) => {
+          const requestId = (req.headers['x-request-id'] as string | undefined) ?? randomUUID();
+
+          ContextProvider.setRequestId(requestId);
+        },
       },
     }),
     ThrottlerModule.forRootAsync({
@@ -64,6 +71,11 @@ function resolveI18nPath(): string {
           pinoHttp: {
             level: 'trace', // per-stream levels below decide what each output receives
             autoLogging: true,
+            mixin: () => {
+              const requestId = ContextProvider.getRequestId();
+
+              return requestId ? { requestId } : {};
+            },
             stream: multistream([
               { level: consoleLevel, stream: process.stdout },
               {

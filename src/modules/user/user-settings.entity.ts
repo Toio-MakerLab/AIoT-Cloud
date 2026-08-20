@@ -16,7 +16,7 @@ export class UserSettingsEntity extends AbstractEntity<UserDto, UserDtoOptions> 
   @Column({ default: false })
   isPhoneVerified?: boolean;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'string' })
   userId?: string;
 
   @OneToOne(

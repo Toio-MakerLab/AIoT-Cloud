@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { ThrottlerOptions } from '@nestjs/throttler';
@@ -7,7 +5,10 @@ import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import parse from 'parse-duration';
 import type { Level } from 'pino';
 
+import { InitSchema1787210034577 } from '../../database/migrations/1787210034577-InitSchema.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
+import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
+import { UserEntity } from '../../modules/user/user.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
 
 @Injectable()
@@ -80,15 +81,9 @@ export class ApiConfigService {
   }
 
   get postgresConfig(): TypeOrmModuleOptions {
-    const entities = [
-      path.join(`${import.meta.dirname}/../../modules/**/*.entity{.ts,.js}`),
-      path.join(`${import.meta.dirname}/../../modules/**/*.view-entity{.ts,.js}`),
-    ];
-    const migrations = [path.join(`${import.meta.dirname}/../../database/migrations/*{.ts,.js}`)];
-
     return {
-      entities,
-      migrations,
+      entities: [UserEntity, UserSettingsEntity],
+      migrations: [InitSchema1787210034577],
       dropSchema: this.isTest,
       type: 'postgres',
       host: this.getString('DB_HOST'),

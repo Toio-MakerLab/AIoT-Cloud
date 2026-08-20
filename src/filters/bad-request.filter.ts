@@ -5,6 +5,9 @@ import type { ValidationError } from 'class-validator';
 import type { Response } from 'express';
 import _ from 'lodash';
 
+import { ResponseCore } from '../common/dto/response-core.dto.ts';
+import { ErrorCode } from '../constants/error-code.ts';
+
 @Catch(UnprocessableEntityException)
 export class HttpExceptionFilter implements ExceptionFilter<UnprocessableEntityException> {
   constructor(public reflector: Reflector) {}
@@ -18,7 +21,7 @@ export class HttpExceptionFilter implements ExceptionFilter<UnprocessableEntityE
     const validationErrors = r.message;
     this.validationFilter(validationErrors);
 
-    response.status(statusCode).json(r);
+    response.status(statusCode).json(new ResponseCore(ErrorCode.BAD_REQUEST, validationErrors, 'error.validation'));
   }
 
   private validationFilter(validationErrors: ValidationError[]): void {

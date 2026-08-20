@@ -11,6 +11,7 @@ import { Logger } from 'nestjs-pino';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 
 import { AppModule } from './app.module.ts';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter.ts';
 import { HttpExceptionFilter } from './filters/bad-request.filter.ts';
 import { QueryFailedFilter } from './filters/query-failed.filter.ts';
 import { TranslationInterceptor } from './interceptors/translation-interceptor.service.ts';
@@ -31,7 +32,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
 
   const reflector = app.get(Reflector);
 
-  app.useGlobalFilters(new HttpExceptionFilter(reflector), new QueryFailedFilter(reflector));
+  app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter(reflector), new QueryFailedFilter(reflector));
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector), new TranslationInterceptor(app.select(SharedModule).get(TranslationService)));
 

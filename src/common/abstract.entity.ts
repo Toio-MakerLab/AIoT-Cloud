@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { BeforeInsert, Column, CreateDateColumn, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 import { LanguageCode } from '../constants/language-code.ts';
+import { GeneratorService } from '../shared/services/generator.service.ts';
 import type { AbstractDto, AbstractTranslationDto } from './dto/abstract.dto.ts';
 
 /**
@@ -14,6 +15,11 @@ import type { AbstractDto, AbstractTranslationDto } from './dto/abstract.dto.ts'
 export abstract class AbstractEntity<DTO extends AbstractDto = AbstractDto, O = never> {
   @PrimaryColumn()
   id!: string;
+
+  @BeforeInsert()
+  generateId(): void {
+    this.id ??= GeneratorService.getInstance().generateId();
+  }
 
   @CreateDateColumn({
     type: 'timestamp',

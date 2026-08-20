@@ -57,25 +57,29 @@ export class UserService {
 
   @Transactional()
   async createUser(userRegisterDto: UserRegisterDto, file?: Reference<IFile>): Promise<ResponseCore<UserEntity>> {
-    const user = this.userRepository.create(userRegisterDto);
+    const user = this.userRepository.create({
+      ...userRegisterDto,
+      username: userRegisterDto.email.split('@')[0],
+    });
 
-    if (file && !this.validatorService.isImage(file.mimetype)) {
-      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.fileNotImage');
-    }
+    // if (file && !this.validatorService.isImage(file.mimetype)) {
+    //   return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.fileNotImage');
+    // }
 
-    if (file) {
-      user.avatar = await this.awsS3Service.uploadImage(file);
-    }
+    // if (file) {
+    //   user.avatar = await this.awsS3Service.uploadImage(file);
+    // }
+    console.log('userRegisterDto', userRegisterDto);
 
     await this.userRepository.save(user);
 
-    user.settings = await this.createSettings(
-      user.id,
-      plainToClass(CreateSettingsDto, {
-        isEmailVerified: false,
-        isPhoneVerified: false,
-      }),
-    );
+    // user.settings = await this.createSettings(
+    //   user.id,
+    //   plainToClass(CreateSettingsDto, {
+    //     isEmailVerified: false,
+    //     isPhoneVerified: false,
+    //   }),
+    // );
 
     return ResponseCore.ok(user);
   }
