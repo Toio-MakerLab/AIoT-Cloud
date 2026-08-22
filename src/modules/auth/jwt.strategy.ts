@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-
+import { ResponseCore } from '../../common/dto/response-core.dto.ts';
+import { ErrorCode } from '../../constants/error-code.ts';
 import type { RoleType } from '../../constants/role-type.ts';
 import { TokenType } from '../../constants/token-type.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
@@ -20,19 +21,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(args: { userId: Uuid; role: RoleType; type: TokenType }): Promise<UserEntity> {
+  async validate(args: { userId: string; role: RoleType; type: TokenType }): Promise<UserEntity | ResponseCore<null>> {
     if (args.type !== TokenType.ACCESS_TOKEN) {
-      throw new UnauthorizedException();
+      return ResponseCore.fail(ErrorCode.UNAUTHORIZED, 'error.invalidTokenType');
     }
 
     const user = await this.userService.findOne({
       // FIXME: issue with type casts
       id: args.userId as never,
-      role: args.role,
     });
 
     if (!user) {
-      throw new UnauthorizedException();
+      return ResponseCore.fail(ErrorCode.UNAUTHORIZED, 'error.userNotFound');
     }
 
     return user;

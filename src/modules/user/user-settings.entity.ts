@@ -16,7 +16,13 @@ export class UserSettingsEntity extends AbstractEntity<UserDto, UserDtoOptions> 
   @Column({ default: false })
   isPhoneVerified?: boolean;
 
-  @Column({ type: 'string' })
+  @Column({ type: 'varchar', nullable: true })
+  emailVerificationToken?: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  emailVerificationTokenExpiresAt?: Date | null;
+
+  @Column({ type: 'varchar' })
   userId?: string;
 
   @OneToOne(

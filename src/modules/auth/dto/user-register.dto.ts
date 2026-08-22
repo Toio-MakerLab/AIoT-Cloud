@@ -1,6 +1,9 @@
 import { EmailField, PasswordField, PhoneFieldOptional, StringField } from '../../../decorators/field.decorators.ts';
 
 export class UserRegisterDto {
+  @StringField({ minLength: 3, maxLength: 32 })
+  readonly username!: string;
+
   @StringField()
   readonly firstName!: string;
 

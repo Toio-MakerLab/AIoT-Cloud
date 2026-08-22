@@ -31,7 +31,7 @@ export class AuthService {
   }
 
   async validateUser(userLoginDto: UserLoginDto): Promise<ResponseCore<UserEntity>> {
-    const user = await this.userService.findOne({
+    const user = await this.userService.findByUsernameOrEmail({
       email: userLoginDto.email,
     });
 
@@ -39,6 +39,10 @@ export class AuthService {
 
     if (!isPasswordValid) {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.userNotFound');
+    }
+
+    if (!user!.settings?.isEmailVerified) {
+      return ResponseCore.fail(ErrorCode.FORBIDDEN, 'error.emailNotVerified');
     }
 
     return ResponseCore.ok(user!);

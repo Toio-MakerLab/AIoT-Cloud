@@ -80,9 +80,6 @@ apiClient.interceptors.request.use((config) => {
 	if (token) {
 		config.headers.Authorization = `Bearer ${token}`;
 	}
-	if (config.data && typeof config.data === "object") {
-		config.data = humps.decamelizeKeys(config.data);
-	}
 	return config;
 });
 

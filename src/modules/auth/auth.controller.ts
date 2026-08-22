@@ -12,8 +12,10 @@ import { UserEntity } from '../user/user.entity.ts';
 import { UserService } from '../user/user.service.ts';
 import { AuthService } from './auth.service.ts';
 import { LoginPayloadDto } from './dto/login-payload.dto.ts';
+import { ResendVerificationDto } from './dto/resend-verification.dto.ts';
 import { UserLoginDto } from './dto/user-login.dto.ts';
 import { UserRegisterDto } from './dto/user-register.dto.ts';
+import { VerifyEmailDto } from './dto/verify-email.dto.ts';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -62,6 +64,20 @@ export class AuthController {
         isActive: true,
       }),
     );
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Verify user account via emailed token' })
+  verifyEmail(@Body() dto: VerifyEmailDto): Promise<ResponseCore<null>> {
+    return this.userService.verifyEmail(dto.email, dto.token);
+  }
+
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ description: 'Resend the account verification email' })
+  resendVerification(@Body() dto: ResendVerificationDto): Promise<ResponseCore<null>> {
+    return this.userService.resendVerification(dto.email);
   }
 
   @Version('1')

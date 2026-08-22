@@ -1,7 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconBrandFacebook, IconBrandGithub } from "@tabler/icons-react";
-import { type HTMLAttributes, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { type HTMLAttributes, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
@@ -14,12 +16,19 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { authApi } from "@/features/auth/api/auth-api";
 import { cn } from "@/lib/utils";
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>;
 
 const formSchema = z
 	.object({
+		username: z
+			.string()
+			.min(3, { message: "Username must be at least 3 characters" })
+			.max(32, { message: "Username must be at most 32 characters" }),
+		firstName: z.string().min(1, { message: "Please enter your first name" }),
+		lastName: z.string().min(1, { message: "Please enter your last name" }),
 		email: z
 			.string()
 			.min(1, { message: "Please enter your email" })
@@ -29,8 +38,8 @@ const formSchema = z
 			.min(1, {
 				message: "Please enter your password",
 			})
-			.min(7, {
-				message: "Password must be at least 7 characters long",
+			.min(6, {
+				message: "Password must be at least 6 characters long",
 			}),
 		confirmPassword: z.string(),
 	})
@@ -40,11 +49,38 @@ const formSchema = z
 	});
 
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
-	const [isLoading, setIsLoading] = useState(false);
+	const navigate = useNavigate();
+	const [isLoading, startTransition] = useTransition();
+
+	const { mutate: register, isPending } = useMutation({
+		mutationFn: authApi.register,
+		onSuccess: (res, variables) => {
+			if (res.error !== 0) {
+				if (res.message === "error.userAlreadyExists") {
+					toast.error("Username or email already in use");
+					return;
+				}
+				toast.error("Failed to create account");
+				return;
+			}
+
+			toast.success("Account created — check your email to verify it");
+			navigate({
+				to: "/verify-email",
+				search: { email: variables.email },
+			});
+		},
+		onError: () => {
+			toast.error("Failed to create account");
+		},
+	});
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
+			username: "",
+			firstName: "",
+			lastName: "",
 			email: "",
 			password: "",
 			confirmPassword: "",
@@ -52,13 +88,9 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 	});
 
 	function onSubmit(data: z.infer<typeof formSchema>) {
-		setIsLoading(true);
-		// eslint-disable-next-line no-console
-		console.log(data);
-
-		setTimeout(() => {
-			setIsLoading(false);
-		}, 3000);
+		startTransition(() => {
+			register(data);
+		});
 	}
 
 	return (
@@ -68,6 +100,47 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 				className={cn("grid gap-3", className)}
 				{...props}
 			>
+				<FormField
+					control={form.control}
+					name="username"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel>Username</FormLabel>
+							<FormControl>
+								<Input placeholder="johndoe" {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				<div className="grid grid-cols-2 gap-3">
+					<FormField
+						control={form.control}
+						name="firstName"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>First name</FormLabel>
+								<FormControl>
+									<Input placeholder="John" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={form.control}
+						name="lastName"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Last name</FormLabel>
+								<FormControl>
+									<Input placeholder="Doe" {...field} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+				</div>
 				<FormField
 					control={form.control}
 					name="email"
@@ -107,39 +180,9 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
 						</FormItem>
 					)}
 				/>
-				<Button className="mt-2" disabled={isLoading}>
+				<Button className="mt-2" disabled={isPending && isLoading}>
 					Create Account
 				</Button>
-
-				<div className="relative my-2">
-					<div className="absolute inset-0 flex items-center">
-						<span className="w-full border-t" />
-					</div>
-					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-background text-muted-foreground px-2">
-							Or continue with
-						</span>
-					</div>
-				</div>
-
-				<div className="grid grid-cols-2 gap-2">
-					<Button
-						variant="outline"
-						className="w-full"
-						type="button"
-						disabled={isLoading}
-					>
-						<IconBrandGithub className="h-4 w-4" /> GitHub
-					</Button>
-					<Button
-						variant="outline"
-						className="w-full"
-						type="button"
-						disabled={isLoading}
-					>
-						<IconBrandFacebook className="h-4 w-4" /> Facebook
-					</Button>
-				</div>
 			</form>
 		</Form>
 	);

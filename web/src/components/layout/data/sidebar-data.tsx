@@ -1,8 +1,11 @@
 import {
 	IconBrowserCheck,
+	IconCpu,
 	IconHelp,
+	IconLayoutDashboard,
 	IconNotification,
 	IconPalette,
+	IconRouter,
 	IconSettings,
 	IconShieldLock,
 	IconTool,
@@ -188,8 +191,33 @@ export const sidebarData: SidebarData = {
 		//   ],
 		// },
 		{
+			title: "IoT",
+			items: [
+				{
+					title: "Dashboard",
+					url: "/",
+					icon: IconLayoutDashboard,
+				},
+				{
+					title: "Devices",
+					url: "/devices",
+					icon: IconCpu,
+				},
+				{
+					title: "Device Templates",
+					url: "/device-templates",
+					icon: IconRouter,
+				},
+			],
+		},
+		{
 			title: "Other",
 			items: [
+				{
+					title: "My Account",
+					url: "/profile",
+					icon: IconUserCog,
+				},
 				{
 					title: "Settings",
 					icon: IconSettings,

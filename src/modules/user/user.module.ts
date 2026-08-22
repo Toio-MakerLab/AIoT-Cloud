@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { CreateSettingsHandler } from './commands/create-settings.command.ts';
@@ -15,4 +15,10 @@ const handlers = [CreateSettingsHandler];
   exports: [UserService],
   providers: [UserService, ...handlers],
 })
-export class UserModule {}
+export class UserModule implements OnModuleInit {
+  constructor(private readonly userService: UserService) {}
+
+  async onModuleInit() {
+    await this.userService.initRootUser();
+  }
+}

@@ -4,11 +4,16 @@ import type { ThrottlerOptions } from '@nestjs/throttler';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import parse from 'parse-duration';
 import type { Level } from 'pino';
-
 import { InitSchema1787210034577 } from '../../database/migrations/1787210034577-InitSchema.ts';
+import { AddIotDeviceManagement1787378213385 } from '../../database/migrations/1787378213385-AddIotDeviceManagement.ts';
+import { AddEmailVerification1787381039053 } from '../../database/migrations/1787381039053-AddEmailVerification.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
-import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
+import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
+import { DeviceEntity } from '../../modules/device/device.entity.ts';
+import { DeviceTelemetryEntity } from '../../modules/device/device-telemetry.entity.ts';
+import { DeviceTemplateEntity } from '../../modules/device-template/device-template.entity.ts';
 import { UserEntity } from '../../modules/user/user.entity.ts';
+import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
 
 @Injectable()
@@ -82,8 +87,8 @@ export class ApiConfigService {
 
   get postgresConfig(): TypeOrmModuleOptions {
     return {
-      entities: [UserEntity, UserSettingsEntity],
-      migrations: [InitSchema1787210034577],
+      entities: [UserEntity, UserSettingsEntity, DeviceTemplateEntity, DeviceEntity, DeviceTelemetryEntity, DashboardEntity],
+      migrations: [InitSchema1787210034577, AddIotDeviceManagement1787378213385, AddEmailVerification1787381039053],
       dropSchema: this.isTest,
       type: 'postgres',
       host: this.getString('DB_HOST'),
@@ -144,6 +149,22 @@ export class ApiConfigService {
   get appConfig() {
     return {
       port: this.getString('PORT'),
+    };
+  }
+
+  get mailEnabled(): boolean {
+    return this.getBoolean('MAIL_ENABLED');
+  }
+
+  get mailConfig() {
+    return {
+      host: this.configService.get<string>('SMTP_HOST'),
+      port: this.configService.get<number>('SMTP_PORT', 587),
+      user: this.configService.get<string>('SMTP_USER'),
+      pass: this.configService.get<string>('SMTP_PASS'),
+      secure: this.configService.get<boolean>('SMTP_SECURE', false),
+      from: this.configService.get<string>('SMTP_FROM', 'no-reply@aiot-lab.local'),
+      appUrl: this.configService.get<string>('APP_URL', 'http://localhost:5173'),
     };
   }
 

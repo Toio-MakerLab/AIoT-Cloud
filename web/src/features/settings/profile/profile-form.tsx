@@ -53,11 +53,11 @@ export default function ProfileForm() {
 	useEffect(() => {
 		if (!profile) return;
 		form.reset({
-			firstName: profile.firstName,
-			lastName: profile.lastName,
+			firstName: profile.firstName ?? "",
+			lastName: profile.lastName ?? "",
 			username: profile.username,
-			email: profile.email,
-			phoneNumber: profile.phoneNumber ?? "",
+			email: profile.email ?? "",
+			phoneNumber: profile.phone ?? "",
 		});
 	}, [profile, form]);
 

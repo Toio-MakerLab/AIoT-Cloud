@@ -6,6 +6,26 @@ import type { AuthUser } from "@/features/auth/api/types";
 export const ACCESS_TOKEN = "c2hhZGNuLWF1dGgtdG9rZW4=";
 export const REFRESH_TOKEN = "c2hhZ1231LWF1dGgtdG9rZW4=";
 
+// The auth store isn't persisted, so `user` (and its `role`) is lost on every
+// page reload even though the access token cookie survives. Decode the JWT's
+// own claims to rehydrate a minimal user until a real profile fetch runs —
+// same claims (`userId`, `role`) the backend's JwtStrategy trusts from the
+// signature-verified token, so this is safe for client-side display/gating.
+function decodeUserFromToken(token: string): AuthUser | null {
+	const payload = token.split(".")[1];
+	if (!payload) return null;
+
+	try {
+		const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+		const claims = JSON.parse(json) as { userId?: string; role?: string };
+		if (!claims.userId) return null;
+
+		return { id: claims.userId, role: claims.role };
+	} catch {
+		return null;
+	}
+}
+
 interface AuthState {
 	auth: {
 		user: AuthUser | null;
@@ -26,7 +46,7 @@ export const useAuthStore = create<AuthState>()((set, get) => {
 	const initToken = cookieState ? cookieState : "";
 	return {
 		auth: {
-			user: null,
+			user: initToken ? decodeUserFromToken(initToken) : null,
 			setUser: (user) =>
 				set((state) => ({ ...state, auth: { ...state.auth, user } })),
 			accessToken: initToken,

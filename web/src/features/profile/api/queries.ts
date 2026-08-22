@@ -11,7 +11,6 @@ export const useProfileQuery = () => {
 	return useQuery({
 		queryKey: PROFILE_QUERY_KEY,
 		queryFn: profileApi.getMe,
-		select: (res) => res.data,
 		enabled: !!accessToken,
 		staleTime: 5 * 60 * 1000,
 	});

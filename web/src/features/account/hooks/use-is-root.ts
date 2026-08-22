@@ -1,3 +1,4 @@
+import { RoleType } from "@/constants/role-type";
 import { useAuthStore } from "@/stores/authStore";
 
 // The Roles & Permissions page manages every role's access, including its
@@ -6,5 +7,5 @@ import { useAuthStore } from "@/stores/authStore";
 // backend expectations (Casbin's root role is exempt from permission checks).
 export function useIsRoot(): boolean {
 	const role = useAuthStore((state) => state.auth.user?.role);
-	return role === "root";
+	return role === RoleType.ROOT;
 }

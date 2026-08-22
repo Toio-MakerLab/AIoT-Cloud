@@ -1,12 +1,14 @@
 export interface IProfile {
 	id: string;
-	firstName: string;
-	lastName: string;
+	firstName: string | null;
+	lastName: string | null;
 	username: string;
-	email: string;
-	phoneNumber: string;
-	status: string;
+	email: string | null;
+	phone: string | null;
+	avatar: string | null;
 	role: string;
+	isActive: boolean;
+	isEmailVerified: boolean;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -16,5 +18,5 @@ export interface IUpdateProfile {
 	lastName?: string;
 	username?: string;
 	email?: string;
-	phoneNumber?: string;
+	phone?: string;
 }

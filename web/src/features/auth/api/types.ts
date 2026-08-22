@@ -1,26 +1,45 @@
 export type AuthUser = {
-	email?: string;
-	exp?: number;
-	sub?: string;
-	picture?: string;
-	updatedAt?: number;
+	id?: string;
+	email?: string | null;
 	username?: string;
-	createdAt?: number;
-	emailVerified?: boolean;
-	fullName: string;
-	roles?: string[];
+	firstName?: string | null;
+	lastName?: string | null;
+	phone?: string | null;
+	avatar?: string | null;
 	role?: string;
+	isActive?: boolean;
+	isEmailVerified?: boolean;
+	// Derived client-side from firstName/lastName/avatar for display.
+	fullName?: string;
+	picture?: string | null;
 };
 
-// Define the response type (adjust based on your actual API)
 export type LoginResponse = {
-	accessToken: string;
-	refreshToken: string;
 	user: AuthUser;
+	token: {
+		accessToken: string;
+		expiresIn: number;
+	};
 };
 
-// Ensure this matches your generic schema if possible, or just strict input type
 export type LoginInput = {
-	username: string;
+	email: string;
 	password: string;
+};
+
+export type RegisterInput = {
+	username: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+};
+
+export type VerifyEmailInput = {
+	email: string;
+	token: string;
+};
+
+export type ResendVerificationInput = {
+	email: string;
 };

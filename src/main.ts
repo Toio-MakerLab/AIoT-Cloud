@@ -25,7 +25,19 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, new ExpressAdapter(), { cors: true, bufferLogs: true });
   app.useLogger(app.get(Logger));
   app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+          'connect-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
+          'worker-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
+          'script-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
+          'script-src-elem': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
+        },
+      },
+    }),
+  );
   app.setGlobalPrefix('/api'); // use api as global prefix if you don't have subdomain
   app.use(compression());
   app.enableVersioning();

@@ -4,6 +4,7 @@ import path, { join } from 'node:path';
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -14,6 +15,9 @@ import { destination, multistream } from 'pino';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { AuthModule } from './modules/auth/auth.module.ts';
+import { DashboardModule } from './modules/dashboard/dashboard.module.ts';
+import { DeviceTemplateModule } from './modules/device-template/device-template.module.ts';
+import { DeviceModule } from './modules/device/device.module.ts';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module.ts';
 import { MqttModule } from './modules/mqtt/mqtt.module.ts';
 import { UserModule } from './modules/user/user.module.ts';
@@ -57,8 +61,12 @@ function redactSensitiveFields(body: unknown): unknown {
   imports: [
     AuthModule,
     UserModule,
+    DeviceTemplateModule,
+    DeviceModule,
+    DashboardModule,
     MqttModule,
     WebsocketModule,
+    EventEmitterModule.forRoot(),
     ClsModule.forRoot({
       global: true,
       middleware: {

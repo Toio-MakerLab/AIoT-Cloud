@@ -77,7 +77,7 @@ export const RESPONSE_CODE_MESSAGES: Record<ResponseCodeValue, string> = {
 export function getResponseCode(error: unknown): ResponseCodeValue | undefined {
 	if (!(error instanceof AxiosError)) return undefined;
 	const data = error.response?.data as Response<unknown> | undefined;
-	return data?.errorCode as ResponseCodeValue | undefined;
+	return data?.error as ResponseCodeValue | undefined;
 }
 
 /**

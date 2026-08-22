@@ -1,216 +1,238 @@
+import { IconDeviceFloppy, IconPlus } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Header } from "@/components/layout/header";
 import { Main } from "@/components/layout/main";
-import { TopNav } from "@/components/layout/top-nav";
 import { ProfileDropdown } from "@/components/profile-dropdown";
 import { Search } from "@/components/search";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Overview } from "./components/overview";
-import { RecentSales } from "./components/recent-sales";
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useDashboardDevicesQuery, useDashboardsQuery } from "./api/queries";
+import { useCreateDashboardMutation, useUpdateDashboardMutation } from "./api/queries";
+import type { IDashboard, IDashboardWidget } from "./api/types";
+import { AddPanelDialog } from "./components/add-panel-dialog";
+import { DashboardGrid } from "./components/dashboard-grid";
+import { useDeviceSocket } from "./hooks/use-device-socket";
+
+const NEW_DASHBOARD_VALUE = "__new__";
+
+interface DraftDashboard {
+	id: string | null;
+	name: string;
+	isDefault: boolean;
+	widgets: IDashboardWidget[];
+}
+
+const blankDraft = (): DraftDashboard => ({
+	id: null,
+	name: "New Dashboard",
+	isDefault: false,
+	widgets: [],
+});
 
 export default function Dashboard() {
+	const dashboardsQuery = useDashboardsQuery();
+	const devicesQuery = useDashboardDevicesQuery();
+	const createDashboard = useCreateDashboardMutation();
+	const updateDashboard = useUpdateDashboardMutation();
+
+	const [draft, setDraft] = useState<DraftDashboard>(blankDraft());
+	const [addPanelOpen, setAddPanelOpen] = useState(false);
+	const [hasSelectedInitial, setHasSelectedInitial] = useState(false);
+
+	const dashboards = useMemo(() => dashboardsQuery.data ?? [], [dashboardsQuery.data]);
+	const devices = useMemo(() => devicesQuery.data ?? [], [devicesQuery.data]);
+
+	// Once the saved dashboards load, default to the first one (if any) instead of a blank draft.
+	useEffect(() => {
+		if (!hasSelectedInitial && dashboards.length > 0) {
+			const first = dashboards[0];
+			setDraft({
+				id: first.id,
+				name: first.name,
+				isDefault: first.isDefault,
+				widgets: first.widgets,
+			});
+			setHasSelectedInitial(true);
+		}
+	}, [dashboards, hasSelectedInitial]);
+
+	const distinctDeviceIds = useMemo(
+		() => Array.from(new Set(draft.widgets.map((w) => w.deviceId))),
+		[draft.widgets],
+	);
+	const { latestByDevice, historyByDevice, seedHistory } = useDeviceSocket(distinctDeviceIds);
+
+	const handleSelectDashboard = (value: string) => {
+		setHasSelectedInitial(true);
+		if (value === NEW_DASHBOARD_VALUE) {
+			setDraft(blankDraft());
+			return;
+		}
+		const selected = dashboards.find((d: IDashboard) => d.id === value);
+		if (selected) {
+			setDraft({
+				id: selected.id,
+				name: selected.name,
+				isDefault: selected.isDefault,
+				widgets: selected.widgets,
+			});
+		}
+	};
+
+	const handleAddWidget = (widget: IDashboardWidget) => {
+		setDraft((prev) => ({ ...prev, widgets: [...prev.widgets, widget] }));
+	};
+
+	const handleRemoveWidget = (widgetId: string) => {
+		setDraft((prev) => ({
+			...prev,
+			widgets: prev.widgets.filter((w) => w.id !== widgetId),
+		}));
+	};
+
+	const handleLayoutChange = (widgets: IDashboardWidget[]) => {
+		setDraft((prev) => ({ ...prev, widgets }));
+	};
+
+	const nextSlot = useMemo(() => {
+		const maxY = draft.widgets.reduce((max, w) => Math.max(max, w.y + w.h), 0);
+		return { x: 0, y: maxY };
+	}, [draft.widgets]);
+
+	const isSaving = createDashboard.isPending || updateDashboard.isPending;
+
+	const handleSave = async () => {
+		if (!draft.name.trim()) {
+			toast.error("Dashboard name is required.");
+			return;
+		}
+		const payload = {
+			name: draft.name.trim(),
+			isDefault: draft.isDefault,
+			widgets: draft.widgets,
+		};
+		try {
+			if (draft.id) {
+				const saved = await updateDashboard.mutateAsync({ id: draft.id, data: payload });
+				setDraft({
+					id: saved.id,
+					name: saved.name,
+					isDefault: saved.isDefault,
+					widgets: saved.widgets,
+				});
+			} else {
+				const saved = await createDashboard.mutateAsync(payload);
+				setDraft({
+					id: saved.id,
+					name: saved.name,
+					isDefault: saved.isDefault,
+					widgets: saved.widgets,
+				});
+			}
+			toast.success("Dashboard saved");
+		} catch {
+			// Error toast is already shown by the global mutation error handler.
+		}
+	};
+
 	return (
 		<>
-			{/* ===== Top Heading ===== */}
-			<Header>
-				<TopNav links={topNav} />
+			<Header fixed>
+				<Search />
 				<div className="ml-auto flex items-center space-x-4">
-					<Search />
 					<ThemeSwitch />
 					<ProfileDropdown />
 				</div>
 			</Header>
 
-			{/* ===== Main ===== */}
 			<Main>
-				<div className="mb-2 flex items-center justify-between space-y-2">
-					<h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-					<div className="flex items-center space-x-2">
-						<Button>Download</Button>
+				<div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+					<div>
+						<h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+						<p className="text-muted-foreground text-sm">
+							Build a live view of your devices' telemetry.
+						</p>
 					</div>
 				</div>
-				<Tabs
-					orientation="vertical"
-					defaultValue="overview"
-					className="space-y-4"
-				>
-					<div className="w-full overflow-x-auto pb-2">
-						<TabsList>
-							<TabsTrigger value="overview">Overview</TabsTrigger>
-							<TabsTrigger value="analytics" disabled>
-								Analytics
-							</TabsTrigger>
-							<TabsTrigger value="reports" disabled>
-								Reports
-							</TabsTrigger>
-							<TabsTrigger value="notifications" disabled>
-								Notifications
-							</TabsTrigger>
-						</TabsList>
+
+				<div className="mb-4 flex flex-wrap items-center gap-2">
+					<Select
+						value={draft.id ?? NEW_DASHBOARD_VALUE}
+						onValueChange={handleSelectDashboard}
+					>
+						<SelectTrigger className="w-56">
+							<SelectValue placeholder="Select a dashboard" />
+						</SelectTrigger>
+						<SelectContent>
+							{dashboards.map((d) => (
+								<SelectItem key={d.id} value={d.id}>
+									{d.name}
+								</SelectItem>
+							))}
+							<SelectItem value={NEW_DASHBOARD_VALUE}>+ New Dashboard</SelectItem>
+						</SelectContent>
+					</Select>
+
+					<Input
+						className="w-56"
+						value={draft.name}
+						onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
+						placeholder="Dashboard name"
+					/>
+
+					<div className="flex items-center gap-2">
+						<Switch
+							id="dashboard-is-default"
+							checked={draft.isDefault}
+							onCheckedChange={(checked) =>
+								setDraft((prev) => ({ ...prev, isDefault: checked }))
+							}
+						/>
+						<label htmlFor="dashboard-is-default" className="text-muted-foreground text-sm">
+							Default
+						</label>
 					</div>
-					<TabsContent value="overview" className="space-y-4">
-						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">
-										Total Revenue
-									</CardTitle>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth="2"
-										className="text-muted-foreground h-4 w-4"
-									>
-										<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-									</svg>
-								</CardHeader>
-								<CardContent>
-									<div className="text-2xl font-bold">$45,231.89</div>
-									<p className="text-muted-foreground text-xs">
-										+20.1% from last month
-									</p>
-								</CardContent>
-							</Card>
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">
-										Subscriptions
-									</CardTitle>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth="2"
-										className="text-muted-foreground h-4 w-4"
-									>
-										<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-										<circle cx="9" cy="7" r="4" />
-										<path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-									</svg>
-								</CardHeader>
-								<CardContent>
-									<div className="text-2xl font-bold">+2350</div>
-									<p className="text-muted-foreground text-xs">
-										+180.1% from last month
-									</p>
-								</CardContent>
-							</Card>
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">Sales</CardTitle>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth="2"
-										className="text-muted-foreground h-4 w-4"
-									>
-										<rect width="20" height="14" x="2" y="5" rx="2" />
-										<path d="M2 10h20" />
-									</svg>
-								</CardHeader>
-								<CardContent>
-									<div className="text-2xl font-bold">+12,234</div>
-									<p className="text-muted-foreground text-xs">
-										+19% from last month
-									</p>
-								</CardContent>
-							</Card>
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">
-										Active Now
-									</CardTitle>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth="2"
-										className="text-muted-foreground h-4 w-4"
-									>
-										<path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-									</svg>
-								</CardHeader>
-								<CardContent>
-									<div className="text-2xl font-bold">+573</div>
-									<p className="text-muted-foreground text-xs">
-										+201 since last hour
-									</p>
-								</CardContent>
-							</Card>
-						</div>
-						<div className="grid grid-cols-1 gap-4 lg:grid-cols-7">
-							<Card className="col-span-1 lg:col-span-4">
-								<CardHeader>
-									<CardTitle>Overview</CardTitle>
-								</CardHeader>
-								<CardContent className="pl-2">
-									<Overview />
-								</CardContent>
-							</Card>
-							<Card className="col-span-1 lg:col-span-3">
-								<CardHeader>
-									<CardTitle>Recent Sales</CardTitle>
-									<CardDescription>
-										You made 265 sales this month.
-									</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<RecentSales />
-								</CardContent>
-							</Card>
-						</div>
-					</TabsContent>
-				</Tabs>
+
+					<div className="ml-auto flex items-center gap-2">
+						<Button variant="outline" onClick={() => setAddPanelOpen(true)}>
+							<IconPlus className="h-4 w-4" />
+							Add Panel
+						</Button>
+						<Button onClick={handleSave} disabled={isSaving}>
+							<IconDeviceFloppy className="h-4 w-4" />
+							{isSaving ? "Saving..." : "Save"}
+						</Button>
+					</div>
+				</div>
+
+				<DashboardGrid
+					widgets={draft.widgets}
+					devices={devices}
+					latestByDevice={latestByDevice}
+					historyByDevice={historyByDevice}
+					seedHistory={seedHistory}
+					onLayoutChange={handleLayoutChange}
+					onRemoveWidget={handleRemoveWidget}
+				/>
 			</Main>
+
+			<AddPanelDialog
+				open={addPanelOpen}
+				onOpenChange={setAddPanelOpen}
+				devices={devices}
+				nextSlot={nextSlot}
+				onAdd={handleAddWidget}
+			/>
 		</>
 	);
 }
-
-const topNav = [
-	{
-		title: "Overview",
-		href: "dashboard/overview",
-		isActive: true,
-		disabled: false,
-	},
-	// {
-	//   title: 'Customers',
-	//   href: 'dashboard/customers',
-	//   isActive: false,
-	//   disabled: true,
-	// },
-	// {
-	//   title: 'Products',
-	//   href: 'dashboard/products',
-	//   isActive: false,
-	//   disabled: true,
-	// },
-	// {
-	//   title: 'Settings',
-	//   href: 'dashboard/settings',
-	//   isActive: false,
-	//   disabled: true,
-	// },
-];

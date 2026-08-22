@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 import { Injectable } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,7 +9,9 @@ import { Transactional } from 'typeorm-transactional';
 import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
+import { RoleType } from '../../constants/role-type.ts';
 import type { IFile } from '../../interfaces/IFile.ts';
+import { MailService } from '../../shared/services/mail.service.ts';
 import type { Reference } from '../../types.ts';
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
 import { CreateSettingsCommand } from './commands/create-settings.command.ts';
@@ -15,21 +19,29 @@ import { CreateSettingsDto } from './dtos/create-settings.dto.ts';
 import type { UserDto } from './dtos/user.dto.ts';
 import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
-import type { UserSettingsEntity } from './user-settings.entity.ts';
+import { UserSettingsEntity } from './user-settings.entity.ts';
+
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    @InjectRepository(UserSettingsEntity)
+    private userSettingsRepository: Repository<UserSettingsEntity>,
     private commandBus: CommandBus,
+    private mailService: MailService,
   ) {}
 
   /**
-   * Find single user
+   * Find single user (loads settings relation)
    */
   findOne(findData: FindOptionsWhere<UserEntity>): Promise<UserEntity | null> {
-    return this.userRepository.findOneBy(findData);
+    return this.userRepository.findOne({
+      where: findData,
+      relations: ['settings'],
+    });
   }
 
   findByUsernameOrEmail(options: Partial<{ username: string; email: string }>): Promise<UserEntity | null> {
@@ -52,10 +64,16 @@ export class UserService {
 
   @Transactional()
   async createUser(userRegisterDto: UserRegisterDto, _?: Reference<IFile>): Promise<ResponseCore<UserEntity>> {
-    const user = this.userRepository.create({
-      ...userRegisterDto,
-      username: userRegisterDto.email.split('@')[0],
+    const existing = await this.findByUsernameOrEmail({
+      username: userRegisterDto.username,
+      email: userRegisterDto.email,
     });
+
+    if (existing) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.userAlreadyExists');
+    }
+
+    const user = this.userRepository.create(userRegisterDto);
 
     // if (file && !this.validatorService.isImage(file.mimetype)) {
     //   return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.fileNotImage');
@@ -67,15 +85,95 @@ export class UserService {
 
     await this.userRepository.save(user);
 
-    // user.settings = await this.createSettings(
-    //   user.id,
-    //   plainToClass(CreateSettingsDto, {
-    //     isEmailVerified: false,
-    //     isPhoneVerified: false,
-    //   }),
-    // );
+    const emailVerificationToken = randomBytes(32).toString('hex');
+
+    user.settings = await this.createSettings(user.id, {
+      isEmailVerified: false,
+      isPhoneVerified: false,
+      emailVerificationToken,
+      emailVerificationTokenExpiresAt: new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS),
+    });
+
+    await this.mailService.sendVerificationEmail(user.email!, emailVerificationToken);
 
     return ResponseCore.ok(user);
+  }
+
+  @Transactional()
+  async initRootUser(): Promise<void> {
+    const existing = await this.findByUsernameOrEmail({
+      username: 'root',
+    });
+
+    if (existing) {
+      return;
+    }
+
+    const user = this.userRepository.create({
+      username: 'root',
+      firstName: 'Root',
+      lastName: 'User',
+      email: 'root@example.com',
+      password: '12345678',
+      role: RoleType.ROOT,
+    });
+
+    await this.userRepository.save(user);
+
+    const settings = this.userSettingsRepository.create({
+      userId: user.id,
+      isEmailVerified: true,
+      isPhoneVerified: true,
+    });
+
+    user.settings = await this.userSettingsRepository.save(settings);
+  }
+
+  async verifyEmail(email: string, token: string): Promise<ResponseCore<null>> {
+    const user = await this.findByUsernameOrEmail({ email });
+
+    if (!user?.settings) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.userNotFound');
+    }
+
+    if (user.settings.isEmailVerified) {
+      return ResponseCore.ok(null, 'success.emailAlreadyVerified');
+    }
+
+    const tokenExpired = !user.settings.emailVerificationTokenExpiresAt || user.settings.emailVerificationTokenExpiresAt.getTime() < Date.now();
+
+    if (!user.settings.emailVerificationToken || user.settings.emailVerificationToken !== token || tokenExpired) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.invalidOrExpiredToken');
+    }
+
+    user.settings.isEmailVerified = true;
+    user.settings.emailVerificationToken = null;
+    user.settings.emailVerificationTokenExpiresAt = null;
+    await this.userSettingsRepository.save(user.settings);
+
+    return ResponseCore.ok(null, 'success.emailVerified');
+  }
+
+  async resendVerification(email: string): Promise<ResponseCore<null>> {
+    const user = await this.findByUsernameOrEmail({ email });
+
+    if (!user?.settings) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.userNotFound');
+    }
+
+    if (user.settings.isEmailVerified) {
+      return ResponseCore.ok(null, 'success.emailAlreadyVerified');
+    }
+
+    const emailVerificationToken = randomBytes(32).toString('hex');
+
+    user.settings.emailVerificationToken = emailVerificationToken;
+    user.settings.emailVerificationTokenExpiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS);
+    await this.userSettingsRepository.save(user.settings);
+
+    await this.mailService.sendVerificationEmail(user.email!, emailVerificationToken);
+
+    return ResponseCore.ok(null, 'success.verificationEmailSent');
   }
 
   async getUsers(pageOptionsDto: UsersPageOptionsDto): Promise<PageDto<UserDto>> {

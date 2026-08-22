@@ -37,14 +37,19 @@ export class UserDto extends AbstractDto {
   @BooleanFieldOptional()
   isActive?: boolean;
 
+  @BooleanFieldOptional()
+  isEmailVerified?: boolean;
+
   constructor(user: UserEntity, options?: UserDtoOptions) {
     super(user);
     this.firstName = user.firstName;
     this.lastName = user.lastName;
+    this.username = user.username;
     this.role = user.role;
     this.email = user.email;
     this.avatar = user.avatar;
     this.phone = user.phone;
     this.isActive = options?.isActive;
+    this.isEmailVerified = user.settings?.isEmailVerified ?? false;
   }
 }

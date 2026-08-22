@@ -1,16 +1,18 @@
 FROM node:lts AS dist
 COPY package.json yarn.lock ./
 
-RUN yarn install
+RUN corepack && corepack enable
+
+RUN  pnpm install
 
 COPY . ./
 
-RUN yarn build:prod
+RUN pnpm build:prod
 
 FROM node:lts AS node_modules
 COPY package.json yarn.lock ./
 
-RUN yarn install --prod
+RUN pnpm install --prod
 
 FROM node:lts
 
@@ -29,4 +31,4 @@ COPY . /usr/src/app
 
 EXPOSE $PORT
 
-CMD [ "yarn", "start:prod" ]
+CMD [ "node", "dist/src/main.js" ]
