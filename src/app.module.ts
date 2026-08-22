@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import type { IncomingMessage } from 'node:http';
-import path from 'node:path';
+import path, { join } from 'node:path';
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClsModule } from 'nestjs-cls';
@@ -12,7 +13,6 @@ import { LoggerModule } from 'nestjs-pino';
 import { destination, multistream } from 'pino';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
-
 import { AuthModule } from './modules/auth/auth.module.ts';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module.ts';
 import { MqttModule } from './modules/mqtt/mqtt.module.ts';
@@ -138,6 +138,9 @@ function redactSensitiveFields(body: unknown): unknown {
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver, new HeaderResolver(['x-lang'])],
       imports: [SharedModule],
       inject: [ApiConfigService],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'dist-client'), // Path to your web folder
     }),
     HealthCheckerModule,
   ],

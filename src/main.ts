@@ -26,7 +26,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   app.useLogger(app.get(Logger));
   app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
   app.use(helmet());
-  // app.setGlobalPrefix('/api'); use api as global prefix if you don't have subdomain
+  app.setGlobalPrefix('/api'); // use api as global prefix if you don't have subdomain
   app.use(compression());
   app.enableVersioning();
 

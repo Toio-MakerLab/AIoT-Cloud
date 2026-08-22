@@ -98,3 +98,8 @@ db-data
 .vuepress/.cache
 # VuePress default build output directory
 .vuepress/dist
+
+
+# build output
+dist/
+dist-client/

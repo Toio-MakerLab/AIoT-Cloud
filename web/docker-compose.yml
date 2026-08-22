@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Production build
+  web-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "80:80"
+    container_name: shadcn-admin-prod
+    restart: unless-stopped
+    volumes:
+      # Persistent assets volume: new chunks are added, old ones never removed.
+      # Prevents 404 for in-flight browser sessions after a new deploy.
+      - assets-store:/usr/share/nginx/html/assets
+
+  # Asset cleanup — runs daily at 02:00, removes stale chunks from the persistent volume
+  asset-cleanup:
+    build:
+      context: .
+      dockerfile: Dockerfile.cleanup
+    container_name: shadcn-admin-cleanup
+    restart: unless-stopped
+    depends_on:
+      - web-prod
+    volumes:
+      - assets-store:/assets
+    environment:
+      - NGINX_URL=http://web-prod
+      - GRACE_HOURS=24
+
+  # Development build
+  web-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "5173:5173"
+    container_name: shadcn-admin-dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+
+volumes:
+  assets-store:
+
+networks:
+  default:
+    name: shadcn-admin-network

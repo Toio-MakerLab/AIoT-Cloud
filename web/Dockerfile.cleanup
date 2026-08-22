@@ -1,0 +1,6 @@
+FROM alpine:3.19
+RUN apk add --no-cache wget
+COPY cleanup-assets.sh /etc/periodic/daily/cleanup-assets
+RUN chmod +x /etc/periodic/daily/cleanup-assets
+# alpine crond runs /etc/periodic/daily at 02:00 every day
+CMD ["crond", "-f", "-l", "2"]

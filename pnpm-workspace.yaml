@@ -1,0 +1,8 @@
+allowBuilds:
+  '@parcel/watcher': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  bcrypt: true
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@vkhang2stack/snowflake-id@1.0.2'
