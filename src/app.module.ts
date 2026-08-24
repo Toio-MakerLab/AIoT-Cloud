@@ -151,6 +151,7 @@ function redactSensitiveFields(body: unknown): unknown {
     }),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'dist-client'), // Path to your web folder
+      exclude: ['/api/{*splat}'],
     }),
     HealthCheckerModule,
   ],

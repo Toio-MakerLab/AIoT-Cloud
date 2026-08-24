@@ -1,11 +1,15 @@
 import './boilerplate.polyfill';
 
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { ClassSerializerInterceptor, HttpStatus, UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import compression from 'compression';
+import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { initializeTransactionalContext } from 'typeorm-transactional';
@@ -104,6 +108,18 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   if (configService.documentationEnabled) {
     setupSwagger(app);
   }
+
+  // SPA fallback: client-side routed paths (no file extension, not under /api) serve
+  // the frontend's index.html so deep-links / hard refreshes work with browser-history routing.
+  app.use((request: Request, response: Response, next: NextFunction) => {
+    const indexHtml = path.join(process.cwd(), 'dist-client', 'index.html');
+
+    if (request.method === 'GET' && !request.path.startsWith('/api') && !path.extname(request.path) && fs.existsSync(indexHtml)) {
+      response.sendFile(indexHtml);
+    } else {
+      next();
+    }
+  });
 
   // Starts listening for shutdown hooks
   if (!configService.isDevelopment) {

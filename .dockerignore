@@ -1,7 +1,12 @@
 .git
 dist
+dist-client
 node_modules
+web/node_modules
+web/dist-client
 db-data
 .vuepress
 .vscode
 docs
+.env
+*.log

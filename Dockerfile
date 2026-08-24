@@ -1,34 +1,51 @@
-FROM node:lts AS dist
-COPY package.json yarn.lock ./
+# syntax=docker/dockerfile:1
 
-RUN corepack && corepack enable
+ARG NODE_VERSION=22-alpine
 
-RUN  pnpm install
+# ---- backend deps ----------------------------------------------------------
+FROM node:${NODE_VERSION} AS backend-deps
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
-COPY . ./
-
+# ---- backend build ----------------------------------------------------------
+FROM backend-deps AS backend-build
+COPY tsconfig.json tsconfig.build.json nest-cli.json ormconfig.ts .swcrc ./
+COPY src ./src
 RUN pnpm build:prod
 
-FROM node:lts AS node_modules
-COPY package.json yarn.lock ./
+# ---- frontend build ----------------------------------------------------------
+FROM node:${NODE_VERSION} AS frontend-build
+WORKDIR /app/web
+RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
+COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY web/ ./
+# Frontend and backend share an origin in the final image, so the API is reachable
+# at a relative path. Overridable at runtime via dist-client/domain.json (see docker-entrypoint.sh).
+ENV VITE_API_URL=/api
+RUN pnpm build
 
-RUN pnpm install --prod
+# ---- production deps (backend, no devDependencies) --------------------------
+FROM node:${NODE_VERSION} AS backend-prod-deps
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN npm pkg delete scripts.prepare
+RUN pnpm install --frozen-lockfile --prod
 
-FROM node:lts
-
-ARG PORT=3000
-
+# ---- runtime ------------------------------------------------------------------
+FROM node:${NODE_VERSION} AS runtime
+WORKDIR /app
 ENV NODE_ENV=production
 
-RUN mkdir -p /usr/src/app
+COPY --from=backend-prod-deps /app/node_modules ./node_modules
+COPY --from=backend-build /app/dist ./dist
+COPY --from=frontend-build /app/dist-client ./dist-client
+COPY package.json ./
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
-WORKDIR /usr/src/app
-
-COPY --from=dist dist /usr/src/app/dist
-COPY --from=node_modules node_modules /usr/src/app/node_modules
-
-COPY . /usr/src/app
-
-EXPOSE $PORT
-
-CMD [ "node", "dist/src/main.js" ]
+EXPOSE 3000
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
