@@ -1,7 +1,7 @@
 import { AbstractDto } from '../../../common/dto/abstract.dto.ts';
 import { DeviceTemplateType } from '../../../constants/device-template-type.ts';
 import { BooleanField, EnumField, StringField, StringFieldOptional } from '../../../decorators/field.decorators.ts';
-import type { DeviceTemplateEntity, TelemetryFieldDefinition } from '../device-template.entity.ts';
+import type { ActionFieldDefinition, DeviceTemplateEntity, TelemetryFieldDefinition } from '../device-template.entity.ts';
 
 export class DeviceTemplateDto extends AbstractDto {
   @StringField()
@@ -21,6 +21,8 @@ export class DeviceTemplateDto extends AbstractDto {
 
   telemetrySchema?: TelemetryFieldDefinition[] | null;
 
+  actionSchema?: ActionFieldDefinition[] | null;
+
   @BooleanField()
   isActive!: boolean;
 
@@ -32,6 +34,7 @@ export class DeviceTemplateDto extends AbstractDto {
     this.manufacturer = entity.manufacturer;
     this.icon = entity.icon;
     this.telemetrySchema = entity.telemetrySchema;
+    this.actionSchema = entity.actionSchema;
     this.isActive = entity.isActive;
   }
 }

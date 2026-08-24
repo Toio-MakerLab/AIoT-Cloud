@@ -1,6 +1,7 @@
 import { Column, Entity } from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity.ts';
+import type { DeviceActionType } from '../../constants/device-action-type.ts';
 import { DeviceTemplateType } from '../../constants/device-template-type.ts';
 import { UseDto } from '../../decorators/use-dto.decorator.ts';
 import { DeviceTemplateDto } from './dtos/device-template.dto.ts';
@@ -9,6 +10,14 @@ export interface TelemetryFieldDefinition {
   key: string;
   label: string;
   unit?: string;
+}
+
+export interface ActionFieldDefinition {
+  key: string;
+  label: string;
+  type: DeviceActionType;
+  onValue?: string;
+  offValue?: string;
 }
 
 @Entity({ name: 'device_templates' })
@@ -31,6 +40,9 @@ export class DeviceTemplateEntity extends AbstractEntity<DeviceTemplateDto> {
 
   @Column({ nullable: true, type: 'jsonb' })
   telemetrySchema!: TelemetryFieldDefinition[] | null;
+
+  @Column({ nullable: true, type: 'jsonb' })
+  actionSchema!: ActionFieldDefinition[] | null;
 
   @Column({ type: 'boolean', default: true })
   isActive!: boolean;

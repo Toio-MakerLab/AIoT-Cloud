@@ -17,6 +17,23 @@ export const telemetryFieldSchema = z.object({
 });
 export type TelemetryField = z.infer<typeof telemetryFieldSchema>;
 
+// Values match backend `DeviceActionType` enum exactly
+// (src/constants/device-action-type.ts).
+export const deviceActionTypeSchema = z.union([
+	z.literal("TOGGLE"),
+	z.literal("BUTTON"),
+]);
+export type DeviceActionType = z.infer<typeof deviceActionTypeSchema>;
+
+export const actionFieldSchema = z.object({
+	key: z.string().min(1),
+	label: z.string().min(1),
+	type: deviceActionTypeSchema,
+	onValue: z.string().nullish(),
+	offValue: z.string().nullish(),
+});
+export type ActionField = z.infer<typeof actionFieldSchema>;
+
 const deviceTemplateSchema = z.object({
 	id: z.string(),
 	name: z.string(),
@@ -24,6 +41,7 @@ const deviceTemplateSchema = z.object({
 	description: z.string().nullish(),
 	manufacturer: z.string().nullish(),
 	telemetrySchema: z.array(telemetryFieldSchema).nullish(),
+	actionSchema: z.array(actionFieldSchema).nullish(),
 	icon: z.string().nullish(),
 	isActive: z.boolean(),
 	createdAt: z.coerce.date(),

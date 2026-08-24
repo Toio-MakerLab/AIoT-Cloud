@@ -5,6 +5,7 @@ import {
 	IconSettings,
 	IconTrash,
 } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -94,9 +95,13 @@ export const columns: ColumnDef<Device>[] = [
 			<DataTableColumnHeader column={column} title="Name" />
 		),
 		cell: ({ row }) => (
-			<div className="w-fit text-nowrap font-medium">
+			<Link
+				to="/devices/$deviceId"
+				params={{ deviceId: row.original.id }}
+				className="w-fit text-nowrap font-medium hover:underline"
+			>
 				{row.getValue("name")}
-			</div>
+			</Link>
 		),
 		enableHiding: false,
 	},

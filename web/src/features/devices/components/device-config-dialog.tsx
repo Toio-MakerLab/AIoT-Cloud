@@ -35,6 +35,7 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
 		defaultValues: deviceConfigFormDefaults(
 			currentRow.config,
 			currentRow.pushChannel,
+			currentRow.isActive,
 		),
 	});
 

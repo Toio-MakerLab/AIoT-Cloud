@@ -11,6 +11,7 @@ export function mapIDeviceTemplateToDeviceTemplate(
 		description: t.description,
 		manufacturer: t.manufacturer,
 		telemetrySchema: t.telemetrySchema,
+		actionSchema: t.actionSchema,
 		icon: t.icon,
 		isActive: t.isActive,
 		createdAt: new Date(t.createdAt),

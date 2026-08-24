@@ -1,4 +1,4 @@
-import { StringField } from '../../../decorators/field.decorators.ts';
+import { BooleanFieldOptional, StringField } from '../../../decorators/field.decorators.ts';
 
 export class RegisterDeviceDto {
   @StringField()
@@ -9,4 +9,7 @@ export class RegisterDeviceDto {
 
   @StringField()
   name!: string;
+
+  @BooleanFieldOptional()
+  isActive?: boolean;
 }

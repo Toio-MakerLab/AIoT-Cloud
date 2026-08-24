@@ -3,6 +3,7 @@ import { devicesApi } from "./api";
 import type {
 	IDevicesQuery,
 	IRegisterDevice,
+	ITriggerDeviceAction,
 	IUpdateDeviceConfig,
 } from "./types";
 
@@ -61,6 +62,16 @@ export const useUpdateDeviceConfigMutation = () => {
 			devicesApi.updateDeviceConfig(id, data),
 		onSuccess: () =>
 			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
+	});
+};
+
+export const useTriggerDeviceActionMutation = (id: string) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (data: ITriggerDeviceAction) =>
+			devicesApi.triggerDeviceAction(id, data),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY, id] }),
 	});
 };
 

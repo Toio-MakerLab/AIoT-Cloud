@@ -5,3 +5,12 @@
  * is expected to carry `{ deviceId, ...telemetry }`.
  */
 export const KAFKA_TELEMETRY_TOPIC = 'devices.telemetry';
+
+/**
+ * Shared Kafka topic for backend -> gateway command delivery. Devices on the KAFKA push
+ * channel sit behind a local gateway (ESP32 -> gateway -> cloud); the gateway consumes this
+ * topic and relays matching commands to the ESP32 over its own local MQTT broker. Each
+ * message carries `{ deviceId, key, value }`, keyed/partitioned by deviceId like the
+ * telemetry topic.
+ */
+export const KAFKA_COMMAND_TOPIC = 'devices.commands';

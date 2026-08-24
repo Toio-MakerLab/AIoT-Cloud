@@ -6,6 +6,7 @@ import type {
 	IDeviceTelemetry,
 	IPageDto,
 	ISaveDashboard,
+	ITriggerDeviceAction,
 } from "./types";
 
 export const dashboardApi = {
@@ -25,8 +26,14 @@ export const dashboardApi = {
 		return res.data.data;
 	},
 
-	updateDashboard: async (id: string, data: ISaveDashboard): Promise<IDashboard> => {
-		const res = await apiClient.put<Response<IDashboard>>(`/dashboards/${id}`, data);
+	updateDashboard: async (
+		id: string,
+		data: ISaveDashboard,
+	): Promise<IDashboard> => {
+		const res = await apiClient.put<Response<IDashboard>>(
+			`/dashboards/${id}`,
+			data,
+		);
 		return res.data.data;
 	},
 
@@ -43,11 +50,24 @@ export const deviceApi = {
 		return res.data.data;
 	},
 
-	getDeviceTelemetry: async (deviceId: string, limit = 100): Promise<IDeviceTelemetry[]> => {
+	getDeviceTelemetry: async (
+		deviceId: string,
+		limit = 100,
+	): Promise<IDeviceTelemetry[]> => {
 		const res = await apiClient.get<Response<IDeviceTelemetry[]>>(
 			`/devices/${deviceId}/telemetry`,
 			{ params: { limit } },
 		);
 		return res.data.data;
+	},
+
+	triggerDeviceAction: async (
+		deviceId: string,
+		data: ITriggerDeviceAction,
+	): Promise<void> => {
+		await apiClient.post<Response<unknown>>(
+			`/devices/${deviceId}/actions`,
+			data,
+		);
 	},
 };

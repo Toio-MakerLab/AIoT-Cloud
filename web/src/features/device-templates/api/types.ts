@@ -13,6 +13,17 @@ export interface ITelemetryFieldDefinition {
 	unit?: string;
 }
 
+export const DEVICE_ACTION_TYPES = ["TOGGLE", "BUTTON"] as const;
+export type DeviceActionTypeValue = (typeof DEVICE_ACTION_TYPES)[number];
+
+export interface IDeviceActionFieldDefinition {
+	key: string;
+	label: string;
+	type: DeviceActionTypeValue;
+	onValue?: string | null;
+	offValue?: string | null;
+}
+
 export interface IDeviceTemplate {
 	id: string;
 	name: string;
@@ -20,6 +31,7 @@ export interface IDeviceTemplate {
 	description?: string | null;
 	manufacturer?: string | null;
 	telemetrySchema?: ITelemetryFieldDefinition[] | null;
+	actionSchema?: IDeviceActionFieldDefinition[] | null;
 	icon?: string | null;
 	isActive: boolean;
 	createdAt: string;
@@ -32,6 +44,7 @@ export interface ICreateDeviceTemplate {
 	description?: string;
 	manufacturer?: string;
 	telemetrySchema?: ITelemetryFieldDefinition[];
+	actionSchema?: IDeviceActionFieldDefinition[];
 	icon?: string;
 	isActive?: boolean;
 }

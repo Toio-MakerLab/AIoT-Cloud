@@ -8,6 +8,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { devicePushChannels } from "../data/data";
 import type { DeviceConfigFormValues } from "../data/device-config-form";
 
@@ -19,6 +20,20 @@ interface Props {
 export function DeviceConfigFields({ control, pushChannel }: Props) {
 	return (
 		<>
+			<FormField
+				control={control}
+				name="isActive"
+				render={({ field }) => (
+					<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+						<div className="space-y-0.5">
+							<FormLabel>Active</FormLabel>
+						</div>
+						<FormControl>
+							<Switch checked={field.value} onCheckedChange={field.onChange} />
+						</FormControl>
+					</FormItem>
+				)}
+			/>
 			<FormField
 				control={control}
 				name="apiEndpoint"

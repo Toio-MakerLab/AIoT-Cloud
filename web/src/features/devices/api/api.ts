@@ -8,6 +8,8 @@ import type {
 	IRegisterDevice,
 	IRegisterDeviceResult,
 	IResponseCore,
+	ITriggerDeviceAction,
+	ITriggerDeviceActionResult,
 	IUpdateDeviceConfig,
 } from "./types";
 
@@ -41,6 +43,13 @@ export const devicesApi = {
 	updateDeviceConfig: async (id: string, data: IUpdateDeviceConfig) => {
 		const response = await apiClient.patch<IResponseCore<IDevice>>(
 			`/devices/${id}/config`,
+			data,
+		);
+		return response.data;
+	},
+	triggerDeviceAction: async (id: string, data: ITriggerDeviceAction) => {
+		const response = await apiClient.post<IResponseCore<ITriggerDeviceActionResult>>(
+			`/devices/${id}/actions`,
 			data,
 		);
 		return response.data;

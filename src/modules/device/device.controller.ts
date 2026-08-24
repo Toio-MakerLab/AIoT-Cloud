@@ -16,6 +16,7 @@ import type { DeviceTelemetryDto } from './dtos/device-telemetry.dto.ts';
 import { DeviceTelemetryQueryDto } from './dtos/device-telemetry-query.dto.ts';
 import { DevicesPageOptionsDto } from './dtos/devices-page-options.dto.ts';
 import { RegisterDeviceDto } from './dtos/register-device.dto.ts';
+import { TriggerDeviceActionDto } from './dtos/trigger-device-action.dto.ts';
 
 @Controller('devices')
 @ApiTags('devices')
@@ -71,6 +72,17 @@ export class DeviceController {
   @HttpCode(HttpStatus.OK)
   updateDeviceConfig(@AuthUser() user: UserEntity, @Param('id') id: Uuid, @Body() dto: UpdateDeviceConfigDto): Promise<ResponseCore<DeviceDto>> {
     return this.deviceService.updateDeviceConfig(user.id as Uuid, id, dto);
+  }
+
+  @Post(':id/actions')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  triggerDeviceAction(
+    @AuthUser() user: UserEntity,
+    @Param('id') id: Uuid,
+    @Body() dto: TriggerDeviceActionDto,
+  ): Promise<ResponseCore<{ key: string; value: string; topic: string; publishedAt: Date }>> {
+    return this.deviceService.triggerDeviceAction(user.id as Uuid, id, dto);
   }
 
   @Post(':id/regenerate-secret')

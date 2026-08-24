@@ -1,5 +1,6 @@
 import { DeviceTemplateType } from '../../../constants/device-template-type.ts';
 import { BooleanFieldOptional, ClassFieldOptional, EnumField, StringField, StringFieldOptional } from '../../../decorators/field.decorators.ts';
+import { DeviceActionFieldDto } from './device-action-field.dto.ts';
 import { TelemetryFieldDto } from './telemetry-field.dto.ts';
 
 export class CreateDeviceTemplateDto {
@@ -20,6 +21,9 @@ export class CreateDeviceTemplateDto {
 
   @ClassFieldOptional(() => TelemetryFieldDto, { each: true, isArray: true })
   telemetrySchema?: TelemetryFieldDto[];
+
+  @ClassFieldOptional(() => DeviceActionFieldDto, { each: true, isArray: true })
+  actionSchema?: DeviceActionFieldDto[];
 
   @BooleanFieldOptional()
   isActive?: boolean;

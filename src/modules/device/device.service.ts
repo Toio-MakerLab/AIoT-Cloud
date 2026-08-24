@@ -1,16 +1,19 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import type { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
+import { lastValueFrom } from 'rxjs';
 import type { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
 import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
+import { DeviceActionType } from '../../constants/device-action-type.ts';
 import { DevicePushChannel } from '../../constants/device-push-channel.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
-import { KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
+import { KAFKA_COMMAND_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
 import { defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from '../../constants/mqtt-topics.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
@@ -21,6 +24,8 @@ import type { DeviceConfigDto, UpdateDeviceConfigDto } from './dtos/device-confi
 import type { DeviceTelemetryDto } from './dtos/device-telemetry.dto.ts';
 import type { DevicesPageOptionsDto } from './dtos/devices-page-options.dto.ts';
 import type { RegisterDeviceDto } from './dtos/register-device.dto.ts';
+import type { TriggerDeviceActionDto } from './dtos/trigger-device-action.dto.ts';
+import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
 
 export interface DeviceTelemetryEvent {
   deviceId: string;
@@ -46,6 +51,7 @@ export class DeviceService {
     private deviceTelemetryRepository: Repository<DeviceTelemetryEntity>,
     private eventEmitter: EventEmitter2,
     private apiConfigService: ApiConfigService,
+    @Inject(KAFKA_COMMAND_CLIENT) private kafkaCommandClient: ClientProxy,
   ) {}
 
   @Transactional()
@@ -71,6 +77,7 @@ export class DeviceService {
       userId,
       deviceSecretHash: hash,
       secretIssuedAt: new Date(),
+      isActive: dto.isActive ?? true,
     });
 
     await this.deviceRepository.save(entity);
@@ -172,11 +179,58 @@ export class DeviceService {
       device.pushChannel = dto.pushChannel;
     }
 
+    if (dto.isActive !== undefined) {
+      device.isActive = dto.isActive;
+    }
+
     device.configVersion += 1;
 
     await this.deviceRepository.save(device);
 
     return ResponseCore.ok(device.toDto());
+  }
+
+  async triggerDeviceAction(
+    userId: Uuid,
+    id: Uuid,
+    dto: TriggerDeviceActionDto,
+  ): Promise<ResponseCore<{ key: string; value: string; topic: string; publishedAt: Date }>> {
+    const device = await this.deviceRepository.findOne({ where: { id, userId }, relations: ['template'] });
+
+    if (!device) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
+    }
+
+    const actionDef = device.template?.actionSchema?.find((action) => action.key === dto.key);
+
+    if (!actionDef) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceActionNotFound');
+    }
+
+    if (actionDef.type === DeviceActionType.TOGGLE && dto.value !== actionDef.onValue && dto.value !== actionDef.offValue) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceActionInvalidValue');
+    }
+
+    if (device.pushChannel !== DevicePushChannel.MQTT && device.pushChannel !== DevicePushChannel.KAFKA) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceActionChannelUnsupported');
+    }
+
+    // The cloud backend has no route to the device-side MQTT broker (it's private to the
+    // local network/gateway), so action delivery always goes out via the shared Kafka
+    // command topic. A gateway (or broker bridge) consumes it and relays to the device over
+    // its own local MQTT.
+    const topic = KAFKA_COMMAND_TOPIC;
+    const publishedAt = new Date();
+
+    try {
+      await lastValueFrom(this.kafkaCommandClient.emit(topic, { deviceId: device.deviceId, key: dto.key, value: dto.value }));
+    } catch (error) {
+      this.logger.error(`Failed to publish action ${dto.key}=${dto.value} to ${topic}: ${error instanceof Error ? error.message : String(error)}`);
+
+      return ResponseCore.fail(ErrorCode.INTERNAL_SERVER_ERROR, 'error.deviceActionPublishFailed');
+    }
+
+    return ResponseCore.ok({ key: dto.key, value: dto.value, topic, publishedAt });
   }
 
   @Transactional()

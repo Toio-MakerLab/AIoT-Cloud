@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { dashboardApi, deviceApi } from "./api";
-import type { ISaveDashboard } from "./types";
+import type { ISaveDashboard, ITriggerDeviceAction } from "./types";
 
 export const DASHBOARDS_QUERY_KEY = "dashboards";
 export const DEVICES_QUERY_KEY = "dashboard-devices";
@@ -58,4 +58,10 @@ export const useDeviceTelemetryHistoryQuery = (deviceId: string | undefined) =>
 		queryKey: [DEVICE_TELEMETRY_QUERY_KEY, deviceId],
 		queryFn: () => deviceApi.getDeviceTelemetry(deviceId as string, 100),
 		enabled: !!deviceId,
+	});
+
+export const useTriggerDeviceActionMutation = (deviceId: string) =>
+	useMutation({
+		mutationFn: (data: ITriggerDeviceAction) =>
+			deviceApi.triggerDeviceAction(deviceId, data),
 	});

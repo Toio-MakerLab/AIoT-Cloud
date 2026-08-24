@@ -39,6 +39,7 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
+import { Route as AuthenticatedDevicesDeviceIdRouteImport } from './routes/_authenticated/devices/$deviceId'
 import { Route as AuthenticatedTasksTaskIdViewRouteImport } from './routes/_authenticated/tasks/$taskId.view'
 import { Route as AuthenticatedTasksTaskIdEditRouteImport } from './routes/_authenticated/tasks/$taskId.edit'
 
@@ -202,6 +203,12 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+const AuthenticatedDevicesDeviceIdRoute =
+  AuthenticatedDevicesDeviceIdRouteImport.update({
+    id: '/devices/$deviceId',
+    path: '/devices/$deviceId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTasksTaskIdViewRoute =
   AuthenticatedTasksTaskIdViewRouteImport.update({
     id: '/tasks/$taskId/view',
@@ -232,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/profile': typeof AuthenticatedProfileRoute
+  '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -264,6 +272,7 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/profile': typeof AuthenticatedProfileRoute
   '/': typeof AuthenticatedIndexRoute
+  '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -299,6 +308,7 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -334,6 +344,7 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/profile'
+    | '/devices/$deviceId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/503'
     | '/profile'
     | '/'
+    | '/devices/$deviceId'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -400,6 +412,7 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_authenticated/profile'
     | '/_authenticated/'
+    | '/_authenticated/devices/$deviceId'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -646,6 +659,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
+    '/_authenticated/devices/$deviceId': {
+      id: '/_authenticated/devices/$deviceId'
+      path: '/devices/$deviceId'
+      fullPath: '/devices/$deviceId'
+      preLoaderRoute: typeof AuthenticatedDevicesDeviceIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tasks/$taskId/view': {
       id: '/_authenticated/tasks/$taskId/view'
       path: '/tasks/$taskId/view'
@@ -692,6 +712,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedDevicesDeviceIdRoute: typeof AuthenticatedDevicesDeviceIdRoute
   AuthenticatedTasksCreateRoute: typeof AuthenticatedTasksCreateRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedDeviceTemplatesIndexRoute: typeof AuthenticatedDeviceTemplatesIndexRoute
@@ -707,6 +728,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedDevicesDeviceIdRoute: AuthenticatedDevicesDeviceIdRoute,
   AuthenticatedTasksCreateRoute: AuthenticatedTasksCreateRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedDeviceTemplatesIndexRoute:

@@ -9,12 +9,19 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { useDeviceTelemetryHistoryQuery } from "../api/queries";
+import {
+	useDeviceTelemetryHistoryQuery,
+	useTriggerDeviceActionMutation,
+} from "../api/queries";
 import type { IDashboardWidget, IDevice } from "../api/types";
-import type { ILatestTelemetry, ITelemetryPoint } from "../hooks/use-device-socket";
+import type {
+	ILatestTelemetry,
+	ITelemetryPoint,
+} from "../hooks/use-device-socket";
 
 interface Props {
 	widget: IDashboardWidget;
@@ -35,16 +42,28 @@ function formatValue(value: unknown): string {
 	return String(value);
 }
 
-export function DevicePanel({ widget, device, latest, history, seedHistory, onRemove }: Props) {
+export function DevicePanel({
+	widget,
+	device,
+	latest,
+	history,
+	seedHistory,
+	onRemove,
+}: Props) {
 	// Seed the rolling history buffer once fetched — combined with any live telemetry
 	// already appended by the socket hook, this gives charts both history and a live tail.
-	const { data: fetchedHistory } = useDeviceTelemetryHistoryQuery(widget.deviceId);
+	const { data: fetchedHistory } = useDeviceTelemetryHistoryQuery(
+		widget.deviceId,
+	);
 
 	useEffect(() => {
 		if (fetchedHistory && fetchedHistory.length > 0) {
 			seedHistory(
 				widget.deviceId,
-				fetchedHistory.map((t) => ({ payload: t.payload, recordedAt: t.recordedAt })),
+				fetchedHistory.map((t) => ({
+					payload: t.payload,
+					recordedAt: t.recordedAt,
+				})),
 			);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,9 +75,30 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
 	const lastUpdated = latest?.recordedAt ?? lastPoint?.recordedAt;
 	const isOnline = device?.status === "ONLINE";
 
+	const actionDef = device?.template?.actionSchema?.find(
+		(a) => a.key === field,
+	);
+	const triggerAction = useTriggerDeviceActionMutation(widget.deviceId);
+	const handleTrigger = (value: string) => {
+		if (!actionDef) return;
+		triggerAction.mutate(
+			{ key: actionDef.key, value },
+			{
+				onSuccess: () => toast.success(`${actionDef.label} -> ${value}`),
+				onError: (error) =>
+					toast.error(
+						error instanceof Error ? error.message : "Failed to send action",
+					),
+			},
+		);
+	};
+
 	const chartData = history.map((point) => ({
 		recordedAt: new Date(point.recordedAt).toLocaleTimeString(),
-		value: typeof point.payload[field] === "number" ? (point.payload[field] as number) : null,
+		value:
+			typeof point.payload[field] === "number"
+				? (point.payload[field] as number)
+				: null,
 	}));
 
 	return (
@@ -69,7 +109,9 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
 						{widget.title || device?.name || "Panel"}
 					</CardTitle>
 					<p className="text-muted-foreground truncate text-xs">
-						{device?.name ?? widget.deviceId} · {field || "no field"}
+						{device?.name ?? widget.deviceId} ·{" "}
+						{(widget.widgetType === "ACTION" ? actionDef?.label : field) ||
+							"no field"}
 					</p>
 				</div>
 				<div className="flex shrink-0 items-center gap-2">
@@ -92,9 +134,41 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
 				</div>
 			</CardHeader>
 			<CardContent className="min-h-0 flex-1 px-4">
-				{widget.widgetType === "VALUE" ? (
+				{widget.widgetType === "ACTION" ? (
+					<div className="flex h-full flex-col items-center justify-center gap-2">
+						{actionDef ? (
+							<div className="flex gap-2">
+								<Button
+									variant="default"
+									disabled={!isOnline || triggerAction.isPending}
+									onClick={() => handleTrigger(actionDef.onValue ?? "ON")}
+								>
+									On
+								</Button>
+								<Button
+									variant="outline"
+									disabled={!isOnline || triggerAction.isPending}
+									onClick={() => handleTrigger(actionDef.offValue ?? "OFF")}
+								>
+									Off
+								</Button>
+							</div>
+						) : (
+							<span className="text-muted-foreground text-xs">
+								Channel not found on device template
+							</span>
+						)}
+						{!isOnline && (
+							<span className="text-muted-foreground text-xs">
+								Device is offline
+							</span>
+						)}
+					</div>
+				) : widget.widgetType === "VALUE" ? (
 					<div className="flex h-full flex-col items-center justify-center gap-1">
-						<span className="text-3xl font-bold">{formatValue(currentValue)}</span>
+						<span className="text-3xl font-bold">
+							{formatValue(currentValue)}
+						</span>
 						<span className="text-muted-foreground text-xs">
 							{lastUpdated
 								? `Updated ${new Date(lastUpdated).toLocaleTimeString()}`
@@ -105,7 +179,11 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
 					<ResponsiveContainer width="100%" height="100%">
 						<LineChart data={chartData}>
 							<CartesianGrid strokeDasharray="3 3" />
-							<XAxis dataKey="recordedAt" tick={{ fontSize: 10 }} minTickGap={20} />
+							<XAxis
+								dataKey="recordedAt"
+								tick={{ fontSize: 10 }}
+								minTickGap={20}
+							/>
 							<YAxis tick={{ fontSize: 10 }} width={36} />
 							<Tooltip />
 							<Line

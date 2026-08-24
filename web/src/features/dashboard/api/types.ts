@@ -4,7 +4,15 @@
 
 export type DeviceStatus = "ONLINE" | "OFFLINE";
 
-export type WidgetType = "VALUE" | "CHART";
+export type WidgetType = "VALUE" | "CHART" | "ACTION";
+
+export interface IDeviceActionField {
+	key: string;
+	label: string;
+	type: "TOGGLE" | "BUTTON";
+	onValue?: string | null;
+	offValue?: string | null;
+}
 
 export interface IDeviceTemplate {
 	id: string;
@@ -13,7 +21,13 @@ export interface IDeviceTemplate {
 	description?: string | null;
 	manufacturer?: string | null;
 	icon?: string | null;
-	telemetrySchema?: Array<{ key: string; label?: string; unit?: string; [k: string]: unknown }> | null;
+	telemetrySchema?: Array<{
+		key: string;
+		label?: string;
+		unit?: string;
+		[k: string]: unknown;
+	}> | null;
+	actionSchema?: IDeviceActionField[] | null;
 	isActive: boolean;
 	createdAt: string;
 	updatedAt: string;
@@ -81,4 +95,9 @@ export interface ISaveDashboard {
 	name: string;
 	isDefault?: boolean;
 	widgets?: IDashboardWidget[];
+}
+
+export interface ITriggerDeviceAction {
+	key: string;
+	value: string;
 }

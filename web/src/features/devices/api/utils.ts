@@ -24,6 +24,7 @@ export function mapIDeviceToDevice(d: IDevice): Device {
 		status: deviceStatusSchema.parse(d.status),
 		pushChannel: d.pushChannel,
 		config: d.config,
+		isActive: d.isActive,
 		createdAt: new Date(d.createdAt),
 		updatedAt: new Date(d.updatedAt),
 	};

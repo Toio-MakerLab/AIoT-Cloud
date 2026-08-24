@@ -55,4 +55,7 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
 
   @Column({ type: 'int', default: 1 })
   configVersion!: number;
+
+  @Column({ type: 'boolean', default: true })
+  isActive!: boolean;
 }

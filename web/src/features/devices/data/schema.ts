@@ -77,6 +77,7 @@ const deviceSchema = z.object({
 	status: deviceStatusSchema,
 	pushChannel: devicePushChannelSchema,
 	config: deviceNetworkConfigSchema.nullish(),
+	isActive: z.boolean(),
 	createdAt: z.coerce.date(),
 	updatedAt: z.coerce.date(),
 });

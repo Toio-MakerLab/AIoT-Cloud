@@ -1,5 +1,6 @@
 import { DevicePushChannel } from '../../../constants/device-push-channel.ts';
 import {
+  BooleanFieldOptional,
   ClassField,
   ClassFieldOptional,
   EnumFieldOptional,
@@ -77,6 +78,9 @@ export class UpdateDeviceConfigDto {
 
   @ClassFieldOptional(() => KafkaConfigDto, { nullable: true })
   kafka?: KafkaConfigDto | null;
+
+  @BooleanFieldOptional()
+  isActive?: boolean;
 }
 
 /** Response for the ESP32 boot-config endpoint — never includes the device secret. */

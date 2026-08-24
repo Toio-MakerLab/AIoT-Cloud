@@ -3,6 +3,7 @@ import type { IUpdateDeviceConfig } from "../api/types";
 import type { DeviceNetworkConfig, DevicePushChannel } from "./schema";
 
 export const deviceConfigFormSchema = z.object({
+	isActive: z.boolean(),
 	apiEndpoint: z.string().optional(),
 	pushChannel: z.union([
 		z.literal("MQTT"),
@@ -26,8 +27,10 @@ export type DeviceConfigFormValues = z.infer<typeof deviceConfigFormSchema>;
 export function deviceConfigFormDefaults(
 	config: DeviceNetworkConfig | null | undefined,
 	pushChannel: DevicePushChannel,
+	isActive = true,
 ): DeviceConfigFormValues {
 	return {
+		isActive,
 		apiEndpoint: config?.apiEndpoint ?? "",
 		pushChannel,
 		mqttBroker: config?.mqtt?.broker ?? "",
@@ -48,6 +51,7 @@ export function deviceConfigFormToPayload(
 	values: DeviceConfigFormValues,
 ): IUpdateDeviceConfig {
 	return {
+		isActive: values.isActive,
 		apiEndpoint: values.apiEndpoint || undefined,
 		pushChannel: values.pushChannel,
 		mqtt:
