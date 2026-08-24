@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { devicesApi } from "./api";
-import type { IDevicesQuery, IRegisterDevice } from "./types";
+import type {
+	IDevicesQuery,
+	IRegisterDevice,
+	IUpdateDeviceConfig,
+} from "./types";
 
 export const DEVICES_QUERY_KEY = "devices";
 export const DEVICE_TEMPLATES_QUERY_KEY = "device-templates";
@@ -45,6 +49,25 @@ export const useDeleteDeviceMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (id: string) => devicesApi.deleteDevice(id),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
+	});
+};
+
+export const useUpdateDeviceConfigMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ id, data }: { id: string; data: IUpdateDeviceConfig }) =>
+			devicesApi.updateDeviceConfig(id, data),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
+	});
+};
+
+export const useRegenerateDeviceSecretMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (id: string) => devicesApi.regenerateDeviceSecret(id),
 		onSuccess: () =>
 			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
 	});

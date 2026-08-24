@@ -1,4 +1,8 @@
-import { deviceStatusSchema, deviceTemplateTypeSchema, type Device } from "../data/schema";
+import {
+	type Device,
+	deviceStatusSchema,
+	deviceTemplateTypeSchema,
+} from "../data/schema";
 import type { IDevice } from "./types";
 
 export function mapIDeviceToDevice(d: IDevice): Device {
@@ -18,6 +22,8 @@ export function mapIDeviceToDevice(d: IDevice): Device {
 		userId: d.userId,
 		lastSeenAt: d.lastSeenAt ? new Date(d.lastSeenAt) : null,
 		status: deviceStatusSchema.parse(d.status),
+		pushChannel: d.pushChannel,
+		config: d.config,
 		createdAt: new Date(d.createdAt),
 		updatedAt: new Date(d.updatedAt),
 	};

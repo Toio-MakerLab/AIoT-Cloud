@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import useDialogState from "@/hooks/use-dialog-state";
 import type { Device } from "../data/schema";
 
-type DevicesDialogType = "add" | "delete";
+type DevicesDialogType = "add" | "delete" | "config" | "view-config" | "secret";
 
 interface DevicesContextType {
 	open: DevicesDialogType | null;
 	setOpen: (str: DevicesDialogType | null) => void;
 	currentRow: Device | null;
 	setCurrentRow: React.Dispatch<React.SetStateAction<Device | null>>;
+	deviceSecret: string | null;
+	setDeviceSecret: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const DevicesContext = React.createContext<DevicesContextType | null>(null);
@@ -20,9 +22,19 @@ interface Props {
 export default function DevicesProvider({ children }: Props) {
 	const [open, setOpen] = useDialogState<DevicesDialogType>(null);
 	const [currentRow, setCurrentRow] = useState<Device | null>(null);
+	const [deviceSecret, setDeviceSecret] = useState<string | null>(null);
 
 	return (
-		<DevicesContext.Provider value={{ open, setOpen, currentRow, setCurrentRow }}>
+		<DevicesContext.Provider
+			value={{
+				open,
+				setOpen,
+				currentRow,
+				setCurrentRow,
+				deviceSecret,
+				setDeviceSecret,
+			}}
+		>
 			{children}
 		</DevicesContext.Provider>
 	);

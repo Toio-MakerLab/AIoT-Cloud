@@ -16,9 +16,10 @@ import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { AuthModule } from './modules/auth/auth.module.ts';
 import { DashboardModule } from './modules/dashboard/dashboard.module.ts';
-import { DeviceTemplateModule } from './modules/device-template/device-template.module.ts';
 import { DeviceModule } from './modules/device/device.module.ts';
+import { DeviceTemplateModule } from './modules/device-template/device-template.module.ts';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module.ts';
+import { KafkaModule } from './modules/kafka/kafka.module.ts';
 import { MqttModule } from './modules/mqtt/mqtt.module.ts';
 import { UserModule } from './modules/user/user.module.ts';
 import { WebsocketModule } from './modules/websocket/websocket.module.ts';
@@ -65,6 +66,7 @@ function redactSensitiveFields(body: unknown): unknown {
     DeviceModule,
     DashboardModule,
     MqttModule,
+    KafkaModule,
     WebsocketModule,
     EventEmitterModule.forRoot(),
     ClsModule.forRoot({

@@ -32,19 +32,19 @@ export default defineConfig({
     outDir: '../dist-client',
   },
   server: {
-    port: 3000,
+    port: 8080,
     host: true,
     strictPort: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        // optional: remove prefix /api when sending to backend
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:3000',
+    //     changeOrigin: true,
+    //     // optional: remove prefix /api when sending to backend
+    //     rewrite: (path) => path.replace(/^\/api/, ''),
+    //   },
+    // },
   },
 });

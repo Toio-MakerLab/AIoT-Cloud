@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, ValidationPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
@@ -8,8 +8,10 @@ import { ApiPageResponse } from '../../decorators/api-page-response.decorator.ts
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
 import { Auth } from '../../decorators/http.decorators.ts';
 import type { UserEntity } from '../user/user.entity.ts';
+import type { RegisterDeviceResult } from './device.service.ts';
 import { DeviceService } from './device.service.ts';
 import type { DeviceDto } from './dtos/device.dto.ts';
+import { UpdateDeviceConfigDto } from './dtos/device-config.dto.ts';
 import type { DeviceTelemetryDto } from './dtos/device-telemetry.dto.ts';
 import { DeviceTelemetryQueryDto } from './dtos/device-telemetry-query.dto.ts';
 import { DevicesPageOptionsDto } from './dtos/devices-page-options.dto.ts';
@@ -35,7 +37,7 @@ export class DeviceController {
   @Post('register')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.CREATED)
-  registerDevice(@AuthUser() user: UserEntity, @Body() dto: RegisterDeviceDto): Promise<ResponseCore<DeviceDto>> {
+  registerDevice(@AuthUser() user: UserEntity, @Body() dto: RegisterDeviceDto): Promise<ResponseCore<RegisterDeviceResult>> {
     return this.deviceService.registerDevice(user.id as Uuid, dto);
   }
 
@@ -62,5 +64,19 @@ export class DeviceController {
     @Query(new ValidationPipe({ transform: true })) query: DeviceTelemetryQueryDto,
   ): Promise<ResponseCore<DeviceTelemetryDto[]>> {
     return this.deviceService.getDeviceTelemetryHistory(user.id as Uuid, id, query.limit);
+  }
+
+  @Patch(':id/config')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  updateDeviceConfig(@AuthUser() user: UserEntity, @Param('id') id: Uuid, @Body() dto: UpdateDeviceConfigDto): Promise<ResponseCore<DeviceDto>> {
+    return this.deviceService.updateDeviceConfig(user.id as Uuid, id, dto);
+  }
+
+  @Post(':id/regenerate-secret')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  regenerateDeviceSecret(@AuthUser() user: UserEntity, @Param('id') id: Uuid): Promise<ResponseCore<{ deviceSecret: string }>> {
+    return this.deviceService.regenerateDeviceSecret(user.id as Uuid, id);
   }
 }

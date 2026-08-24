@@ -1,21 +1,22 @@
 import apiClient from "@/lib/api-client";
 import type {
 	IDevice,
+	IDevicesQuery,
 	IDeviceTelemetry,
 	IDeviceTemplateSummary,
-	IDevicesQuery,
 	IPageResponse,
 	IRegisterDevice,
+	IRegisterDeviceResult,
 	IResponseCore,
+	IUpdateDeviceConfig,
 } from "./types";
 
 export const devicesApi = {
 	/** GET /api/devices — backend scopes the list to the caller's own devices. */
 	getDevices: async (query: IDevicesQuery = {}) => {
-		const response = await apiClient.get<IPageResponse<IDevice>>(
-			"/devices",
-			{ params: query },
-		);
+		const response = await apiClient.get<IPageResponse<IDevice>>("/devices", {
+			params: query,
+		});
 		return response.data;
 	},
 	getDeviceById: async (id: string) => {
@@ -25,7 +26,7 @@ export const devicesApi = {
 		return response.data;
 	},
 	registerDevice: async (data: IRegisterDevice) => {
-		const response = await apiClient.post<IResponseCore<IDevice>>(
+		const response = await apiClient.post<IResponseCore<IRegisterDeviceResult>>(
 			"/devices/register",
 			data,
 		);
@@ -35,6 +36,19 @@ export const devicesApi = {
 		const response = await apiClient.delete<IResponseCore<null>>(
 			`/devices/${id}`,
 		);
+		return response.data;
+	},
+	updateDeviceConfig: async (id: string, data: IUpdateDeviceConfig) => {
+		const response = await apiClient.patch<IResponseCore<IDevice>>(
+			`/devices/${id}/config`,
+			data,
+		);
+		return response.data;
+	},
+	regenerateDeviceSecret: async (id: string) => {
+		const response = await apiClient.post<
+			IResponseCore<{ deviceSecret: string }>
+		>(`/devices/${id}/regenerate-secret`);
 		return response.data;
 	},
 	/** Wired up for reuse by the dashboard feature; not consumed on the list page. */

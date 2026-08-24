@@ -39,7 +39,10 @@ export function DevicesDeleteDialog({ open, onOpenChange, currentRow }: Props) {
 			disabled={value.trim() !== currentRow.name || deleteDevice.isPending}
 			title={
 				<span className="text-destructive">
-					<IconAlertTriangle className="stroke-destructive mr-1 inline-block" size={18} />{" "}
+					<IconAlertTriangle
+						className="stroke-destructive mr-1 inline-block"
+						size={18}
+					/>{" "}
 					Delete Device
 				</span>
 			}

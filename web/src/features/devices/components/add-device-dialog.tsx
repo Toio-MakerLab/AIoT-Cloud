@@ -13,8 +13,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useDeviceTemplatesQuery, useRegisterDeviceMutation } from '../api/queries';
+import { useDeviceTemplatesQuery, useRegisterDeviceMutation, useUpdateDeviceConfigMutation } from '../api/queries';
+import { useDevices } from '../context/devices-context';
 import { getDeviceTemplateTypeLabel } from '../data/data';
+import { type DeviceConfigFormValues, deviceConfigFormDefaults, deviceConfigFormSchema, deviceConfigFormToPayload } from '../data/device-config-form';
+import { DeviceConfigFields } from './device-config-fields';
 
 const detailsSchema = z.object({
   templateId: z.string().min(1, { message: 'Please choose a template.' }),
@@ -22,7 +25,7 @@ const detailsSchema = z.object({
 });
 type DetailsForm = z.infer<typeof detailsSchema>;
 
-type Step = 'details' | 'scan';
+type Step = 'details' | 'scan' | 'config';
 
 interface Props {
   open: boolean;
@@ -35,23 +38,42 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
   const [manualDeviceId, setManualDeviceId] = useState('');
   const [scanError, setScanError] = useState<string | null>(null);
   const [useCamera, setUseCamera] = useState(true);
+  const [registeredDeviceId, setRegisteredDeviceId] = useState<string | null>(null);
+  const [pendingSecret, setPendingSecret] = useState<string | null>(null);
 
   const { data: templatesPage, isLoading: templatesLoading } = useDeviceTemplatesQuery();
   const templates = templatesPage?.data ?? [];
   const registerDevice = useRegisterDeviceMutation();
+  const updateDeviceConfig = useUpdateDeviceConfigMutation();
+  const { setOpen: setDevicesOpen, setDeviceSecret } = useDevices();
 
   const form = useForm<DetailsForm>({
     resolver: zodResolver(detailsSchema),
     defaultValues: { templateId: '', name: '' },
   });
 
+  const configForm = useForm<DeviceConfigFormValues>({
+    resolver: zodResolver(deviceConfigFormSchema),
+    defaultValues: deviceConfigFormDefaults(null, 'MQTT'),
+  });
+  const configPushChannel = configForm.watch('pushChannel');
+
   const resetAll = () => {
     form.reset({ templateId: '', name: '' });
+    configForm.reset(deviceConfigFormDefaults(null, 'MQTT'));
     setStep('details');
     setDetails(null);
     setManualDeviceId('');
     setScanError(null);
     setUseCamera(true);
+    setRegisteredDeviceId(null);
+    setPendingSecret(null);
+  };
+
+  const finishAndShowSecret = (secret: string) => {
+    handleOpenChange(false);
+    setDeviceSecret(secret);
+    setDevicesOpen('secret');
   };
 
   const handleOpenChange = (state: boolean) => {
@@ -70,16 +92,41 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
     if (!trimmed) return;
 
     try {
-      await registerDevice.mutateAsync({
+      const result = await registerDevice.mutateAsync({
         deviceId: trimmed,
         templateId: details.templateId,
         name: details.name,
       });
       toast.success('Device added');
-      handleOpenChange(false);
+      if (result.data) {
+        setRegisteredDeviceId(result.data.device.id);
+        setPendingSecret(result.data.deviceSecret);
+        setStep('config');
+      } else {
+        handleOpenChange(false);
+      }
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
     }
+  };
+
+  const handleSkipConfig = () => {
+    if (pendingSecret) finishAndShowSecret(pendingSecret);
+  };
+
+  const handleSaveConfig = async (values: DeviceConfigFormValues) => {
+    if (!registeredDeviceId || !pendingSecret) return;
+
+    try {
+      await updateDeviceConfig.mutateAsync({
+        id: registeredDeviceId,
+        data: deviceConfigFormToPayload(values),
+      });
+      toast.success('Device config saved');
+    } catch {
+      // Error toast is already shown by the global mutation error handler (see main.tsx).
+    }
+    finishAndShowSecret(pendingSecret);
   };
 
   return (
@@ -138,7 +185,7 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
               </Button>
             </DialogFooter>
           </>
-        ) : (
+        ) : step === 'scan' ? (
           <>
             <DialogHeader>
               <DialogTitle>Scan Device QR Code</DialogTitle>
@@ -198,6 +245,26 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setStep('details')} disabled={registerDevice.isPending}>
                 Back
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Configure Device (optional)</DialogTitle>
+              <DialogDescription>Set the network parameters this device will fetch at boot, or skip and configure later.</DialogDescription>
+            </DialogHeader>
+            <Form {...configForm}>
+              <form id="device-add-config-form" onSubmit={configForm.handleSubmit(handleSaveConfig)} className="space-y-4 p-0.5">
+                <DeviceConfigFields control={configForm.control} pushChannel={configPushChannel} />
+              </form>
+            </Form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleSkipConfig} disabled={updateDeviceConfig.isPending}>
+                Skip
+              </Button>
+              <Button type="submit" form="device-add-config-form" disabled={updateDeviceConfig.isPending}>
+                Save &amp; Finish
               </Button>
             </DialogFooter>
           </>

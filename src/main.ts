@@ -80,7 +80,24 @@ export async function bootstrap(): Promise<NestExpressApplication> {
     });
   }
 
-  if (configService.natsEnabled || configService.mqttEnabled) {
+  // only start kafka if it is enabled
+  if (configService.kafkaEnabled) {
+    const kafkaConfig = configService.kafkaConfig;
+    app.connectMicroservice({
+      transport: Transport.KAFKA,
+      options: {
+        client: {
+          clientId: kafkaConfig.clientId,
+          brokers: kafkaConfig.brokers.split(','),
+        },
+        consumer: {
+          groupId: kafkaConfig.groupId,
+        },
+      },
+    });
+  }
+
+  if (configService.natsEnabled || configService.mqttEnabled || configService.kafkaEnabled) {
     await app.startAllMicroservices();
   }
 

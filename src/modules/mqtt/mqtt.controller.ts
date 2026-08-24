@@ -2,6 +2,7 @@ import { Controller, Logger } from '@nestjs/common';
 import type { MqttContext } from '@nestjs/microservices';
 import { Ctx, EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 
+import { COMMAND_TOPIC_REGEX, STATUS_TOPIC_REGEX, TELEMETRY_TOPIC_REGEX } from '../../constants/mqtt-topics.ts';
 import { DeviceService } from '../device/device.service.ts';
 
 @Controller()
@@ -20,13 +21,26 @@ export class MqttController {
   @EventPattern('#')
   handleAny(@Payload() data: unknown, @Ctx() context: MqttContext): void {
     const topic = context.getTopic();
-    const telemetryMatch = /^devices\/([^/]+)\/telemetry$/.exec(topic);
 
-    const deviceId = telemetryMatch?.[1];
+    const telemetryDeviceId = TELEMETRY_TOPIC_REGEX.exec(topic)?.[1];
 
-    if (deviceId) {
-      void this.handleDeviceTelemetry(deviceId, data);
+    if (telemetryDeviceId) {
+      void this.handleDeviceTelemetry(telemetryDeviceId, data);
 
+      return;
+    }
+
+    const statusDeviceId = STATUS_TOPIC_REGEX.exec(topic)?.[1];
+
+    if (statusDeviceId) {
+      this.logger.log(`Status from device ${statusDeviceId}: ${JSON.stringify(data)}`);
+
+      return;
+    }
+
+    // Command topic is backend -> device (downlink); the broker echoes our own
+    // publishes back through this wildcard subscription, so ignore rather than re-process.
+    if (COMMAND_TOPIC_REGEX.test(topic)) {
       return;
     }
 

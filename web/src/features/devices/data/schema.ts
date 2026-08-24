@@ -14,6 +14,50 @@ export const deviceTemplateTypeSchema = z.union([
 ]);
 export type DeviceTemplateType = z.infer<typeof deviceTemplateTypeSchema>;
 
+export const devicePushChannelSchema = z.union([
+	z.literal("MQTT"),
+	z.literal("HTTP"),
+	z.literal("KAFKA"),
+]);
+export type DevicePushChannel = z.infer<typeof devicePushChannelSchema>;
+
+const mqttTopicsSchema = z.object({
+	telemetry: z.string(),
+	command: z.string().nullish(),
+	status: z.string().nullish(),
+});
+export type MqttTopics = z.infer<typeof mqttTopicsSchema>;
+
+const mqttConfigSchema = z.object({
+	broker: z.string(),
+	port: z.number(),
+	username: z.string().nullish(),
+	password: z.string().nullish(),
+	topics: mqttTopicsSchema,
+});
+export type MqttConfig = z.infer<typeof mqttConfigSchema>;
+
+const httpPushConfigSchema = z.object({
+	url: z.string(),
+	headers: z.record(z.string(), z.string()).nullish(),
+});
+export type HttpPushConfig = z.infer<typeof httpPushConfigSchema>;
+
+const kafkaConfigSchema = z.object({
+	brokers: z.string(),
+	topic: z.string(),
+	clientId: z.string().nullish(),
+});
+export type KafkaConfig = z.infer<typeof kafkaConfigSchema>;
+
+const deviceNetworkConfigSchema = z.object({
+	apiEndpoint: z.string().nullish(),
+	mqtt: mqttConfigSchema.nullish(),
+	http: httpPushConfigSchema.nullish(),
+	kafka: kafkaConfigSchema.nullish(),
+});
+export type DeviceNetworkConfig = z.infer<typeof deviceNetworkConfigSchema>;
+
 const deviceTemplateSummarySchema = z.object({
 	id: z.string(),
 	name: z.string(),
@@ -31,6 +75,8 @@ const deviceSchema = z.object({
 	userId: z.string(),
 	lastSeenAt: z.coerce.date().nullish(),
 	status: deviceStatusSchema,
+	pushChannel: devicePushChannelSchema,
+	config: deviceNetworkConfigSchema.nullish(),
 	createdAt: z.coerce.date(),
 	updatedAt: z.coerce.date(),
 });

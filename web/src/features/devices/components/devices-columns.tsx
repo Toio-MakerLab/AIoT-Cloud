@@ -1,6 +1,12 @@
+import {
+	IconDotsVertical,
+	IconEye,
+	IconKey,
+	IconSettings,
+	IconTrash,
+} from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
-import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,23 +16,62 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useRegenerateDeviceSecretMutation } from "../api/queries";
+import { useDevices } from "../context/devices-context";
 import { deviceStatusColors, getDeviceTemplateTypeLabel } from "../data/data";
 import type { Device } from "../data/schema";
-import { useDevices } from "../context/devices-context";
 import { DataTableColumnHeader } from "./data-table-column-header";
 
 function DeviceRowActions({ row }: { row: { original: Device } }) {
-	const { setOpen, setCurrentRow } = useDevices();
+	const { setOpen, setCurrentRow, setDeviceSecret } = useDevices();
+	const regenerateSecret = useRegenerateDeviceSecretMutation();
+
+	const handleRegenerateSecret = async () => {
+		try {
+			const result = await regenerateSecret.mutateAsync(row.original.id);
+			if (result.data) {
+				setDeviceSecret(result.data.deviceSecret);
+				setOpen("secret");
+			}
+		} catch {
+			// Error toast is already shown by the global mutation error handler (see main.tsx).
+		}
+	};
 
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" className="data-[state=open]:bg-muted h-8 w-8 p-0">
+				<Button
+					variant="ghost"
+					className="data-[state=open]:bg-muted h-8 w-8 p-0"
+				>
 					<IconDotsVertical className="h-4 w-4" />
 					<span className="sr-only">Open menu</span>
 				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-[140px]">
+			<DropdownMenuContent align="end" className="w-[170px]">
+				<DropdownMenuItem
+					onClick={() => {
+						setCurrentRow(row.original);
+						setOpen("view-config");
+					}}
+				>
+					View Config
+					<IconEye className="ml-auto h-4 w-4" />
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					onClick={() => {
+						setCurrentRow(row.original);
+						setOpen("config");
+					}}
+				>
+					Edit Config
+					<IconSettings className="ml-auto h-4 w-4" />
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={() => void handleRegenerateSecret()}>
+					Regenerate Secret
+					<IconKey className="ml-auto h-4 w-4" />
+				</DropdownMenuItem>
 				<DropdownMenuItem
 					className="text-destructive focus:text-destructive"
 					onClick={() => {
@@ -49,7 +94,9 @@ export const columns: ColumnDef<Device>[] = [
 			<DataTableColumnHeader column={column} title="Name" />
 		),
 		cell: ({ row }) => (
-			<div className="w-fit text-nowrap font-medium">{row.getValue("name")}</div>
+			<div className="w-fit text-nowrap font-medium">
+				{row.getValue("name")}
+			</div>
 		),
 		enableHiding: false,
 	},

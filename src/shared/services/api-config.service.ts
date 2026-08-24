@@ -7,6 +7,7 @@ import type { Level } from 'pino';
 import { InitSchema1787210034577 } from '../../database/migrations/1787210034577-InitSchema.ts';
 import { AddIotDeviceManagement1787378213385 } from '../../database/migrations/1787378213385-AddIotDeviceManagement.ts';
 import { AddEmailVerification1787381039053 } from '../../database/migrations/1787381039053-AddEmailVerification.ts';
+import { AddDeviceProvisioningConfig1787400000000 } from '../../database/migrations/1787400000000-AddDeviceProvisioningConfig.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -88,7 +89,12 @@ export class ApiConfigService {
   get postgresConfig(): TypeOrmModuleOptions {
     return {
       entities: [UserEntity, UserSettingsEntity, DeviceTemplateEntity, DeviceEntity, DeviceTelemetryEntity, DashboardEntity],
-      migrations: [InitSchema1787210034577, AddIotDeviceManagement1787378213385, AddEmailVerification1787381039053],
+      migrations: [
+        InitSchema1787210034577,
+        AddIotDeviceManagement1787378213385,
+        AddEmailVerification1787381039053,
+        AddDeviceProvisioningConfig1787400000000,
+      ],
       dropSchema: this.isTest,
       type: 'postgres',
       host: this.getString('DB_HOST'),
@@ -135,6 +141,18 @@ export class ApiConfigService {
       url: this.getString('MQTT_URL'),
       username: this.configService.get<string>('MQTT_USERNAME'),
       password: this.configService.get<string>('MQTT_PASSWORD'),
+    };
+  }
+
+  get kafkaEnabled(): boolean {
+    return this.getBoolean('KAFKA_ENABLED');
+  }
+
+  get kafkaConfig() {
+    return {
+      brokers: this.getString('KAFKA_BROKERS'),
+      clientId: this.configService.get<string>('KAFKA_CLIENT_ID') ?? 'aiot-lab-service',
+      groupId: this.configService.get<string>('KAFKA_GROUP_ID') ?? 'aiot-lab-service-consumer',
     };
   }
 

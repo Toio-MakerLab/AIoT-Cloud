@@ -71,7 +71,10 @@ export function DevicesTable({ columns, data }: DataTableProps) {
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id} className={header.column.columnDef.meta?.className}>
+									<TableHead
+										key={header.id}
+										className={header.column.columnDef.meta?.className}
+									>
 										{header.isPlaceholder
 											? null
 											: flexRender(
@@ -86,17 +89,29 @@ export function DevicesTable({ columns, data }: DataTableProps) {
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+								<TableRow
+									key={row.id}
+									data-state={row.getIsSelected() && "selected"}
+								>
 									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
+										<TableCell
+											key={cell.id}
+											className={cell.column.columnDef.meta?.className}
+										>
+											{flexRender(
+												cell.column.columnDef.cell,
+												cell.getContext(),
+											)}
 										</TableCell>
 									))}
 								</TableRow>
 							))
 						) : (
 							<TableRow>
-								<TableCell colSpan={columns.length} className="h-24 text-center">
+								<TableCell
+									colSpan={columns.length}
+									className="h-24 text-center"
+								>
 									No devices yet.
 								</TableCell>
 							</TableRow>
