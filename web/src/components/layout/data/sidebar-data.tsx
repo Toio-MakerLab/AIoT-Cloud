@@ -1,265 +1,267 @@
 import {
-	IconBrowserCheck,
-	IconCpu,
-	IconHelp,
-	IconLayoutDashboard,
-	IconNotification,
-	IconPalette,
-	IconRouter,
-	IconSettings,
-	IconShieldLock,
-	IconTool,
-	IconUserCog,
-} from "@tabler/icons-react";
-import { Command } from "lucide-react";
-import type { SidebarData } from "../types";
+  IconBrowserCheck,
+  IconCpu,
+  IconHelp,
+  IconLayoutDashboard,
+  IconNotification,
+  IconPalette,
+  IconRouter,
+  IconSettings,
+  IconShieldLock,
+  IconTool,
+  IconUserCog,
+} from '@tabler/icons-react';
+import { Command, GalleryVerticalEnd } from 'lucide-react';
+import type { SidebarData } from '../types';
 
 export const sidebarData: SidebarData = {
-	user: {
-		name: "vkhangstack",
-		email: "vkhangstack@gmail.com",
-		avatar: "/avatars/shadcn.jpg",
-	},
-	teams: [
-		{
-			name: "CMS for vkhangstack",
-			logo: Command,
-			plan: "Blog vkhangstack",
-		},
-		// {
-		//   name: 'Acme Inc',
-		//   logo: GalleryVerticalEnd,
-		//   plan: 'Enterprise',
-		// },
-		// {
-		//   name: 'Acme Corp.',
-		//   logo: AudioWaveform,
-		//   plan: 'Startup',
-		// },
-	],
-	navGroups: [
-		// {
-		//   title: 'General',
-		//   items: [
-		//     {
-		//       title: 'Dashboard',
-		//       url: '/',
-		//       icon: IconLayoutDashboard,
-		//     },
-		//     {
-		//       title: "Blog's",
-		//       icon: IconBrandBlogger,
-		//       items: [
-		//         {
-		//           title: 'Posts',
-		//           url: '/posts',
-		//           icon: IconFileText,
-		//         },
-		//         {
-		//           title: 'Categories',
-		//           url: '/categories',
-		//           icon: IconFolder,
-		//         },
-		//         {
-		//           title: 'Tags',
-		//           url: '/posts/tags',
-		//           icon: IconTag,
-		//         },
-		//       ],
-		//     },
-		//     {
-		//       title: 'Tasks',
-		//       url: '/tasks',
-		//       icon: IconChecklist,
-		//     },
-		//     {
-		//       title: 'Notes',
-		//       url: '/notes',
-		//       icon: IconNotebook,
-		//     },
-		//     {
-		//       title: 'Timetable',
-		//       url: '/timetables',
-		//       icon: IconCalendarWeek,
-		//     },
-		//     {
-		//       title: 'Drawings',
-		//       url: '/drawings',
-		//       icon: IconPencil,
-		//     },
-		//     {
-		//       title: 'Warehouse 3D',
-		//       url: '/warehouse',
-		//       icon: IconBuildingWarehouse,
-		//     },
-		//     {
-		//       title: 'Apps',
-		//       url: '/apps',
-		//       icon: IconPackages,
-		//     },
-		//     {
-		//       title: 'Chats',
-		//       url: '/chats',
-		//       badge: '3',
-		//       icon: IconMessages,
-		//     },
-		//     {
-		//       title: 'Users',
-		//       url: '/users',
-		//       icon: IconUsers,
-		//     },
-		//     // {
-		//     //   title: 'Secured by Clerk',
-		//     //   icon: ClerkLogo,
-		//     //   items: [
-		//     //     {
-		//     //       title: 'Sign In',
-		//     //       url: '/clerk/sign-in',
-		//     //     },
-		//     //     {
-		//     //       title: 'Sign Up',
-		//     //       url: '/clerk/sign-up',
-		//     //     },
-		//     //     {
-		//     //       title: 'User Management',
-		//     //       url: '/clerk/user-management',
-		//     //     },
-		//     //   ],
-		//     // },
-		//   ],
-		// },
-		// {
-		//   title: 'Pages',
-		//   items: [
-		//     {
-		//       title: 'Auth',
-		//       icon: IconLockAccess,
-		//       items: [
-		//         {
-		//           title: 'Sign In',
-		//           url: '/sign-in',
-		//         },
-		//         {
-		//           title: 'Sign In (2 Col)',
-		//           url: '/sign-in-2',
-		//         },
-		//         {
-		//           title: 'Sign Up',
-		//           url: '/sign-up',
-		//         },
-		//         {
-		//           title: 'Forgot Password',
-		//           url: '/forgot-password',
-		//         },
-		//         {
-		//           title: 'OTP',
-		//           url: '/otp',
-		//         },
-		//       ],
-		//     },
-		//     {
-		//       title: 'Errors',
-		//       icon: IconBug,
-		//       items: [
-		//         {
-		//           title: 'Unauthorized',
-		//           url: '/401',
-		//           icon: IconLock,
-		//         },
-		//         {
-		//           title: 'Forbidden',
-		//           url: '/403',
-		//           icon: IconUserOff,
-		//         },
-		//         {
-		//           title: 'Not Found',
-		//           url: '/404',
-		//           icon: IconError404,
-		//         },
-		//         {
-		//           title: 'Internal Server Error',
-		//           url: '/500',
-		//           icon: IconServerOff,
-		//         },
-		//         {
-		//           title: 'Maintenance Error',
-		//           url: '/503',
-		//           icon: IconBarrierBlock,
-		//         },
-		//       ],
-		//     },
-		//   ],
-		// },
-		{
-			title: "IoT",
-			items: [
-				{
-					title: "Dashboard",
-					url: "/",
-					icon: IconLayoutDashboard,
-				},
-				{
-					title: "Devices",
-					url: "/devices",
-					icon: IconCpu,
-				},
-				{
-					title: "Device Templates",
-					url: "/device-templates",
-					icon: IconRouter,
-				},
-			],
-		},
-		{
-			title: "Other",
-			items: [
-				{
-					title: "My Account",
-					url: "/profile",
-					icon: IconUserCog,
-				},
-				{
-					title: "Settings",
-					icon: IconSettings,
-					items: [
-						{
-							title: "Profile",
-							url: "/settings",
-							icon: IconUserCog,
-						},
-						{
-							title: "Account",
-							url: "/settings/account",
-							icon: IconTool,
-						},
-						{
-							title: "Appearance",
-							url: "/settings/appearance",
-							icon: IconPalette,
-						},
-						{
-							title: "Notifications",
-							url: "/settings/notifications",
-							icon: IconNotification,
-						},
-						{
-							title: "Display",
-							url: "/settings/display",
-							icon: IconBrowserCheck,
-						},
-						{
-							title: "Roles & Permissions",
-							url: "/settings/roles",
-							icon: IconShieldLock,
-						},
-					],
-				},
-				{
-					title: "Help Center",
-					url: "/help-center",
-					icon: IconHelp,
-				},
-			],
-		},
-	],
+  user: {
+    name: 'vkhangstack',
+    email: 'vkhangstack@gmail.com',
+    avatar: '/avatars/shadcn.jpg',
+  },
+  teams: [
+    {
+      name: 'Toio Marker Lab',
+      logo: Command,
+      plan: 'AIoT Platform',
+      disabled: false,
+    },
+    {
+      name: 'Acme Inc',
+      logo: GalleryVerticalEnd,
+      plan: 'Enterprise',
+      disabled: true,
+    },
+    // {
+    //   name: 'Acme Corp.',
+    //   logo: AudioWaveform,
+    //   plan: 'Startup',
+    // },
+  ],
+  navGroups: [
+    // {
+    //   title: 'General',
+    //   items: [
+    //     {
+    //       title: 'Dashboard',
+    //       url: '/',
+    //       icon: IconLayoutDashboard,
+    //     },
+    //     {
+    //       title: "Blog's",
+    //       icon: IconBrandBlogger,
+    //       items: [
+    //         {
+    //           title: 'Posts',
+    //           url: '/posts',
+    //           icon: IconFileText,
+    //         },
+    //         {
+    //           title: 'Categories',
+    //           url: '/categories',
+    //           icon: IconFolder,
+    //         },
+    //         {
+    //           title: 'Tags',
+    //           url: '/posts/tags',
+    //           icon: IconTag,
+    //         },
+    //       ],
+    //     },
+    //     {
+    //       title: 'Tasks',
+    //       url: '/tasks',
+    //       icon: IconChecklist,
+    //     },
+    //     {
+    //       title: 'Notes',
+    //       url: '/notes',
+    //       icon: IconNotebook,
+    //     },
+    //     {
+    //       title: 'Timetable',
+    //       url: '/timetables',
+    //       icon: IconCalendarWeek,
+    //     },
+    //     {
+    //       title: 'Drawings',
+    //       url: '/drawings',
+    //       icon: IconPencil,
+    //     },
+    //     {
+    //       title: 'Warehouse 3D',
+    //       url: '/warehouse',
+    //       icon: IconBuildingWarehouse,
+    //     },
+    //     {
+    //       title: 'Apps',
+    //       url: '/apps',
+    //       icon: IconPackages,
+    //     },
+    //     {
+    //       title: 'Chats',
+    //       url: '/chats',
+    //       badge: '3',
+    //       icon: IconMessages,
+    //     },
+    //     {
+    //       title: 'Users',
+    //       url: '/users',
+    //       icon: IconUsers,
+    //     },
+    //     // {
+    //     //   title: 'Secured by Clerk',
+    //     //   icon: ClerkLogo,
+    //     //   items: [
+    //     //     {
+    //     //       title: 'Sign In',
+    //     //       url: '/clerk/sign-in',
+    //     //     },
+    //     //     {
+    //     //       title: 'Sign Up',
+    //     //       url: '/clerk/sign-up',
+    //     //     },
+    //     //     {
+    //     //       title: 'User Management',
+    //     //       url: '/clerk/user-management',
+    //     //     },
+    //     //   ],
+    //     // },
+    //   ],
+    // },
+    // {
+    //   title: 'Pages',
+    //   items: [
+    //     {
+    //       title: 'Auth',
+    //       icon: IconLockAccess,
+    //       items: [
+    //         {
+    //           title: 'Sign In',
+    //           url: '/sign-in',
+    //         },
+    //         {
+    //           title: 'Sign In (2 Col)',
+    //           url: '/sign-in-2',
+    //         },
+    //         {
+    //           title: 'Sign Up',
+    //           url: '/sign-up',
+    //         },
+    //         {
+    //           title: 'Forgot Password',
+    //           url: '/forgot-password',
+    //         },
+    //         {
+    //           title: 'OTP',
+    //           url: '/otp',
+    //         },
+    //       ],
+    //     },
+    //     {
+    //       title: 'Errors',
+    //       icon: IconBug,
+    //       items: [
+    //         {
+    //           title: 'Unauthorized',
+    //           url: '/401',
+    //           icon: IconLock,
+    //         },
+    //         {
+    //           title: 'Forbidden',
+    //           url: '/403',
+    //           icon: IconUserOff,
+    //         },
+    //         {
+    //           title: 'Not Found',
+    //           url: '/404',
+    //           icon: IconError404,
+    //         },
+    //         {
+    //           title: 'Internal Server Error',
+    //           url: '/500',
+    //           icon: IconServerOff,
+    //         },
+    //         {
+    //           title: 'Maintenance Error',
+    //           url: '/503',
+    //           icon: IconBarrierBlock,
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // },
+    {
+      title: 'IoT',
+      items: [
+        {
+          title: 'Dashboard',
+          url: '/',
+          icon: IconLayoutDashboard,
+        },
+        {
+          title: 'Devices',
+          url: '/devices',
+          icon: IconCpu,
+        },
+        {
+          title: 'Device Templates',
+          url: '/device-templates',
+          icon: IconRouter,
+        },
+      ],
+    },
+    {
+      title: 'Other',
+      items: [
+        {
+          title: 'My Account',
+          url: '/profile',
+          icon: IconUserCog,
+        },
+        {
+          title: 'Settings',
+          icon: IconSettings,
+          items: [
+            {
+              title: 'Profile',
+              url: '/settings',
+              icon: IconUserCog,
+            },
+            {
+              title: 'Account',
+              url: '/settings/account',
+              icon: IconTool,
+            },
+            {
+              title: 'Appearance',
+              url: '/settings/appearance',
+              icon: IconPalette,
+            },
+            {
+              title: 'Notifications',
+              url: '/settings/notifications',
+              icon: IconNotification,
+            },
+            {
+              title: 'Display',
+              url: '/settings/display',
+              icon: IconBrowserCheck,
+            },
+            {
+              title: 'Roles & Permissions',
+              url: '/settings/roles',
+              icon: IconShieldLock,
+            },
+          ],
+        },
+        {
+          title: 'Help Center',
+          url: '/help-center',
+          icon: IconHelp,
+        },
+      ],
+    },
+  ],
 };
