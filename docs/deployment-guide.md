@@ -30,9 +30,12 @@ Builds and pushes `docker.io/vkhangstack/aiot-lab-service` for `linux/amd64`
 and `linux/arm64`, tagged with the `package.json` version and `latest`.
 Uses a dedicated `docker buildx` builder (created automatically on first run)
 since multi-platform images require `buildx build --push` rather than a plain
-`docker build` + `docker push`. Reuses an existing `docker login` session;
-for non-interactive/CI use, export `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`
-(a Docker Hub access token) first.
+`docker build` + `docker push`. Platforms are built one at a time and merged
+into a single manifest afterward — building both concurrently runs the
+non-native platform under QEMU emulation, and Vite/esbuild's memory use there
+is high enough to exhaust the builder ("cannot allocate memory"). Reuses an
+existing `docker login` session; for non-interactive/CI use, export
+`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (a Docker Hub access token) first.
 
 ### Run
 
