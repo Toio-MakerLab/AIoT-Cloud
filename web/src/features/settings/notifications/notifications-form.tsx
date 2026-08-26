@@ -1,60 +1,24 @@
-// biome-ignore assist/source/organizeImports: <explanation>
-import { type FormEvent, useEffect, useRef, useState } from "react";
-import {
-	Check,
-	Copy,
-	ExternalLink,
-	Loader2,
-	RefreshCw,
-	Unlink,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Copy, ExternalLink, Loader2, RefreshCw } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { getResponseMessage } from "@/lib/response-codes";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { getChannelDeepLinkRedirectUrl } from "./api/notifications-settings-api";
+import { Textarea } from "@/components/ui/textarea";
 import {
-	useChannelDeepLinkQuery,
-	useNotificationSettingQuery,
-	useRequestChannelVerificationMutation,
-	useUnlinkChannelMutation,
-	useUpdateNotificationSettingMutation,
+	useNotificationConfigsQuery,
+	useUpsertNotificationConfigMutation,
+	useZaloLinkCodeMutation,
 } from "./api/queries";
-import {
-	NOTIFICATION_CHANNELS,
-	VERIFIABLE_NOTIFICATION_CHANNELS,
-	type INotificationChannel,
-	type NotificationChannelType,
-} from "./api/types";
-
-function buildChannelState(
-	existing: INotificationChannel[] | undefined,
-): Record<NotificationChannelType, INotificationChannel> {
-	const state = {} as Record<NotificationChannelType, INotificationChannel>;
-	for (const { value } of NOTIFICATION_CHANNELS) {
-		const found = existing?.find((c) => c.channel === value);
-		state[value] = found ?? { channel: value, enabled: false, token: "" };
-	}
-	return state;
-}
+import { NOTIFICATION_CHANNELS, type INotificationConfig } from "./api/types";
 
 const POLL_INTERVAL_MS = 4000;
-const MAX_POLL_ATTEMPTS = 10;
+const MAX_POLL_ATTEMPTS = 15;
 
 function useCopyToClipboard() {
 	const [copied, setCopied] = useState(false);
@@ -68,243 +32,209 @@ function useCopyToClipboard() {
 	return { copied, copy };
 }
 
-function UnlinkChannelButton({
-	channel,
-}: {
-	channel: NotificationChannelType;
-}) {
-	const [open, setOpen] = useState(false);
-	const unlinkChannel = useUnlinkChannelMutation();
+/**
+ * Zalo Bot API has no OAuth/deep-link start-payload, so linking is a pairing code the user
+ * pastes as a plain message to the bot. Once the webhook records the chat id, `isLinked` flips
+ * to true on the config — this panel polls for that instead of requiring a manual refresh.
+ */
+/** Rendered only while a channel isn't linked yet — full-width block below the channel header. */
+function ZaloLinkPanel() {
+	const requestLinkCode = useZaloLinkCodeMutation();
+	const { copied, copy } = useCopyToClipboard();
+	const [pollAttempts, setPollAttempts] = useState(0);
 
-	const handleUnlink = async () => {
+	const link = requestLinkCode.data?.data;
+	const pollExhausted = pollAttempts >= MAX_POLL_ATTEMPTS;
+
+	const configsQuery = useNotificationConfigsQuery({
+		refetchInterval: link && !pollExhausted ? POLL_INTERVAL_MS : false,
+	});
+
+	useEffect(() => {
+		if (!link || pollExhausted) {
+			return;
+		}
+
+		const timer = setTimeout(() => setPollAttempts((n) => n + 1), POLL_INTERVAL_MS);
+
+		return () => clearTimeout(timer);
+	}, [link, pollExhausted, pollAttempts]);
+
+	const handleRequest = async () => {
+		setPollAttempts(0);
+
 		try {
-			await unlinkChannel.mutateAsync(channel);
-			toast.success("Channel unlinked");
-			setOpen(false);
+			await requestLinkCode.mutateAsync();
+		} catch (error) {
+			toast.error(getResponseMessage(error));
+		}
+	};
+
+	if (!link) {
+		return (
+			<Button
+				type="button"
+				size="sm"
+				onClick={handleRequest}
+				disabled={requestLinkCode.isPending}
+			>
+				{requestLinkCode.isPending && (
+					<Loader2 className="size-4 animate-spin" />
+				)}
+				Link Zalo
+			</Button>
+		);
+	}
+
+	return (
+		<div className="w-full min-w-0 space-y-3 rounded-md border p-4">
+			<p className="text-sm text-muted-foreground">
+				Open the bot below and send it this code as a message:
+			</p>
+			<div className="flex flex-col items-start gap-4 sm:flex-row">
+				{link.shareUrl && (
+					<div className="shrink-0 self-center rounded-md border p-2 sm:self-start">
+						<QRCodeSVG value={link.shareUrl} size={112} />
+					</div>
+				)}
+				<div className="w-full min-w-0 space-y-2">
+					<div className="flex w-full min-w-0 items-start gap-2">
+						<code className="min-w-0 flex-1 break-all rounded bg-muted px-3 py-2 text-sm">
+							{link.code}
+						</code>
+						<Button
+							type="button"
+							variant="outline"
+							size="icon"
+							className="shrink-0"
+							title="Copy code"
+							aria-label="Copy code"
+							onClick={() => copy(link.code)}
+						>
+							{copied ? (
+								<Check className="size-4" />
+							) : (
+								<Copy className="size-4" />
+							)}
+						</Button>
+					</div>
+					{link.shareUrl && (
+						<a
+							className="inline-flex items-center gap-1 text-sm text-primary underline"
+							href={link.shareUrl}
+							target="_blank"
+							rel="noreferrer"
+						>
+							Open Zalo bot
+							<ExternalLink className="size-3.5" />
+						</a>
+					)}
+				</div>
+			</div>
+			<div className="flex flex-wrap items-center gap-2 pt-1">
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					onClick={() => configsQuery.refetch()}
+					disabled={pollExhausted}
+				>
+					<RefreshCw className="size-4" />
+					Check status
+				</Button>
+				<span className="text-xs text-muted-foreground">
+					{pollExhausted
+						? "Stopped checking automatically — refresh to try again."
+						: `Checking automatically... (${pollAttempts}/${MAX_POLL_ATTEMPTS})`}
+				</span>
+			</div>
+		</div>
+	);
+}
+
+function ChannelRow({ config }: { config: INotificationConfig }) {
+	const meta = NOTIFICATION_CHANNELS.find((c) => c.value === config.channel);
+	const upsertConfig = useUpsertNotificationConfigMutation();
+	const [messageTemplate, setMessageTemplate] = useState(
+		config.messageTemplate ?? "",
+	);
+
+	const handleToggle = async (enabled: boolean) => {
+		try {
+			await upsertConfig.mutateAsync({
+				channel: config.channel,
+				data: { isEnabled: enabled },
+			});
+		} catch (error) {
+			toast.error(getResponseMessage(error));
+		}
+	};
+
+	const handleSaveTemplate = async () => {
+		try {
+			await upsertConfig.mutateAsync({
+				channel: config.channel,
+				data: { messageTemplate: messageTemplate || null },
+			});
+			toast.success("Message template saved");
 		} catch (error) {
 			toast.error(getResponseMessage(error));
 		}
 	};
 
 	return (
-		<AlertDialog open={open} onOpenChange={setOpen}>
-			<Button
-				type="button"
-				variant="ghost"
-				size="sm"
-				onClick={() => setOpen(true)}
-			>
-				<Unlink className="size-4" />
-				Unlink
-			</Button>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Unlink this channel?</AlertDialogTitle>
-					<AlertDialogDescription>
-						You'll stop receiving notifications here until you link it again.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<div className="flex gap-2">
-					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction
-						onClick={handleUnlink}
-						disabled={unlinkChannel.isPending}
-					>
-						{unlinkChannel.isPending && (
-							<Loader2 className="size-4 animate-spin" />
-						)}
-						Unlink
-					</AlertDialogAction>
-				</div>
-			</AlertDialogContent>
-		</AlertDialog>
-	);
-}
-
-function ZaloVerificationPanel({
-	channel,
-	onCheckStatus,
-}: {
-	channel: INotificationChannel;
-	/** Refetches the setting and reports whether this channel is now linked. */
-	onCheckStatus: () => Promise<boolean>;
-}) {
-	const requestVerification = useRequestChannelVerificationMutation();
-	const { copied, copy } = useCopyToClipboard();
-
-	const verification = requestVerification.data?.data;
-	const deepLinkQuery = useChannelDeepLinkQuery(
-		channel.channel,
-		!!verification && !channel.enabled,
-	);
-	const deepLink = deepLinkQuery.data?.deepLink;
-
-	const [pollAttempts, setPollAttempts] = useState(0);
-	const pollExhausted = pollAttempts >= MAX_POLL_ATTEMPTS;
-
-	// Keep the latest onCheckStatus without making it an effect dependency, so unrelated
-	// re-renders of the parent form (e.g. editing another channel's token) don't reset the
-	// interval below.
-	const onCheckStatusRef = useRef(onCheckStatus);
-	useEffect(() => {
-		onCheckStatusRef.current = onCheckStatus;
-	}, [onCheckStatus]);
-
-	const handleRequest = () => {
-		setPollAttempts(0);
-		requestVerification.mutate(
-			{ channel: channel.channel },
-			{
-				onError: (error) => {
-					toast.error(getResponseMessage(error));
-				},
-			},
-		);
-	};
-
-	// Auto-poll for the linked status once a code is issued. Stops as soon as it's linked
-	// (channel.enabled flips to true) or after MAX_POLL_ATTEMPTS unsuccessful checks — the
-	// user can still tap "Check now" or "Request new code" to keep going manually.
-	useEffect(() => {
-		if (!verification || channel.enabled || pollExhausted) return;
-		const id = setInterval(async () => {
-			const linked = await onCheckStatusRef.current();
-			if (!linked) setPollAttempts((n) => n + 1);
-		}, POLL_INTERVAL_MS);
-		return () => clearInterval(id);
-	}, [verification, channel.enabled, pollExhausted]);
-
-	if (channel.enabled) {
-		return (
-			<div className="flex items-center gap-2">
-				<Badge variant="success">Linked</Badge>
-				<UnlinkChannelButton channel={channel.channel} />
-			</div>
-		);
-	}
-
-	if (!verification) {
-		return (
-			<Button
-				type="button"
-				variant="outline"
-				size="sm"
-				onClick={handleRequest}
-				disabled={requestVerification.isPending}
-			>
-				{requestVerification.isPending && (
-					<Loader2 className="size-4 animate-spin" />
-				)}
-				Link with Zalo
-			</Button>
-		);
-	}
-
-	return (
-		<div className="w-full space-y-3 rounded-lg border p-4">
-			<p className="text-sm">{verification.message}</p>
-			<div className="flex items-center gap-2">
-				<code className="bg-muted flex-1 rounded px-3 py-2 font-mono text-sm">
-					{verification.code}
-				</code>
-				<Button
-					type="button"
-					variant="outline"
-					size="icon"
-					onClick={() => copy(verification.code)}
-				>
-					{copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-				</Button>
-			</div>
-			<p className="text-muted-foreground text-xs">
-				Expires at {new Date(verification.expiresAt).toLocaleTimeString()}
-			</p>
-			{deepLink && (
-				<div className="flex flex-col items-center gap-2 border-t pt-3 sm:flex-row sm:justify-between">
-					<div className="rounded-md border bg-white p-2">
-						<QRCodeSVG value={deepLink} size={128} />
+		<div className="space-y-4 rounded-lg border p-4">
+			<div className="flex flex-wrap items-start justify-between gap-4">
+				<div className="min-w-0 space-y-0.5">
+					<div className="flex flex-wrap items-center gap-2">
+						<Label>{meta?.label ?? config.channel}</Label>
+						<Badge variant={config.isLinked ? "success" : "outline"}>
+							{config.isLinked ? "Linked" : "Not linked"}
+						</Badge>
 					</div>
-					<div className="text-center sm:text-left">
-						<p className="text-muted-foreground text-xs">
-							Scan with your phone's Zalo app, or on mobile:
-						</p>
-						<Button type="button" variant="link" size="sm" asChild>
-							<a href={getChannelDeepLinkRedirectUrl(channel.channel)}>
-								Open Zalo
-								<ExternalLink className="size-3.5" />
-							</a>
+					<p className="text-sm text-muted-foreground">{meta?.description}</p>
+				</div>
+				<Switch
+					checked={config.isEnabled}
+					disabled={!config.isLinked || upsertConfig.isPending}
+					onCheckedChange={handleToggle}
+				/>
+			</div>
+			{!config.isLinked && <ZaloLinkPanel />}
+			{config.isLinked && (
+				<>
+					<Separator />
+					<div className="space-y-2">
+						<Label htmlFor={`template-${config.channel}`}>
+							Message template
+						</Label>
+						<Textarea
+							id={`template-${config.channel}`}
+							placeholder="Device {{deviceName}} — {{field}} is {{value}} (expected {{min}}-{{max}})"
+							value={messageTemplate}
+							onChange={(e) => setMessageTemplate(e.target.value)}
+						/>
+						<Button
+							type="button"
+							size="sm"
+							onClick={handleSaveTemplate}
+							disabled={upsertConfig.isPending}
+						>
+							{upsertConfig.isPending && (
+								<Loader2 className="size-4 animate-spin" />
+							)}
+							Save template
 						</Button>
 					</div>
-				</div>
-			)}
-			<div className="flex items-center gap-2">
-				<Button
-					type="button"
-					size="sm"
-					onClick={() => onCheckStatusRef.current()}
-					disabled={pollExhausted}
-				>
-					<RefreshCw className="size-4" />
-					I've sent it — check status
-				</Button>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					onClick={handleRequest}
-					disabled={requestVerification.isPending}
-				>
-					Request new code
-				</Button>
-			</div>
-			{!pollExhausted ? (
-				<p className="text-muted-foreground text-xs">
-					Checking automatically… (attempt {pollAttempts}/{MAX_POLL_ATTEMPTS})
-				</p>
-			) : (
-				<p className="text-destructive text-xs">
-					Stopped after {MAX_POLL_ATTEMPTS} tries — tap "Check status" or
-					"Request new code" to keep going.
-				</p>
+				</>
 			)}
 		</div>
 	);
 }
 
 export function NotificationsForm() {
-	const { data, isLoading, refetch } = useNotificationSettingQuery();
-	const updateSetting = useUpdateNotificationSettingMutation();
-	const [channels, setChannels] = useState<
-		Record<NotificationChannelType, INotificationChannel>
-	>(() => buildChannelState(undefined));
-
-	useEffect(() => {
-		if (data) {
-			setChannels(buildChannelState(data.channels));
-		}
-	}, [data]);
-
-	const updateChannel = (
-		channel: NotificationChannelType,
-		patch: Partial<INotificationChannel>,
-	) => {
-		setChannels((prev) => ({
-			...prev,
-			[channel]: { ...prev[channel], ...patch },
-		}));
-	};
-
-	const handleSubmit = async (e: FormEvent) => {
-		e.preventDefault();
-		try {
-			await updateSetting.mutateAsync({
-				channels: Object.values(channels),
-			});
-			toast.success("Notification settings updated");
-		} catch (error) {
-			toast.error(getResponseMessage(error));
-		}
-	};
+	const { data, isLoading } = useNotificationConfigsQuery();
+	const configs = data?.data ?? [];
 
 	if (isLoading) {
 		return (
@@ -317,60 +247,20 @@ export function NotificationsForm() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-6">
-			<div className="space-y-4">
-				{NOTIFICATION_CHANNELS.map(({ value, label, description }) => {
-					const isVerifiable = VERIFIABLE_NOTIFICATION_CHANNELS.includes(value);
-					const channel = channels[value];
+		<div className="space-y-4">
+			{NOTIFICATION_CHANNELS.map(({ value }) => {
+				const config = configs.find((c) => c.channel === value) ?? {
+					id: value,
+					channel: value,
+					isEnabled: false,
+					messageTemplate: null,
+					isLinked: false,
+					createdAt: "",
+					updatedAt: "",
+				};
 
-					return (
-						<div
-							key={value}
-							className="flex flex-col gap-3 rounded-lg border p-4"
-						>
-							<div className="flex flex-row items-center justify-between">
-								<div className="space-y-0.5">
-									<Label className="text-base">{label}</Label>
-									<p className="text-muted-foreground text-sm">{description}</p>
-								</div>
-								{isVerifiable ? (
-									<ZaloVerificationPanel
-										channel={channel}
-										onCheckStatus={async () => {
-											const result = await refetch();
-											const updated = result.data?.channels.find(
-												(c) => c.channel === value,
-											);
-											return !!updated?.enabled;
-										}}
-									/>
-								) : (
-									<Switch
-										checked={channel.enabled}
-										onCheckedChange={(enabled) =>
-											updateChannel(value, { enabled })
-										}
-									/>
-								)}
-							</div>
-							{!isVerifiable && channel.enabled && (
-								<Input
-									placeholder={`${label} address / token`}
-									value={channel.token}
-									onChange={(e) =>
-										updateChannel(value, { token: e.target.value })
-									}
-								/>
-							)}
-						</div>
-					);
-				})}
-			</div>
-			<Separator />
-			<Button type="submit" disabled={updateSetting.isPending}>
-				{updateSetting.isPending && <Loader2 className="size-4 animate-spin" />}
-				Update notifications
-			</Button>
-		</form>
+				return <ChannelRow key={value} config={config} />;
+			})}
+		</div>
 	);
 }

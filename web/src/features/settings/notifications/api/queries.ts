@@ -1,71 +1,43 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/authStore";
 import { notificationSettingsApi } from "./notifications-settings-api";
-import type {
-	IChannelVerificationRequest,
-	IUpdateNotificationSetting,
-	NotificationChannelType,
-} from "./types";
+import type { IUpsertNotificationConfig, NotificationChannel } from "./types";
 
-export const NOTIFICATION_SETTING_QUERY_KEY = [
-	"notification-settings",
-	"me",
-] as const;
+const NOTIFICATION_CONFIGS_QUERY_KEY = ["notification-configs"];
 
-export const useNotificationSettingQuery = () => {
+export function useNotificationConfigsQuery(options?: {
+	refetchInterval?: number | false;
+}) {
 	const accessToken = useAuthStore((state) => state.auth.accessToken);
 
 	return useQuery({
-		queryKey: NOTIFICATION_SETTING_QUERY_KEY,
-		queryFn: notificationSettingsApi.get,
-		select: (res) => res.data,
+		queryKey: NOTIFICATION_CONFIGS_QUERY_KEY,
+		queryFn: () => notificationSettingsApi.getConfigs(),
 		enabled: !!accessToken,
 		staleTime: 60 * 1000,
+		refetchInterval: options?.refetchInterval,
 	});
-};
+}
 
-export const useUpdateNotificationSettingMutation = () => {
+export function useUpsertNotificationConfigMutation() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (data: IUpdateNotificationSetting) =>
-			notificationSettingsApi.update(data),
-		onSuccess: () =>
-			queryClient.invalidateQueries({
-				queryKey: NOTIFICATION_SETTING_QUERY_KEY,
-			}),
+		mutationFn: ({
+			channel,
+			data,
+		}: {
+			channel: NotificationChannel;
+			data: IUpsertNotificationConfig;
+		}) => notificationSettingsApi.upsertConfig(channel, data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: NOTIFICATION_CONFIGS_QUERY_KEY });
+		},
 	});
-};
+}
 
-export const useRequestChannelVerificationMutation = () => {
+export function useZaloLinkCodeMutation() {
 	return useMutation({
-		mutationFn: (data: IChannelVerificationRequest) =>
-			notificationSettingsApi.requestChannelVerification(data),
+		mutationFn: () => notificationSettingsApi.getZaloLinkCode(),
 	});
-};
-
-export const useChannelDeepLinkQuery = (
-	channel: NotificationChannelType,
-	enabled: boolean,
-) => {
-	return useQuery({
-		queryKey: [...NOTIFICATION_SETTING_QUERY_KEY, "deeplink", channel],
-		queryFn: () => notificationSettingsApi.getChannelDeepLink(channel),
-		select: (res) => res.data,
-		enabled,
-		staleTime: 5 * 60 * 1000,
-	});
-};
-
-export const useUnlinkChannelMutation = () => {
-	const queryClient = useQueryClient();
-
-	return useMutation({
-		mutationFn: (channel: NotificationChannelType) =>
-			notificationSettingsApi.unlinkChannel(channel),
-		onSuccess: () =>
-			queryClient.invalidateQueries({
-				queryKey: NOTIFICATION_SETTING_QUERY_KEY,
-			}),
-	});
-};
+}
