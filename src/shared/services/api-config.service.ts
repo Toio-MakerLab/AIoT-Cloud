@@ -8,11 +8,15 @@ import { InitSchema1787210034577 } from '../../database/migrations/1787210034577
 import { AddIotDeviceManagement1787378213385 } from '../../database/migrations/1787378213385-AddIotDeviceManagement.ts';
 import { AddEmailVerification1787381039053 } from '../../database/migrations/1787381039053-AddEmailVerification.ts';
 import { AddDeviceProvisioningConfig1787400000000 } from '../../database/migrations/1787400000000-AddDeviceProvisioningConfig.ts';
+import { AddDeviceTemplateActionSchema1787500000000 } from '../../database/migrations/1787500000000-AddDeviceTemplateActionSchema.ts';
+import { AddDeviceIsActive1787600000000 } from '../../database/migrations/1787600000000-AddDeviceIsActive.ts';
+import { AddNotificationConfig1787700000000 } from '../../database/migrations/1787700000000-AddNotificationConfig.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
 import { DeviceTelemetryEntity } from '../../modules/device/device-telemetry.entity.ts';
 import { DeviceTemplateEntity } from '../../modules/device-template/device-template.entity.ts';
+import { NotificationConfigEntity } from '../../modules/notification/notification-config.entity.ts';
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
@@ -88,12 +92,23 @@ export class ApiConfigService {
 
   get postgresConfig(): TypeOrmModuleOptions {
     return {
-      entities: [UserEntity, UserSettingsEntity, DeviceTemplateEntity, DeviceEntity, DeviceTelemetryEntity, DashboardEntity],
+      entities: [
+        UserEntity,
+        UserSettingsEntity,
+        DeviceTemplateEntity,
+        DeviceEntity,
+        DeviceTelemetryEntity,
+        DashboardEntity,
+        NotificationConfigEntity,
+      ],
       migrations: [
         InitSchema1787210034577,
         AddIotDeviceManagement1787378213385,
         AddEmailVerification1787381039053,
         AddDeviceProvisioningConfig1787400000000,
+        AddDeviceTemplateActionSchema1787500000000,
+        AddDeviceIsActive1787600000000,
+        AddNotificationConfig1787700000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',
@@ -183,6 +198,24 @@ export class ApiConfigService {
       secure: this.configService.get<boolean>('SMTP_SECURE', false),
       from: this.configService.get<string>('SMTP_FROM', 'no-reply@aiot-lab.local'),
       appUrl: this.configService.get<string>('APP_URL', 'http://localhost:5173'),
+    };
+  }
+
+  get zaloEnabled(): boolean {
+    return this.getBoolean('ZALO_ENABLED');
+  }
+
+  get zaloConfig() {
+    const apiBaseUrl = this.configService.get<string>('ZALO_BOT_API_BASE_URL', 'https://bot-api.zaloplatforms.com');
+    const botToken = this.configService.get<string>('ZALO_BOT_TOKEN');
+
+    return {
+      botToken,
+      /** Compared against the `X-Bot-Api-Secret-Token` header on every incoming webhook call. */
+      webhookSecret: this.configService.get<string>('ZALO_BOT_WEBHOOK_SECRET'),
+      sendMessageUrl: botToken ? `${apiBaseUrl}/bot${botToken}/sendMessage` : null,
+      /** Where users find the bot to send it their link code, e.g. `https://zalo.me/s/<bot-share-id>`. Shown to the client as-is; no start-payload support in the Bot API. */
+      shareUrl: this.configService.get<string>('ZALO_BOT_SHARE_URL'),
     };
   }
 

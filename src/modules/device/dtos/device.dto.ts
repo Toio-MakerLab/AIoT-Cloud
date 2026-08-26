@@ -4,7 +4,7 @@ import { DeviceStatus } from '../../../constants/device-status.ts';
 import { BooleanField, ClassFieldOptional, DateFieldOptional, EnumField, StringField } from '../../../decorators/field.decorators.ts';
 import { DeviceTemplateDto } from '../../device-template/dtos/device-template.dto.ts';
 import type { DeviceEntity } from '../device.entity.ts';
-import type { DeviceNetworkConfig } from '../interfaces/device-network-config.interface.ts';
+import type { DeviceNetworkConfig, DeviceWarningOverrides } from '../interfaces/device-network-config.interface.ts';
 
 const ONLINE_THRESHOLD_MS = 2 * 60 * 1000;
 
@@ -39,6 +39,8 @@ export class DeviceDto extends AbstractDto {
   @BooleanField()
   isActive!: boolean;
 
+  warningOverrides?: DeviceWarningOverrides | null;
+
   constructor(entity: DeviceEntity) {
     super(entity);
     this.deviceId = entity.deviceId;
@@ -51,5 +53,6 @@ export class DeviceDto extends AbstractDto {
     this.pushChannel = entity.pushChannel;
     this.config = entity.config;
     this.isActive = entity.isActive;
+    this.warningOverrides = entity.warningOverrides;
   }
 }

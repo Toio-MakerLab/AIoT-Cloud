@@ -1,0 +1,47 @@
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseEnumPipe, Patch } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
+import type { ResponseCore } from '../../common/dto/response-core.dto.ts';
+import { NotificationChannelType } from '../../constants/notification-channel-type.ts';
+import { RoleType } from '../../constants/role-type.ts';
+import { AuthUser } from '../../decorators/auth-user.decorator.ts';
+import { Auth } from '../../decorators/http.decorators.ts';
+import type { UserEntity } from '../user/user.entity.ts';
+import type { NotificationConfigDto } from './dtos/notification-config.dto.ts';
+import { UpsertNotificationConfigDto } from './dtos/upsert-notification-config.dto.ts';
+import { ZaloLinkCodeDto } from './dtos/zalo-link-code.dto.ts';
+import { NotificationService } from './notification.service.ts';
+
+@Controller('notifications')
+@ApiTags('notifications')
+export class NotificationController {
+  constructor(private readonly notificationService: NotificationService) {}
+
+  @Get('config')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  getConfigs(@AuthUser() user: UserEntity): Promise<NotificationConfigDto[]> {
+    return this.notificationService.getUserConfigs(user.id as Uuid);
+  }
+
+  @Patch('config/:channel')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  upsertConfig(
+    @AuthUser() user: UserEntity,
+    @Param('channel', new ParseEnumPipe(NotificationChannelType)) channel: NotificationChannelType,
+    @Body() dto: UpsertNotificationConfigDto,
+  ): Promise<ResponseCore<NotificationConfigDto>> {
+    return this.notificationService.upsertConfig(user.id as Uuid, channel, dto);
+  }
+
+  /** Returns a short-lived code the user pastes as a plain message to the Zalo bot to link their account. */
+  @Get('zalo/link-code')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  async getZaloLinkCode(@AuthUser() user: UserEntity): Promise<ResponseCore<ZaloLinkCodeDto>> {
+    const result = await this.notificationService.generateZaloLinkCode(user.id as Uuid);
+
+    return { ...result, data: result.data ? new ZaloLinkCodeDto(result.data) : null };
+  }
+}

@@ -10,6 +10,9 @@ export interface TelemetryFieldDefinition {
   key: string;
   label: string;
   unit?: string;
+  /** Default warning band for this field; a device can override via `DeviceEntity.warningOverrides`. */
+  warningMin?: number;
+  warningMax?: number;
 }
 
 export interface ActionFieldDefinition {

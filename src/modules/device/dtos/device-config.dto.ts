@@ -10,7 +10,13 @@ import {
   URLField,
   URLFieldOptional,
 } from '../../../decorators/field.decorators.ts';
-import type { DeviceHttpPushConfig, DeviceKafkaConfig, DeviceMqttConfig, DeviceMqttTopics } from '../interfaces/device-network-config.interface.ts';
+import type {
+  DeviceHttpPushConfig,
+  DeviceKafkaConfig,
+  DeviceMqttConfig,
+  DeviceMqttTopics,
+  DeviceWarningOverrides,
+} from '../interfaces/device-network-config.interface.ts';
 
 /**
  * telemetry: device -> backend (ingested via recordTelemetry)
@@ -81,6 +87,9 @@ export class UpdateDeviceConfigDto {
 
   @BooleanFieldOptional()
   isActive?: boolean;
+
+  /** Per-field overrides of the template's default warning band; keyed by telemetry field key. */
+  warningOverrides?: DeviceWarningOverrides | null;
 }
 
 /** Response for the ESP32 boot-config endpoint — never includes the device secret. */

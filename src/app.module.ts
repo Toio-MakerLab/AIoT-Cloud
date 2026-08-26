@@ -21,6 +21,7 @@ import { DeviceTemplateModule } from './modules/device-template/device-template.
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module.ts';
 import { KafkaModule } from './modules/kafka/kafka.module.ts';
 import { MqttModule } from './modules/mqtt/mqtt.module.ts';
+import { NotificationModule } from './modules/notification/notification.module.ts';
 import { UserModule } from './modules/user/user.module.ts';
 import { WebsocketModule } from './modules/websocket/websocket.module.ts';
 import { ContextProvider } from './providers/context.provider.ts';
@@ -68,6 +69,7 @@ function redactSensitiveFields(body: unknown): unknown {
     MqttModule,
     KafkaModule,
     WebsocketModule,
+    NotificationModule,
     EventEmitterModule.forRoot(),
     ClsModule.forRoot({
       global: true,

@@ -30,3 +30,12 @@ export interface DeviceNetworkConfig {
   http?: DeviceHttpPushConfig | null;
   kafka?: DeviceKafkaConfig | null;
 }
+
+/** Per-device override of a template's default warning band for one telemetry field key. */
+export interface DeviceWarningThreshold {
+  min?: number;
+  max?: number;
+  enabled?: boolean;
+}
+
+export type DeviceWarningOverrides = Record<string, DeviceWarningThreshold>;

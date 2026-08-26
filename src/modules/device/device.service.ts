@@ -183,6 +183,10 @@ export class DeviceService {
       device.isActive = dto.isActive;
     }
 
+    if (dto.warningOverrides !== undefined) {
+      device.warningOverrides = dto.warningOverrides;
+    }
+
     device.configVersion += 1;
 
     await this.deviceRepository.save(device);
@@ -311,6 +315,11 @@ export class DeviceService {
     const count = await this.deviceRepository.countBy({ deviceId, userId });
 
     return count > 0;
+  }
+
+  /** Used by notification warning checks, which need the template's telemetry schema alongside the device. */
+  async findByDeviceIdWithTemplate(deviceId: string): Promise<DeviceEntity | null> {
+    return this.deviceRepository.findOne({ where: { deviceId }, relations: ['template'] });
   }
 
   async recordTelemetry(deviceId: string, payload: unknown): Promise<void> {

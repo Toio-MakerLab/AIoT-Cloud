@@ -6,7 +6,7 @@ import { UseDto } from '../../decorators/use-dto.decorator.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
 import { UserEntity } from '../user/user.entity.ts';
 import { DeviceDto } from './dtos/device.dto.ts';
-import type { DeviceNetworkConfig } from './interfaces/device-network-config.interface.ts';
+import type { DeviceNetworkConfig, DeviceWarningOverrides } from './interfaces/device-network-config.interface.ts';
 
 @Entity({ name: 'devices' })
 @UseDto(DeviceDto)
@@ -58,4 +58,8 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
 
   @Column({ type: 'boolean', default: true })
   isActive!: boolean;
+
+  /** Per-field overrides of the template's default warning band; keyed by telemetry field key. */
+  @Column({ nullable: true, type: 'jsonb' })
+  warningOverrides!: DeviceWarningOverrides | null;
 }
