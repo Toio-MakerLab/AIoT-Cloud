@@ -3,7 +3,7 @@ services:
   app:
     env_file:
       - .env
-    container_name: awesome_nest_boilerplate
+    container_name: aiot_app
     restart: always
     build: .
     ports:
@@ -12,7 +12,7 @@ services:
       - postgres
   postgres:
     image: postgres
-    container_name: postgres
+    container_name: aiot_postgres
     restart: always
     environment:
       POSTGRES_PASSWORD: postgres
@@ -26,19 +26,19 @@ services:
     env_file:
       - .env
   pgadmin:
-    container_name: pgadmin
+    container_name: aiot_pgadmin
     image: dpage/pgadmin4
     ports:
       - "8080:80"
     volumes:
-      - /data/pgadmin:/root/.pgadmin
+      - pgadmin:/root/.pgadmin
     env_file:
       - .env
     links:
       - postgres
   redis:
     image: redis
-    container_name: redis
+    container_name: aiot_redis
     restart: always
     command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
@@ -46,4 +46,6 @@ services:
 
 volumes:
   postgres:
+    driver: local
+  pgadmin:
     driver: local
