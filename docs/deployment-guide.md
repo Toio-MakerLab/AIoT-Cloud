@@ -19,6 +19,21 @@ Stages:
 docker build -t aiot-lab-service:latest .
 ```
 
+### Build and push to Docker Hub
+
+```bash
+pnpm docker:build-push
+# or: ./scripts/docker-build-push.sh
+```
+
+Builds and pushes `docker.io/vkhangstack/aiot-lab-service` for `linux/amd64`
+and `linux/arm64`, tagged with the `package.json` version and `latest`.
+Uses a dedicated `docker buildx` builder (created automatically on first run)
+since multi-platform images require `buildx build --push` rather than a plain
+`docker build` + `docker push`. Reuses an existing `docker login` session;
+for non-interactive/CI use, export `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`
+(a Docker Hub access token) first.
+
 ### Run
 
 The app reads its configuration strictly from environment variables (see

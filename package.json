@@ -20,6 +20,7 @@
         "watch:bun": "bun run --watch ./src/main.ts",
         "build:bun": "bun build --external=class-validator --external=@nestjs/sequelize --external=@mikro-orm/core --external=@nestjs/mongoose --external=mock-aws-s3 --external=hbs --external=aws-sdk --external=nock --external=@nestjs/websockets/socket-module --external=class-transformer --external=@nestjs/microservices --define process.env.NODE_ENV:\"'production'\" --target=bun --minify ./dist/main.js --outdir=dist --format esm ./src/main.ts",
         "build:web": "cd web && pnpm build",
+        "docker:build-push": "bash scripts/docker-build-push.sh",
         "typeorm": "typeorm-ts-node-esm",
         "migration:generate": "sh -c 'npm run typeorm migration:generate -d ormconfig.ts ./src/database/migrations/$0'",
         "migration:create": "sh -c 'npm run typeorm migration:create ./src/database/migrations/$0'",
