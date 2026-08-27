@@ -27,10 +27,12 @@ export class AddDeviceSecrets1787900000000 implements MigrationInterface {
     if (legacySecret) {
       const hash = createHash('sha256').update(legacySecret).digest('hex');
 
-      await queryRunner.query(
-        `INSERT INTO "device_secrets" ("id", "label", "secret_hash", "created_by_user_id") VALUES ($1, $2, $3, $4)`,
-        [randomUUID(), 'migrated-shared-secret', hash, 'system'],
-      );
+      await queryRunner.query(`INSERT INTO "device_secrets" ("id", "label", "secret_hash", "created_by_user_id") VALUES ($1, $2, $3, $4)`, [
+        randomUUID(),
+        'migrated-shared-secret',
+        hash,
+        'system',
+      ]);
     }
   }
 

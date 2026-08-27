@@ -6,9 +6,8 @@ import { RoleType } from '../../constants/role-type.ts';
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
 import { Auth } from '../../decorators/http.decorators.ts';
 import type { UserEntity } from '../user/user.entity.ts';
-import type { CreatedDeviceSecret } from './device-secret.service.ts';
-import { DeviceSecretService } from './device-secret.service.ts';
-import { CreateDeviceSecretDto } from './dtos/create-device-secret.dto.ts';
+import type { CreatedDeviceSecret, DeviceSecretService } from './device-secret.service.ts';
+import type { CreateDeviceSecretDto } from './dtos/create-device-secret.dto.ts';
 import type { DeviceSecretDto } from './dtos/device-secret.dto.ts';
 
 /** Manages the shared secrets accepted on the `x-device-secret` header — admin-only. */

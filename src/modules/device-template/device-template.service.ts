@@ -7,11 +7,11 @@ import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import { DeviceEntity } from '../device/device.entity.ts';
+import { DeviceTemplateEntity } from './device-template.entity.ts';
 import { CreateDeviceTemplateDto } from './dtos/create-device-template.dto.ts';
 import type { DeviceTemplateDto } from './dtos/device-template.dto.ts';
 import type { DeviceTemplatesPageOptionsDto } from './dtos/device-templates-page-options.dto.ts';
 import { UpdateDeviceTemplateDto } from './dtos/update-device-template.dto.ts';
-import { DeviceTemplateEntity } from './device-template.entity.ts';
 
 @Injectable()
 export class DeviceTemplateService {

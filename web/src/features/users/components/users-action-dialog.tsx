@@ -71,7 +71,9 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
 
   const onSubmit = async (values: UserForm) => {
     if (!isEdit && !values.password) {
-      form.setError('password', { message: 'Password must be at least 6 characters.' });
+      form.setError('password', {
+        message: 'Password must be at least 6 characters.',
+      });
       return;
     }
 

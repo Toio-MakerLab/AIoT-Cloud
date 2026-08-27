@@ -1,17 +1,17 @@
-import { GridLayout, type Layout, useContainerWidth } from "react-grid-layout";
-import "react-grid-layout/css/styles.css";
-import type { IDashboardWidget, IDevice } from "../api/types";
-import type { ILatestTelemetry, ITelemetryPoint } from "../hooks/use-device-socket";
-import { DevicePanel } from "./device-panel";
+import { GridLayout, type Layout, useContainerWidth } from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import type { IDashboardWidget, IDevice } from '../api/types';
+import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/use-device-socket';
+import { DevicePanel } from './device-panel';
 
 interface Props {
-	widgets: IDashboardWidget[];
-	devices: IDevice[];
-	latestByDevice: Map<string, ILatestTelemetry>;
-	historyByDevice: Map<string, ITelemetryPoint[]>;
-	seedHistory: (deviceId: string, points: ITelemetryPoint[]) => void;
-	onLayoutChange: (widgets: IDashboardWidget[]) => void;
-	onRemoveWidget: (widgetId: string) => void;
+  widgets: IDashboardWidget[];
+  devices: IDevice[];
+  latestByDevice: Map<string, ILatestTelemetry>;
+  historyByDevice: Map<string, ITelemetryPoint[]>;
+  seedHistory: (deviceId: string, points: ITelemetryPoint[]) => void;
+  onLayoutChange: (widgets: IDashboardWidget[]) => void;
+  onRemoveWidget: (widgetId: string) => void;
 }
 
 const ROW_HEIGHT = 80;
@@ -24,77 +24,69 @@ const COLS = 12;
  * children). Grid sizing (cols/rowHeight/margin/containerPadding) is grouped under the
  * `gridConfig` prop in v2 instead of flat props.
  */
-export function DashboardGrid({
-	widgets,
-	devices,
-	latestByDevice,
-	historyByDevice,
-	seedHistory,
-	onLayoutChange,
-	onRemoveWidget,
-}: Props) {
-	const { width, containerRef, mounted } = useContainerWidth();
+export function DashboardGrid({ widgets, devices, latestByDevice, historyByDevice, seedHistory, onLayoutChange, onRemoveWidget }: Props) {
+  const { width, containerRef, mounted } = useContainerWidth();
 
-	const layout: Layout = widgets.map((widget) => ({
-		i: widget.id,
-		x: widget.x,
-		y: widget.y,
-		w: widget.w,
-		h: widget.h,
-		minW: 2,
-		minH: 2,
-	}));
+  const layout: Layout = widgets.map((widget) => ({
+    i: widget.id,
+    x: widget.x,
+    y: widget.y,
+    w: widget.w,
+    h: widget.h,
+    minW: 2,
+    minH: 2,
+  }));
 
-	const handleLayoutChange = (newLayout: Layout) => {
-		const updated = widgets.map((widget) => {
-			const item = newLayout.find((entry) => entry.i === widget.id);
-			if (!item) {
-				return widget;
-			}
-			return { ...widget, x: item.x, y: item.y, w: item.w, h: item.h };
-		});
-		onLayoutChange(updated);
-	};
+  const handleLayoutChange = (newLayout: Layout) => {
+    const updated = widgets.map((widget) => {
+      const item = newLayout.find((entry) => entry.i === widget.id);
+      if (!item) {
+        return widget;
+      }
+      return { ...widget, x: item.x, y: item.y, w: item.w, h: item.h };
+    });
+    onLayoutChange(updated);
+  };
 
-	if (widgets.length === 0) {
-		return (
-			<div className="text-muted-foreground flex h-64 items-center justify-center rounded-lg border border-dashed">
-				No panels yet. Click "Add Panel" to get started.
-			</div>
-		);
-	}
+  if (widgets.length === 0) {
+    return (
+      <div className="text-muted-foreground flex h-64 items-center justify-center rounded-lg border border-dashed">
+        No panels yet. Click "Add Panel" to get started.
+      </div>
+    );
+  }
 
-	return (
-		<div ref={containerRef} className="w-full">
-			{mounted && (
-				<GridLayout
-					layout={layout}
-					width={width}
-					gridConfig={{
-						cols: COLS,
-						rowHeight: ROW_HEIGHT,
-						margin: [12, 12],
-						containerPadding: [0, 0],
-					}}
-					onLayoutChange={handleLayoutChange}
-				>
-					{widgets.map((widget) => {
-						const device = devices.find((d) => d.id === widget.deviceId);
-						return (
-							<div key={widget.id}>
-								<DevicePanel
-									widget={widget}
-									device={device}
-									latest={latestByDevice.get(widget.deviceId)}
-									history={historyByDevice.get(widget.deviceId) ?? []}
-									seedHistory={seedHistory}
-									onRemove={() => onRemoveWidget(widget.id)}
-								/>
-							</div>
-						);
-					})}
-				</GridLayout>
-			)}
-		</div>
-	);
+  return (
+    <div ref={containerRef} className="w-full">
+      {mounted && (
+        <GridLayout
+          layout={layout}
+          width={width}
+          gridConfig={{
+            cols: COLS,
+            rowHeight: ROW_HEIGHT,
+            margin: [12, 12],
+            containerPadding: [0, 0],
+          }}
+          onLayoutChange={handleLayoutChange}
+        >
+          {widgets.map((widget) => {
+            const device = devices.find((d) => d.id === widget.deviceId);
+            return (
+              <div key={widget.id}>
+                <DevicePanel
+                  widget={widget}
+                  device={device}
+                  latest={latestByDevice.get(widget.deviceId)}
+                  history={historyByDevice.get(widget.deviceId) ?? []}
+                  seedHistory={seedHistory}
+                  onRemove={() => onRemoveWidget(widget.id)}
+                />
+              </div>
+            );
+          })}
+        </GridLayout>
+      )}
+    </div>
+  );
 }

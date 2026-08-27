@@ -1,94 +1,84 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { devicesApi } from "./api";
-import type {
-	IDevicesQuery,
-	IRegisterDevice,
-	ITriggerDeviceAction,
-	IUpdateDeviceConfig,
-} from "./types";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { devicesApi } from './api';
+import type { IDevicesQuery, IRegisterDevice, ITriggerDeviceAction, IUpdateDeviceConfig } from './types';
 
-export const DEVICES_QUERY_KEY = "devices";
-export const DEVICE_TEMPLATES_QUERY_KEY = "device-templates";
-export const DEVICE_TELEMETRY_QUERY_KEY = "device-telemetry";
-export const UNCLAIMED_DEVICES_QUERY_KEY = "unclaimed-devices";
+export const DEVICES_QUERY_KEY = 'devices';
+export const DEVICE_TEMPLATES_QUERY_KEY = 'device-templates';
+export const DEVICE_TELEMETRY_QUERY_KEY = 'device-telemetry';
+export const UNCLAIMED_DEVICES_QUERY_KEY = 'unclaimed-devices';
 
 // Devices are swept to OFFLINE server-side every 10s once idle past the 1-minute
 // threshold; poll at the same cadence so the online/offline badge stays current.
 const DEVICE_STATUS_POLL_INTERVAL_MS = 10_000;
 
 export const useDevicesQuery = (query: IDevicesQuery = {}) =>
-	useQuery({
-		queryKey: [DEVICES_QUERY_KEY, query],
-		queryFn: () => devicesApi.getDevices(query),
-		refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
-	});
+  useQuery({
+    queryKey: [DEVICES_QUERY_KEY, query],
+    queryFn: () => devicesApi.getDevices(query),
+    refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
+  });
 
 export const useDeviceQuery = (id: string) =>
-	useQuery({
-		queryKey: [DEVICES_QUERY_KEY, id],
-		queryFn: () => devicesApi.getDeviceById(id),
-		enabled: !!id,
-		refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
-	});
+  useQuery({
+    queryKey: [DEVICES_QUERY_KEY, id],
+    queryFn: () => devicesApi.getDeviceById(id),
+    enabled: !!id,
+    refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
+  });
 
 export const useDeviceTelemetryQuery = (id: string, limit = 100) =>
-	useQuery({
-		queryKey: [DEVICE_TELEMETRY_QUERY_KEY, id, limit],
-		queryFn: () => devicesApi.getDeviceTelemetry(id, limit),
-		enabled: !!id,
-	});
+  useQuery({
+    queryKey: [DEVICE_TELEMETRY_QUERY_KEY, id, limit],
+    queryFn: () => devicesApi.getDeviceTelemetry(id, limit),
+    enabled: !!id,
+  });
 
 export const useDeviceTemplatesQuery = () =>
-	useQuery({
-		queryKey: [DEVICE_TEMPLATES_QUERY_KEY],
-		queryFn: () => devicesApi.getDeviceTemplates(),
-	});
+  useQuery({
+    queryKey: [DEVICE_TEMPLATES_QUERY_KEY],
+    queryFn: () => devicesApi.getDeviceTemplates(),
+  });
 
 export const useUnclaimedDevicesQuery = () =>
-	useQuery({
-		queryKey: [UNCLAIMED_DEVICES_QUERY_KEY],
-		queryFn: () => devicesApi.getUnclaimedDevices(),
-		refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
-	});
+  useQuery({
+    queryKey: [UNCLAIMED_DEVICES_QUERY_KEY],
+    queryFn: () => devicesApi.getUnclaimedDevices(),
+    refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
+  });
 
 export const useRegisterDeviceMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (data: IRegisterDevice) => devicesApi.registerDevice(data),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] });
-			queryClient.invalidateQueries({
-				queryKey: [UNCLAIMED_DEVICES_QUERY_KEY],
-			});
-		},
-	});
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: IRegisterDevice) => devicesApi.registerDevice(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] });
+      queryClient.invalidateQueries({
+        queryKey: [UNCLAIMED_DEVICES_QUERY_KEY],
+      });
+    },
+  });
 };
 
 export const useDeleteDeviceMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (id: string) => devicesApi.deleteDevice(id),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
-	});
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => devicesApi.deleteDevice(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
+  });
 };
 
 export const useUpdateDeviceConfigMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: IUpdateDeviceConfig }) =>
-			devicesApi.updateDeviceConfig(id, data),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
-	});
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: IUpdateDeviceConfig }) => devicesApi.updateDeviceConfig(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
+  });
 };
 
 export const useTriggerDeviceActionMutation = (id: string) => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (data: ITriggerDeviceAction) =>
-			devicesApi.triggerDeviceAction(id, data),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY, id] }),
-	});
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ITriggerDeviceAction) => devicesApi.triggerDeviceAction(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY, id] }),
+  });
 };

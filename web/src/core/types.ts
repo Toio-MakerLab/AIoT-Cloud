@@ -1,5 +1,5 @@
 export type Response<T> = {
-	data: T;
-	message: string;
-	error: number;
+  data: T;
+  message: string;
+  error: number;
 };

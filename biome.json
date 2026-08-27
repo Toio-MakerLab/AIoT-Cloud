@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!dist", "!coverage", "!docs/.vuepress/dist"]
+    "includes": ["**", "!dist", "!coverage", "!docs/.vuepress/dist", "!web/dist", "!web/node_modules", "!node_modules", "!**/node_modules"]
   },
   "formatter": {
     "enabled": true,

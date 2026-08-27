@@ -6,11 +6,11 @@ import type { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { ApiPageResponse } from '../../decorators/api-page-response.decorator.ts';
 import { Auth } from '../../decorators/http.decorators.ts';
+import { DeviceTemplateService } from './device-template.service.ts';
 import { CreateDeviceTemplateDto } from './dtos/create-device-template.dto.ts';
 import type { DeviceTemplateDto } from './dtos/device-template.dto.ts';
 import { DeviceTemplatesPageOptionsDto } from './dtos/device-templates-page-options.dto.ts';
 import { UpdateDeviceTemplateDto } from './dtos/update-device-template.dto.ts';
-import { DeviceTemplateService } from './device-template.service.ts';
 
 @Controller('device-templates')
 @ApiTags('device-templates')
