@@ -2,7 +2,7 @@ import { Controller, Logger } from '@nestjs/common';
 import type { MqttContext } from '@nestjs/microservices';
 import { Ctx, EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 
-import { COMMAND_TOPIC_REGEX, STATUS_TOPIC_REGEX, TELEMETRY_TOPIC_REGEX } from '../../constants/mqtt-topics.ts';
+import { CHANNEL_COMMAND_TOPIC_REGEX, COMMAND_TOPIC_REGEX, STATUS_TOPIC_REGEX, TELEMETRY_TOPIC_REGEX } from '../../constants/mqtt-topics.ts';
 import { DeviceService } from '../device/device.service.ts';
 
 @Controller()
@@ -38,9 +38,9 @@ export class MqttController {
       return;
     }
 
-    // Command topic is backend -> device (downlink); the broker echoes our own
+    // Command topics are backend -> device (downlink); the broker echoes our own
     // publishes back through this wildcard subscription, so ignore rather than re-process.
-    if (COMMAND_TOPIC_REGEX.test(topic)) {
+    if (COMMAND_TOPIC_REGEX.test(topic) || CHANNEL_COMMAND_TOPIC_REGEX.test(topic)) {
       return;
     }
 

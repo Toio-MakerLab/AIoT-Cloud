@@ -10,9 +10,10 @@ import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { DeviceActionType } from '../../constants/device-action-type.ts';
 import { DevicePushChannel } from '../../constants/device-push-channel.ts';
+import { DeviceTemplateType } from '../../constants/device-template-type.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import { KAFKA_COMMAND_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
-import { defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from '../../constants/mqtt-topics.ts';
+import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from '../../constants/mqtt-topics.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
 import { DeviceEntity } from './device.entity.ts';
@@ -23,6 +24,7 @@ import type { DeviceTelemetryDto } from './dtos/device-telemetry.dto.ts';
 import type { DevicesPageOptionsDto } from './dtos/devices-page-options.dto.ts';
 import type { RegisterDeviceDto } from './dtos/register-device.dto.ts';
 import type { TriggerDeviceActionDto } from './dtos/trigger-device-action.dto.ts';
+import type { DeviceMqttTopics } from './interfaces/device-network-config.interface.ts';
 import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
 
 export interface DeviceTelemetryEvent {
@@ -84,7 +86,7 @@ export class DeviceService {
   }
 
   async getBootConfig(deviceId: string): Promise<ResponseCore<DeviceConfigDto>> {
-    const device = await this.deviceRepository.findOneBy({ deviceId });
+    const device = await this.deviceRepository.findOne({ where: { deviceId }, relations: ['template'] });
 
     if (!device) {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
@@ -92,20 +94,19 @@ export class DeviceService {
 
     const mqttFallback = this.apiConfigService.mqttConfig;
 
-    const mqtt =
-      device.pushChannel === DevicePushChannel.MQTT
-        ? (device.config?.mqtt ?? {
-            broker: mqttFallback.url,
-            port: 1883,
-            username: mqttFallback.username,
-            password: mqttFallback.password,
-            topics: {
-              telemetry: defaultTelemetryTopic(device.deviceId),
-              command: defaultCommandTopic(device.deviceId),
-              status: defaultStatusTopic(device.deviceId),
-            },
-          })
-        : null;
+    const mqttBase = device.config?.mqtt ?? {
+      broker: mqttFallback.url,
+      port: 1883,
+      username: mqttFallback.username,
+      password: mqttFallback.password,
+      topics: {
+        telemetry: defaultTelemetryTopic(device.deviceId),
+        command: defaultCommandTopic(device.deviceId),
+        status: defaultStatusTopic(device.deviceId),
+      },
+    };
+
+    const mqtt = device.pushChannel === DevicePushChannel.MQTT ? { ...mqttBase, topics: this.buildMqttTopics(device, mqttBase.topics) } : null;
 
     const kafkaFallback = this.apiConfigService.kafkaConfig;
 
@@ -127,6 +128,29 @@ export class DeviceService {
       kafka,
       configVersion: device.configVersion,
     });
+  }
+
+  /**
+   * Appends auto-derived per-channel command topics for multi-channel templates (e.g. a relay
+   * node) on top of the device's base topics. Channel count/order follows the template's
+   * `actionSchema`, so adding/removing an action on the template automatically resizes the list
+   * the ESP32 firmware sees in boot-config, without needing a dedicated "channel count" field.
+   */
+  private buildMqttTopics(device: DeviceEntity, baseTopics: DeviceMqttTopics): DeviceMqttTopics {
+    const actionSchema = device.template?.actionSchema;
+
+    if (device.template?.type !== DeviceTemplateType.RELAY_NODE || !actionSchema?.length) {
+      return baseTopics;
+    }
+
+    const channels = actionSchema.map((action, index) => ({
+      index: index + 1,
+      key: action.key,
+      label: action.label,
+      topic: defaultChannelCommandTopic(device.deviceId, index + 1),
+    }));
+
+    return { ...baseTopics, channels };
   }
 
   @Transactional()

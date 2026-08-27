@@ -13,15 +13,31 @@ import {
 import type {
   DeviceHttpPushConfig,
   DeviceKafkaConfig,
+  DeviceMqttChannelTopic,
   DeviceMqttConfig,
   DeviceMqttTopics,
   DeviceWarningOverrides,
 } from '../interfaces/device-network-config.interface.ts';
 
+export class MqttChannelTopicDto implements DeviceMqttChannelTopic {
+  @NumberField({ int: true, min: 1 })
+  index!: number;
+
+  @StringField()
+  key!: string;
+
+  @StringField()
+  label!: string;
+
+  @StringField()
+  topic!: string;
+}
+
 /**
  * telemetry: device -> backend (ingested via recordTelemetry)
  * command:   backend -> device (downlink; device subscribes)
  * status:    device -> backend (online/offline / LWT announcements)
+ * channels:  backend -> device (per-channel downlink, auto-derived from the template's actionSchema)
  */
 export class MqttTopicsDto implements DeviceMqttTopics {
   @StringField()
@@ -32,6 +48,9 @@ export class MqttTopicsDto implements DeviceMqttTopics {
 
   @StringFieldOptional({ nullable: true })
   status?: string | null;
+
+  @ClassFieldOptional(() => MqttChannelTopicDto, { nullable: true, each: true, isArray: true })
+  channels?: MqttChannelTopicDto[] | null;
 }
 
 export class MqttConfigDto implements DeviceMqttConfig {

@@ -1,7 +1,19 @@
+/** One downlink topic for a single channel of a multi-channel device (e.g. one relay). */
+export interface DeviceMqttChannelTopic {
+  /** 1-based channel number, matching the order of the template's `actionSchema`. */
+  index: number;
+  /** The action key from the device template's `actionSchema` (e.g. "relay1"). */
+  key: string;
+  label: string;
+  topic: string;
+}
+
 export interface DeviceMqttTopics {
   telemetry: string;
   command?: string | null;
   status?: string | null;
+  /** Auto-generated per-channel command topics; present only for multi-channel templates (e.g. RELAY_NODE). */
+  channels?: DeviceMqttChannelTopic[] | null;
 }
 
 export interface DeviceMqttConfig {
