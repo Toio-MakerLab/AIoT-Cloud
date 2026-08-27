@@ -1,8 +1,11 @@
+import type { MessageEvent } from '@nestjs/common';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { lastValueFrom } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { defer, from, fromEvent, interval, lastValueFrom, merge } from 'rxjs';
+import { filter, map, switchMap } from 'rxjs/operators';
 import type { Repository } from 'typeorm';
 import { In, LessThan } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
@@ -46,6 +49,9 @@ export interface DeviceStatusEvent {
 export interface RegisterDeviceResult {
   device: DeviceDto;
 }
+
+/** How often the SSE stream sends a `ping` event, so proxies/load balancers don't time out an otherwise-idle connection. */
+const SSE_HEARTBEAT_MS = 25_000;
 
 @Injectable()
 export class DeviceService {
@@ -312,6 +318,77 @@ export class DeviceService {
     const count = await this.deviceRepository.countBy({ deviceId, userId });
 
     return count > 0;
+  }
+
+  /**
+   * Resolves an entity id (what the frontend/dashboard widgets key on) to the device's physical
+   * id (what MQTT topics + websocket rooms key on), scoped to devices the user owns. Used by the
+   * websocket gateway's `subscribe:device` handler, which receives entity ids from the client.
+   */
+  async resolveOwnedDeviceByEntityId(userId: Uuid, entityId: string): Promise<Pick<DeviceEntity, 'id' | 'deviceId'> | null> {
+    return this.deviceRepository.findOne({ where: { id: entityId, userId }, select: ['id', 'deviceId'] });
+  }
+
+  /**
+   * Live SSE feed for the dashboard: telemetry + status updates for the given device ids,
+   * scoped to devices the user owns. `deviceIds` are entity ids (the same ids the REST device
+   * endpoints use), which this resolves to the physical device ids that `device.telemetry` /
+   * `device.status` events key on, then maps back to entity ids in the emitted payload.
+   */
+  streamDeviceEvents(userId: Uuid, deviceIds: string[]): Observable<MessageEvent> {
+    return defer(() => from(this.resolveEntityIdByPhysicalDeviceId(userId, deviceIds))).pipe(
+      switchMap((entityIdByPhysicalDeviceId) => {
+        const telemetry$ = fromEvent<DeviceTelemetryEvent>(this.eventEmitter, 'device.telemetry').pipe(
+          filter((event) => entityIdByPhysicalDeviceId.has(event.deviceId)),
+          map(
+            (event) =>
+              ({
+                type: 'telemetry',
+                data: {
+                  deviceId: entityIdByPhysicalDeviceId.get(event.deviceId),
+                  payload: event.payload,
+                  recordedAt: event.recordedAt,
+                },
+              }) satisfies MessageEvent,
+          ),
+        );
+
+        const status$ = fromEvent<DeviceStatusEvent>(this.eventEmitter, 'device.status').pipe(
+          filter((event) => entityIdByPhysicalDeviceId.has(event.deviceId)),
+          map(
+            (event) =>
+              ({
+                type: 'status',
+                data: {
+                  deviceId: entityIdByPhysicalDeviceId.get(event.deviceId),
+                  status: event.status,
+                  changedAt: event.changedAt,
+                },
+              }) satisfies MessageEvent,
+          ),
+        );
+
+        const heartbeat$ = interval(SSE_HEARTBEAT_MS).pipe(
+          map(() => ({ type: 'ping', data: { now: new Date().toISOString() } }) satisfies MessageEvent),
+        );
+
+        return merge(telemetry$, status$, heartbeat$);
+      }),
+    );
+  }
+
+  /** Devices the user owns, restricted to `entityIds` (when given), keyed by their physical device id. */
+  private async resolveEntityIdByPhysicalDeviceId(userId: Uuid, entityIds: string[]): Promise<Map<string, string>> {
+    if (entityIds.length === 0) {
+      return new Map();
+    }
+
+    const devices = await this.deviceRepository.find({
+      where: { id: In(entityIds), userId },
+      select: ['id', 'deviceId'],
+    });
+
+    return new Map(devices.map((device) => [device.deviceId, device.id]));
   }
 
   /** Used by notification warning checks, which need the template's telemetry schema alongside the device. */

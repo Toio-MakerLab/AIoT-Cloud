@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useDeviceTelemetryHistoryQuery, useTriggerDeviceActionMutation } from '../api/queries';
 import type { IDashboardWidget, IDevice } from '../api/types';
-import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/use-device-socket';
+import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
 
 interface Props {
   widget: IDashboardWidget;
@@ -29,11 +29,12 @@ function formatValue(value: unknown): string {
 }
 
 export function DevicePanel({ widget, device, latest, history, seedHistory, onRemove }: Props) {
-  // Seed the rolling history buffer once fetched — combined with any live telemetry
-  // already appended by the socket hook, this gives charts both history and a live tail.
+  // Seed the rolling history buffer once fetched — combined with any live telemetry already
+  // appended by the live-data source (SSE or WebSocket, picked by DashboardGrid based on
+  // widget type), this gives charts both history and a live tail.
   const { data: fetchedHistory } = useDeviceTelemetryHistoryQuery(widget.deviceId);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: seedHistory is an unstable reference from use-device-socket.ts; adding it would re-run the effect on every render.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: seedHistory is an unstable reference from the parent's live-data hook; adding it would re-run the effect on every render.
   useEffect(() => {
     if (fetchedHistory && fetchedHistory.length > 0) {
       seedHistory(

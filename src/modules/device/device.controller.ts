@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, ValidationPipe } from '@nestjs/common';
+import type { MessageEvent } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Sse, ValidationPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import type { Observable } from 'rxjs';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
 import type { ResponseCore } from '../../common/dto/response-core.dto.ts';
@@ -48,6 +50,23 @@ export class DeviceController {
   @HttpCode(HttpStatus.OK)
   getUnclaimedDevices(): Promise<ResponseCore<UnclaimedDeviceDto[]>> {
     return this.deviceService.listUnclaimedDevices();
+  }
+
+  /**
+   * Server-Sent Events feed for the dashboard: streams `telemetry` and `status` events (plus a
+   * periodic `ping` heartbeat) for the devices listed in `ids`, filtered to ones the user owns.
+   * `ids` is a comma-separated list of device ids (same ids `GET /devices/:id` uses).
+   */
+  @Sse('stream')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  streamDeviceEvents(@AuthUser() user: UserEntity, @Query('ids') ids?: string): Observable<MessageEvent> {
+    const deviceIds =
+      ids
+        ?.split(',')
+        .map((id) => id.trim())
+        .filter(Boolean) ?? [];
+
+    return this.deviceService.streamDeviceEvents(user.id as Uuid, deviceIds);
   }
 
   @Get(':id')

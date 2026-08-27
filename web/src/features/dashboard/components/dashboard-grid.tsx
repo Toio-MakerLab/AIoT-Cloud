@@ -1,15 +1,21 @@
 import { GridLayout, type Layout, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import type { IDashboardWidget, IDevice } from '../api/types';
-import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/use-device-socket';
+import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
 import { DevicePanel } from './device-panel';
+
+export interface DeviceLiveData {
+  latestByDevice: Map<string, ILatestTelemetry>;
+  historyByDevice: Map<string, ITelemetryPoint[]>;
+  seedHistory: (deviceId: string, points: ITelemetryPoint[]) => void;
+}
 
 interface Props {
   widgets: IDashboardWidget[];
   devices: IDevice[];
-  latestByDevice: Map<string, ILatestTelemetry>;
-  historyByDevice: Map<string, ITelemetryPoint[]>;
-  seedHistory: (deviceId: string, points: ITelemetryPoint[]) => void;
+  // CHART widgets read live data from `sse`; ACTION/VALUE widgets read from `socket`.
+  sse: DeviceLiveData;
+  socket: DeviceLiveData;
   onLayoutChange: (widgets: IDashboardWidget[]) => void;
   onRemoveWidget: (widgetId: string) => void;
 }
@@ -24,7 +30,7 @@ const COLS = 12;
  * children). Grid sizing (cols/rowHeight/margin/containerPadding) is grouped under the
  * `gridConfig` prop in v2 instead of flat props.
  */
-export function DashboardGrid({ widgets, devices, latestByDevice, historyByDevice, seedHistory, onLayoutChange, onRemoveWidget }: Props) {
+export function DashboardGrid({ widgets, devices, sse, socket, onLayoutChange, onRemoveWidget }: Props) {
   const { width, containerRef, mounted } = useContainerWidth();
 
   const layout: Layout = widgets.map((widget) => ({
@@ -72,14 +78,15 @@ export function DashboardGrid({ widgets, devices, latestByDevice, historyByDevic
         >
           {widgets.map((widget) => {
             const device = devices.find((d) => d.id === widget.deviceId);
+            const source = widget.widgetType === 'CHART' ? sse : socket;
             return (
               <div key={widget.id}>
                 <DevicePanel
                   widget={widget}
                   device={device}
-                  latest={latestByDevice.get(widget.deviceId)}
-                  history={historyByDevice.get(widget.deviceId) ?? []}
-                  seedHistory={seedHistory}
+                  latest={source.latestByDevice.get(widget.deviceId)}
+                  history={source.historyByDevice.get(widget.deviceId) ?? []}
+                  seedHistory={source.seedHistory}
                   onRemove={() => onRemoveWidget(widget.id)}
                 />
               </div>

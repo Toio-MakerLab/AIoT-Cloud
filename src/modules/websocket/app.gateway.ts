@@ -24,6 +24,11 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
+  // `device.telemetry`/`device.status` events (and the rooms above) are keyed by the device's
+  // physical id, but clients subscribe with (and expect payloads keyed by) the entity id. This
+  // cache is populated on subscribe and used to remap outgoing event payloads back to entity ids.
+  private readonly physicalToEntityId = new Map<string, string>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly deviceService: DeviceService,
@@ -58,15 +63,17 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
+  /** `entityId` is the entity id the dashboard widgets key on (same id the REST endpoints use). */
   @SubscribeMessage('subscribe:device')
-  async handleSubscribeDevice(client: Socket & { data: SocketData }, deviceId: string): Promise<{ ok: boolean }> {
-    const owned = await this.deviceService.isOwnedByUser(client.data.userId as Uuid, deviceId);
+  async handleSubscribeDevice(client: Socket & { data: SocketData }, entityId: string): Promise<{ ok: boolean }> {
+    const device = await this.deviceService.resolveOwnedDeviceByEntityId(client.data.userId as Uuid, entityId);
 
-    if (!owned) {
+    if (!device) {
       return { ok: false };
     }
 
-    await client.join(deviceRoom(deviceId));
+    this.physicalToEntityId.set(device.deviceId, device.id);
+    await client.join(deviceRoom(device.deviceId));
 
     return { ok: true };
   }
@@ -78,11 +85,13 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @OnEvent('device.telemetry')
   handleDeviceTelemetry(event: DeviceTelemetryEvent): void {
-    this.server.to(deviceRoom(event.deviceId)).emit('telemetry', event);
+    const deviceId = this.physicalToEntityId.get(event.deviceId) ?? event.deviceId;
+    this.server.to(deviceRoom(event.deviceId)).emit('telemetry', { ...event, deviceId });
   }
 
   @OnEvent('device.status')
   handleDeviceStatus(event: DeviceStatusEvent): void {
-    this.server.to(deviceRoom(event.deviceId)).emit('status', event);
+    const deviceId = this.physicalToEntityId.get(event.deviceId) ?? event.deviceId;
+    this.server.to(deviceRoom(event.deviceId)).emit('status', { ...event, deviceId });
   }
 }

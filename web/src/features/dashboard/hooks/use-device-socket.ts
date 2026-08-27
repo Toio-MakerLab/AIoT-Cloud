@@ -2,19 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { domainConfig } from '@/lib/domain-config';
 import { useAuthStore } from '@/stores/authStore';
+import { type ILatestTelemetry, type ITelemetryPoint, TELEMETRY_HISTORY_LIMIT } from './telemetry-types';
 
-export const TELEMETRY_HISTORY_LIMIT = 100;
-
-export interface ITelemetryPoint {
-  payload: Record<string, unknown>;
-  recordedAt: string;
-}
-
-export interface ILatestTelemetry {
-  deviceId: string;
-  payload: Record<string, unknown>;
-  recordedAt: string;
-}
+export { TELEMETRY_HISTORY_LIMIT };
+export type { ILatestTelemetry, ITelemetryPoint };
 
 interface TelemetryEventPayload {
   deviceId: string;
@@ -23,9 +14,10 @@ interface TelemetryEventPayload {
 }
 
 /**
- * Opens a single socket.io connection for the whole dashboard page, subscribes to every
- * distinct device id referenced by the current widget list, and fans out incoming
- * `telemetry` events by deviceId.
+ * Opens a single socket.io connection for the whole dashboard page, subscribes to the given
+ * device ids, and fans out incoming `telemetry` events by deviceId. Used for the dashboard's
+ * ACTION/VALUE panels — interactive controls and single live values, where push-on-change
+ * WebSocket delivery gives lower latency than SSE. CHART panels use `useDeviceSse` instead.
  *
  * Exposes:
  * - `latestByDevice`: Map<deviceId, ILatestTelemetry> — most recent telemetry per device.

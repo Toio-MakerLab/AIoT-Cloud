@@ -15,6 +15,7 @@ import type { IDashboard, IDashboardWidget } from './api/types';
 import { AddPanelDialog } from './components/add-panel-dialog';
 import { DashboardGrid } from './components/dashboard-grid';
 import { useDeviceSocket } from './hooks/use-device-socket';
+import { useDeviceSse } from './hooks/use-device-sse';
 
 const NEW_DASHBOARD_VALUE = '__new__';
 
@@ -59,8 +60,18 @@ export default function Dashboard() {
     }
   }, [dashboards, hasSelectedInitial]);
 
-  const distinctDeviceIds = useMemo(() => Array.from(new Set(draft.widgets.map((w) => w.deviceId))), [draft.widgets]);
-  const { latestByDevice, historyByDevice, seedHistory } = useDeviceSocket(distinctDeviceIds);
+  // CHART panels (rolling history, less latency-sensitive) stream over SSE; ACTION/VALUE panels
+  // (interactive controls + single live values) stream over WebSocket for lower-latency push.
+  const chartDeviceIds = useMemo(
+    () => Array.from(new Set(draft.widgets.filter((w) => w.widgetType === 'CHART').map((w) => w.deviceId))),
+    [draft.widgets],
+  );
+  const socketDeviceIds = useMemo(
+    () => Array.from(new Set(draft.widgets.filter((w) => w.widgetType !== 'CHART').map((w) => w.deviceId))),
+    [draft.widgets],
+  );
+  const sse = useDeviceSse(chartDeviceIds);
+  const socket = useDeviceSocket(socketDeviceIds);
 
   const handleSelectDashboard = (value: string) => {
     setHasSelectedInitial(true);
@@ -204,9 +215,8 @@ export default function Dashboard() {
         <DashboardGrid
           widgets={draft.widgets}
           devices={devices}
-          latestByDevice={latestByDevice}
-          historyByDevice={historyByDevice}
-          seedHistory={seedHistory}
+          sse={sse}
+          socket={socket}
           onLayoutChange={handleLayoutChange}
           onRemoveWidget={handleRemoveWidget}
         />
