@@ -24,13 +24,13 @@ export const sidebarData: SidebarData = {
 	},
 	teams: [
 		{
-			name: "Toio Marker Lab",
+			name: "KCN Song Than",
 			logo: Command,
 			plan: "AIoT Platform",
 			disabled: false,
 		},
 		{
-			name: "Acme Inc",
+			name: "KCN Song Than 2",
 			logo: GalleryVerticalEnd,
 			plan: "Enterprise",
 			disabled: true,
