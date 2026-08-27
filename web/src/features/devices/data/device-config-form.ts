@@ -21,6 +21,8 @@ export const deviceConfigFormSchema = z.object({
 	kafkaBrokers: z.string().optional(),
 	kafkaTopic: z.string().optional(),
 	kafkaClientId: z.string().optional(),
+	kafkaUsername: z.string().optional(),
+	kafkaPassword: z.string().optional(),
 });
 export type DeviceConfigFormValues = z.infer<typeof deviceConfigFormSchema>;
 
@@ -44,6 +46,8 @@ export function deviceConfigFormDefaults(
 		kafkaBrokers: config?.kafka?.brokers ?? "",
 		kafkaTopic: config?.kafka?.topic ?? "",
 		kafkaClientId: config?.kafka?.clientId ?? "",
+		kafkaUsername: config?.kafka?.username ?? "",
+		kafkaPassword: config?.kafka?.password ?? "",
 	};
 }
 
@@ -76,6 +80,8 @@ export function deviceConfigFormToPayload(
 						brokers: values.kafkaBrokers ?? "",
 						topic: values.kafkaTopic ?? "",
 						clientId: values.kafkaClientId || undefined,
+						username: values.kafkaUsername || undefined,
+						password: values.kafkaPassword || undefined,
 					}
 				: undefined,
 	};

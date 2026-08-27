@@ -240,6 +240,36 @@ export function DeviceConfigFields({ control, pushChannel }: Props) {
 							</FormItem>
 						)}
 					/>
+					<FormField
+						control={control}
+						name="kafkaUsername"
+						render={({ field }) => (
+							<FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+								<FormLabel className="col-span-2 text-right">
+									Username
+								</FormLabel>
+								<FormControl className="col-span-4">
+									<Input {...field} />
+								</FormControl>
+								<FormMessage className="col-span-4 col-start-3" />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={control}
+						name="kafkaPassword"
+						render={({ field }) => (
+							<FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+								<FormLabel className="col-span-2 text-right">
+									Password
+								</FormLabel>
+								<FormControl className="col-span-4">
+									<Input type="password" {...field} />
+								</FormControl>
+								<FormMessage className="col-span-4 col-start-3" />
+							</FormItem>
+						)}
+					/>
 				</>
 			) : null}
 		</>

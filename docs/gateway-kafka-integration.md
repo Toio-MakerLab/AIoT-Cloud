@@ -26,9 +26,25 @@ self-directed (restart itself) rather than something to relay downstream.
 ## Connection
 
 Gateway connects as its own Kafka client (own `clientId`/consumer group),
-producing to the shared broker at `KAFKA_BROKERS`. No credentials are
-exchanged over Kafka itself — a device is only accepted once it's registered
-via `POST /devices/register` (see below).
+producing to the shared broker at `KAFKA_BROKERS`. Registering a device via
+`POST /devices/register` is what makes its `deviceId` accepted — that's
+unrelated to the Kafka connection itself, which the gateway authenticates
+separately if the broker requires it.
+
+The backend supports connecting to a broker with SASL auth over TLS (e.g. a
+managed/hosted Kafka), configured via env vars — not per-device:
+
+| Env var | Purpose |
+|---|---|
+| `KAFKA_SSL_ENABLED` | `true` to connect over TLS |
+| `KAFKA_SASL_ENABLED` | `true` to enable SASL auth |
+| `KAFKA_SASL_MECHANISM` | `plain` \| `scram-sha-256` \| `scram-sha-512` |
+| `KAFKA_SASL_USERNAME` / `KAFKA_SASL_PASSWORD` | SASL credentials |
+
+`aiot-gate` should use the same broker/SSL/SASL settings — fetch them via
+`GET /devices/{deviceId}/boot-config` (see below): the `kafka` field on the
+response carries `username`/`password` alongside `brokers`, so the gateway
+doesn't need its own separate copy of these secrets configured out of band.
 
 ## Topics
 
@@ -145,11 +161,24 @@ x-device-secret: <shared secret>
       }
     },
     "http": null,
-    "kafka": null,
+    "kafka": {
+      "brokers": "kafka.internal:9092",
+      "topic": "devices.telemetry",
+      "clientId": "aiot-lab-service",
+      "username": "cloud-kafka-user",
+      "password": "***"
+    },
     "configVersion": 3
   }
 }
 ```
+
+- `kafka` is `null` only when `pushChannel` isn't `"KAFKA"`. When it is, and
+  the device has no per-device override configured (the common case), the
+  backend fills it in from its own `KAFKA_BROKERS`/`KAFKA_SASL_*` env config
+  — `username`/`password` are only present when `KAFKA_SASL_ENABLED=true`.
+  `topic` here is always `devices.telemetry` — see the topic list above for
+  where to actually publish telemetry vs. status.
 
 - `mqtt` is present regardless of `pushChannel` — it always describes the
   device's **local** MQTT topics on the gateway's own broker, since that's

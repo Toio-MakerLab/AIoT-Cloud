@@ -34,6 +34,9 @@ export interface DeviceKafkaConfig {
   brokers: string;
   topic: string;
   clientId?: string | null;
+  /** SASL credentials, only needed when overriding the platform's default Kafka broker/auth. */
+  username?: string | null;
+  password?: string | null;
 }
 
 export interface DeviceNetworkConfig {

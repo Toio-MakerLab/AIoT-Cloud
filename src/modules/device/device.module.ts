@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import type { SASLOptions } from 'kafkajs';
 
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
@@ -29,6 +30,8 @@ import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
             client: {
               clientId: `${configService.kafkaConfig.clientId}-commands`,
               brokers: configService.kafkaConfig.brokers.split(','),
+              ssl: configService.kafkaConfig.ssl,
+              sasl: configService.kafkaConfig.sasl as SASLOptions | undefined,
             },
           },
         }),

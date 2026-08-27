@@ -130,6 +130,8 @@ export class DeviceService {
             brokers: kafkaFallback.brokers,
             topic: KAFKA_TELEMETRY_TOPIC,
             clientId: kafkaFallback.clientId,
+            username: kafkaFallback.sasl?.username ?? null,
+            password: kafkaFallback.sasl?.password ?? null,
           })
         : null;
 

@@ -11,6 +11,7 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import compression from 'compression';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
+import type { SASLOptions } from 'kafkajs';
 import { Logger } from 'nestjs-pino';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 
@@ -93,6 +94,8 @@ export async function bootstrap(): Promise<NestExpressApplication> {
         client: {
           clientId: kafkaConfig.clientId,
           brokers: kafkaConfig.brokers.split(','),
+          ssl: kafkaConfig.ssl,
+          sasl: kafkaConfig.sasl as SASLOptions | undefined,
         },
         consumer: {
           groupId: kafkaConfig.groupId,

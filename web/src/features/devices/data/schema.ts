@@ -57,6 +57,8 @@ const kafkaConfigSchema = z.object({
 	brokers: z.string(),
 	topic: z.string(),
 	clientId: z.string().nullish(),
+	username: z.string().nullish(),
+	password: z.string().nullish(),
 });
 export type KafkaConfig = z.infer<typeof kafkaConfigSchema>;
 

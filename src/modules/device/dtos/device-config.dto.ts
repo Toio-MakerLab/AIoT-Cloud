@@ -86,6 +86,12 @@ export class KafkaConfigDto implements DeviceKafkaConfig {
 
   @StringFieldOptional({ nullable: true })
   clientId?: string | null;
+
+  @StringFieldOptional({ nullable: true })
+  username?: string | null;
+
+  @StringFieldOptional({ nullable: true })
+  password?: string | null;
 }
 
 export class UpdateDeviceConfigDto {

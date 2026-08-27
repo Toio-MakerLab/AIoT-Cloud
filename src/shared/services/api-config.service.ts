@@ -144,12 +144,12 @@ export class ApiConfigService {
 
   get awsS3Config() {
     return {
-    //   bucketRegion: this.getString('AWS_S3_BUCKET_REGION'),
-    //   bucketApiVersion: this.getString('AWS_S3_API_VERSION'),
-    //   bucketName: this.getString('AWS_S3_BUCKET_NAME'),
-        bucketRegion: "",
-        bucketApiVersion: "",
-        bucketName: "",
+      //   bucketRegion: this.getString('AWS_S3_BUCKET_REGION'),
+      //   bucketApiVersion: this.getString('AWS_S3_API_VERSION'),
+      //   bucketName: this.getString('AWS_S3_BUCKET_NAME'),
+      bucketRegion: '',
+      bucketApiVersion: '',
+      bucketName: '',
     };
   }
 
@@ -164,10 +164,10 @@ export class ApiConfigService {
 
   get natsConfig() {
     return {
-    //   host: this.getString('NATS_HOST'),
-    //   port: this.getNumber('NATS_PORT'),
-        host: "",
-        port: 0,
+      //   host: this.getString('NATS_HOST'),
+      //   port: this.getNumber('NATS_PORT'),
+      host: '',
+      port: 0,
     };
   }
 
@@ -188,10 +188,20 @@ export class ApiConfigService {
   }
 
   get kafkaConfig() {
+    const saslEnabled = this.configService.get<string>('KAFKA_SASL_ENABLED', 'false') === 'true';
+
     return {
       brokers: this.getString('KAFKA_BROKERS'),
       clientId: this.configService.get<string>('KAFKA_CLIENT_ID') ?? 'aiot-lab-service',
       groupId: this.configService.get<string>('KAFKA_GROUP_ID') ?? 'aiot-lab-service-consumer',
+      ssl: this.configService.get<string>('KAFKA_SSL_ENABLED', 'false') === 'true',
+      sasl: saslEnabled
+        ? {
+            mechanism: this.configService.get<string>('KAFKA_SASL_MECHANISM') ?? 'plain',
+            username: this.configService.get<string>('KAFKA_SASL_USERNAME') ?? '',
+            password: this.configService.get<string>('KAFKA_SASL_PASSWORD') ?? '',
+          }
+        : undefined,
     };
   }
 

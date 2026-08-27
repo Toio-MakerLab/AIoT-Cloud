@@ -84,6 +84,7 @@ export function DeviceConfigViewDialog({
 							<Row label="Brokers" value={config?.kafka?.brokers} />
 							<Row label="Topic" value={config?.kafka?.topic} />
 							<Row label="Client ID" value={config?.kafka?.clientId} />
+							<Row label="Username" value={config?.kafka?.username} />
 						</>
 					) : null}
 				</div>

@@ -51,6 +51,8 @@ export interface IKafkaConfig {
 	brokers: string;
 	topic: string;
 	clientId?: string | null;
+	username?: string | null;
+	password?: string | null;
 }
 
 export interface IDeviceNetworkConfig {
