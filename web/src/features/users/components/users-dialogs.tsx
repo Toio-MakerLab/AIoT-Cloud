@@ -1,8 +1,5 @@
 import { useUsers } from "../context/users-context";
 import { UsersActionDialog } from "./users-action-dialog";
-import { UsersDeleteDialog } from "./users-delete-dialog";
-import { UsersInviteDialog } from "./users-invite-dialog";
-import { UsersRolesDialog } from "./users-roles-dialog";
 
 export function UsersDialogs() {
 	const { open, setOpen, currentRow, setCurrentRow } = useUsers();
@@ -14,50 +11,18 @@ export function UsersDialogs() {
 				onOpenChange={() => setOpen("add")}
 			/>
 
-			<UsersInviteDialog
-				key="user-invite"
-				open={open === "invite"}
-				onOpenChange={() => setOpen("invite")}
-			/>
-
 			{currentRow && (
-				<>
-					<UsersActionDialog
-						key={`user-edit-${currentRow.id}`}
-						open={open === "edit"}
-						onOpenChange={() => {
-							setOpen("edit");
-							setTimeout(() => {
-								setCurrentRow(null);
-							}, 500);
-						}}
-						currentRow={currentRow}
-					/>
-
-					<UsersDeleteDialog
-						key={`user-delete-${currentRow.id}`}
-						open={open === "delete"}
-						onOpenChange={() => {
-							setOpen("delete");
-							setTimeout(() => {
-								setCurrentRow(null);
-							}, 500);
-						}}
-						currentRow={currentRow}
-					/>
-
-					<UsersRolesDialog
-						key={`user-roles-${currentRow.id}`}
-						open={open === "roles"}
-						onOpenChange={() => {
-							setOpen("roles");
-							setTimeout(() => {
-								setCurrentRow(null);
-							}, 500);
-						}}
-						currentRow={currentRow}
-					/>
-				</>
+				<UsersActionDialog
+					key={`user-edit-${currentRow.id}`}
+					open={open === "edit"}
+					onOpenChange={() => {
+						setOpen("edit");
+						setTimeout(() => {
+							setCurrentRow(null);
+						}, 500);
+					}}
+					currentRow={currentRow}
+				/>
 			)}
 		</>
 	);

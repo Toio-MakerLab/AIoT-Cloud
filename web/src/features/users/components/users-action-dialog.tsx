@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { PasswordInput } from "@/components/password-input";
 import { SelectDropdown } from "@/components/select-dropdown";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,72 +23,44 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useIsRoot } from "@/features/account/hooks/use-is-root";
-import { generatePassword } from "@/lib/generate-password";
+import { Switch } from "@/components/ui/switch";
 import { useCreateUserMutation, useUpdateUserMutation } from "../api/queries";
-import { getAssignableRoleTypes } from "../data/data";
+import { userRoles } from "../data/data";
 import type { User } from "../data/schema";
+import { userRoleSchema } from "../data/schema";
 
-const formSchema = z
-	.object({
-		firstName: z.string().min(1, { message: "First Name is required." }),
-		lastName: z.string().min(1, { message: "Last Name is required." }),
-		username: z.string().min(1, { message: "Username is required." }),
-		phoneNumber: z.string().optional(),
-		email: z
-			.string()
-			.email({ message: "Email is invalid." })
-			.optional()
-			.or(z.literal("")),
-		password: z.string().transform((pwd) => pwd.trim()),
-		role: z.string().min(1, { message: "Role is required." }),
-		confirmPassword: z.string().transform((pwd) => pwd.trim()),
-		isEdit: z.boolean(),
-	})
-	.superRefine(({ isEdit, password, confirmPassword }, ctx) => {
-		if (!isEdit || (isEdit && password !== "")) {
-			if (password === "") {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: "Password is required.",
-					path: ["password"],
-				});
-			}
+const baseSchema = {
+	firstName: z.string().optional(),
+	lastName: z.string().optional(),
+	email: z.string().email().optional().or(z.literal("")),
+	phone: z.string().optional(),
+	role: userRoleSchema.optional(),
+};
 
-			if (password.length < 8) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: "Password must be at least 8 characters long.",
-					path: ["password"],
-				});
-			}
+const addFormSchema = z.object({
+	username: z
+		.string()
+		.min(3, { message: "Username must be at least 3 characters." }),
+	password: z
+		.string()
+		.min(6, { message: "Password must be at least 6 characters." }),
+	...baseSchema,
+});
 
-			if (!password.match(/[a-z]/)) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: "Password must contain at least one lowercase letter.",
-					path: ["password"],
-				});
-			}
+const editFormSchema = z.object({
+	username: z
+		.string()
+		.min(3, { message: "Username must be at least 3 characters." }),
+	password: z
+		.string()
+		.min(6, { message: "Password must be at least 6 characters." })
+		.optional()
+		.or(z.literal("")),
+	isActive: z.boolean().optional(),
+	...baseSchema,
+});
 
-			if (!password.match(/\d/)) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: "Password must contain at least one number.",
-					path: ["password"],
-				});
-			}
-
-			if (password !== confirmPassword) {
-				ctx.addIssue({
-					code: z.ZodIssueCode.custom,
-					message: "Passwords don't match.",
-					path: ["confirmPassword"],
-				});
-			}
-		}
-	});
-type UserForm = z.infer<typeof formSchema>;
+type UserForm = z.infer<typeof addFormSchema> & { isActive?: boolean };
 
 interface Props {
 	currentRow?: User;
@@ -99,80 +70,63 @@ interface Props {
 
 export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
 	const isEdit = !!currentRow;
-	const isRoot = useIsRoot();
-	const roleTypes = getAssignableRoleTypes(isRoot);
 	const createUser = useCreateUserMutation();
 	const updateUser = useUpdateUserMutation();
 	const isSubmitting = createUser.isPending || updateUser.isPending;
+
 	const form = useForm<UserForm>({
-		resolver: zodResolver(formSchema),
+		resolver: zodResolver(isEdit ? editFormSchema : addFormSchema),
 		defaultValues: isEdit
 			? {
-					...currentRow,
+					username: currentRow.username,
 					password: "",
-					confirmPassword: "",
-					isEdit,
+					firstName: currentRow.firstName ?? "",
+					lastName: currentRow.lastName ?? "",
+					email: currentRow.email ?? "",
+					phone: currentRow.phone ?? "",
+					role: currentRow.role ?? "USER",
+					isActive: currentRow.isActive ?? true,
 				}
 			: {
+					username: "",
+					password: "",
 					firstName: "",
 					lastName: "",
-					username: "",
 					email: "",
-					role: "",
-					phoneNumber: "",
-					password: "",
-					confirmPassword: "",
-					isEdit,
+					phone: "",
+					role: "USER",
 				},
 	});
 
 	const onSubmit = async (values: UserForm) => {
 		try {
+			const payload = {
+				...values,
+				email: values.email || undefined,
+				password: values.password || undefined,
+			};
+
 			if (isEdit && currentRow) {
-				await updateUser.mutateAsync({
-					id: currentRow.id,
-					data: {
-						firstName: values.firstName,
-						lastName: values.lastName,
-						username: values.username,
-						phoneNumber: values.phoneNumber,
-						role: values.role,
-						...(values.email ? { email: values.email } : {}),
-						...(values.password ? { password: values.password } : {}),
-					},
-				});
+				await updateUser.mutateAsync({ id: currentRow.id, data: payload });
 				toast.success("User updated");
 			} else {
 				await createUser.mutateAsync({
-					firstName: values.firstName,
-					lastName: values.lastName,
-					username: values.username,
-					phoneNumber: values.phoneNumber,
-					password: values.password,
-					role: values.role,
-					...(values.email ? { email: values.email } : {}),
+					...payload,
+					password: payload.password!,
 				});
 				toast.success("User created");
 			}
 			form.reset();
 			onOpenChange(false);
-		} catch {
-			// Error toast is already shown by the global mutation error handler (see main.tsx).
+		} catch (error) {
+			// The backend returns business failures (e.g. duplicate username) as
+			// HTTP 200 with a non-zero `error` code, so they surface here as a
+			// thrown Error rather than an AxiosError the global mutation error
+			// handler can parse — toast the message explicitly.
+			toast.error(
+				error instanceof Error ? error.message : "Something went wrong!",
+			);
 		}
-	};
-
-	const isPasswordTouched = !!form.formState.dirtyFields.password;
-
-	const handleGeneratePassword = () => {
-		const generated = generatePassword();
-		form.setValue("password", generated, {
-			shouldValidate: true,
-			shouldDirty: true,
-		});
-		form.setValue("confirmPassword", generated, {
-			shouldValidate: true,
-			shouldDirty: true,
-		});
 	};
 
 	return (
@@ -184,37 +138,60 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
 			}}
 		>
 			<DialogContent className="sm:max-w-lg">
-				<DialogHeader className="text-left">
-					<DialogTitle>{isEdit ? "Edit User" : "Add New User"}</DialogTitle>
+				<DialogHeader>
+					<DialogTitle>{isEdit ? "Edit User" : "Add User"}</DialogTitle>
 					<DialogDescription>
-						{isEdit ? "Update the user here. " : "Create new user here. "}
-						Click save when you&apos;re done.
+						{isEdit
+							? "Update the user's details here."
+							: "Create a new user account here."}{" "}
+						Click save when you're done.
 					</DialogDescription>
 				</DialogHeader>
-				<div className="-mr-4 h-[26.25rem] w-full overflow-y-auto py-1 pr-4">
-					<Form {...form}>
-						<form
-							id="user-form"
-							onSubmit={form.handleSubmit(onSubmit)}
-							className="space-y-4 p-0.5"
-						>
+				<Form {...form}>
+					<form
+						id="user-form"
+						onSubmit={form.handleSubmit(onSubmit)}
+						className="space-y-4"
+					>
+						<FormField
+							control={form.control}
+							name="username"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Username</FormLabel>
+									<FormControl>
+										<Input placeholder="jdoe" {...field} disabled={isEdit} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="password"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										Password{isEdit ? " (leave blank to keep unchanged)" : ""}
+									</FormLabel>
+									<FormControl>
+										<Input type="password" placeholder="••••••" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<div className="grid grid-cols-2 gap-4">
 							<FormField
 								control={form.control}
 								name="firstName"
 								render={({ field }) => (
-									<FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-										<FormLabel className="col-span-2 text-right">
-											First Name
-										</FormLabel>
+									<FormItem>
+										<FormLabel>First name</FormLabel>
 										<FormControl>
-											<Input
-												placeholder="John"
-												className="col-span-4"
-												autoComplete="off"
-												{...field}
-											/>
+											<Input placeholder="John" {...field} />
 										</FormControl>
-										<FormMessage className="col-span-4 col-start-3" />
+										<FormMessage />
 									</FormItem>
 								)}
 							/>
@@ -222,152 +199,77 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
 								control={form.control}
 								name="lastName"
 								render={({ field }) => (
-									<FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-										<FormLabel className="col-span-2 text-right">
-											Last Name
-										</FormLabel>
+									<FormItem>
+										<FormLabel>Last name</FormLabel>
 										<FormControl>
-											<Input
-												placeholder="Doe"
-												className="col-span-4"
-												autoComplete="off"
-												{...field}
+											<Input placeholder="Doe" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+						<FormField
+							control={form.control}
+							name="email"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Email</FormLabel>
+									<FormControl>
+										<Input placeholder="jdoe@example.com" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="phone"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Phone</FormLabel>
+									<FormControl>
+										<Input placeholder="+1 555 555 5555" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="role"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Role</FormLabel>
+									<SelectDropdown
+										defaultValue={field.value}
+										onValueChange={field.onChange}
+										placeholder="Select a role"
+										items={userRoles}
+									/>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						{isEdit && (
+							<FormField
+								control={form.control}
+								name="isActive"
+								render={({ field }) => (
+									<FormItem className="flex items-center justify-between">
+										<FormLabel>Active</FormLabel>
+										<FormControl>
+											<Switch
+												checked={field.value ?? true}
+												onCheckedChange={field.onChange}
 											/>
 										</FormControl>
-										<FormMessage className="col-span-4 col-start-3" />
 									</FormItem>
 								)}
 							/>
-							<FormField
-								control={form.control}
-								name="username"
-								render={({ field }) => (
-									<FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-										<FormLabel className="col-span-2 text-right">
-											Username
-										</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="john_doe"
-												className="col-span-4"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage className="col-span-4 col-start-3" />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-										<FormLabel className="col-span-2 text-right">
-											Email (optional)
-										</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="john.doe@gmail.com"
-												className="col-span-4"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage className="col-span-4 col-start-3" />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="phoneNumber"
-								render={({ field }) => (
-									<FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-										<FormLabel className="col-span-2 text-left">
-											Phone Number (optional)
-										</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="+123456789"
-												className="col-span-4"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage className="col-span-4 col-start-3" />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="role"
-								render={({ field }) => (
-									<FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-										<FormLabel className="col-span-2 text-right">
-											Role
-										</FormLabel>
-										<SelectDropdown
-											defaultValue={field.value}
-											onValueChange={field.onChange}
-											placeholder="Select a role"
-											className="col-span-4"
-											items={roleTypes.map(({ label, value }) => ({
-												label,
-												value,
-											}))}
-										/>
-										<FormMessage className="col-span-4 col-start-3" />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="password"
-								render={({ field }) => (
-									<FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-										<FormLabel className="col-span-2 text-right">
-											Password
-										</FormLabel>
-										<div className="col-span-4 flex gap-2">
-											<FormControl>
-												<PasswordInput
-													placeholder="e.g., S3cur3P@ssw0rd"
-													className="flex-1"
-													{...field}
-												/>
-											</FormControl>
-											<Button
-												type="button"
-												variant="outline"
-												onClick={handleGeneratePassword}
-											>
-												Generate
-											</Button>
-										</div>
-										<FormMessage className="col-span-4 col-start-3" />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="confirmPassword"
-								render={({ field }) => (
-									<FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-										<FormLabel className="col-span-2 text-right">
-											Confirm Password
-										</FormLabel>
-										<FormControl>
-											<PasswordInput
-												disabled={!isPasswordTouched}
-												placeholder="e.g., S3cur3P@ssw0rd"
-												className="col-span-4"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage className="col-span-4 col-start-3" />
-									</FormItem>
-								)}
-							/>
-						</form>
-					</Form>
-				</div>
+						)}
+					</form>
+				</Form>
 				<DialogFooter>
 					<Button type="submit" form="user-form" disabled={isSubmitting}>
 						Save changes

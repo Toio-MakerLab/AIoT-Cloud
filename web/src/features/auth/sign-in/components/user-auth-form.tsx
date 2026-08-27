@@ -23,10 +23,9 @@ import { useAuthStore } from "@/stores/authStore";
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
 
 const formSchema = z.object({
-	email: z
+	usernameOrEmail: z
 		.string()
-		.min(1, { message: "Please enter your email" })
-		.email({ message: "Invalid email address" }),
+		.min(1, { message: "Please enter your username or email" }),
 	password: z.string().min(1, {
 		message: "Please enter your password",
 	}),
@@ -42,21 +41,32 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
 		onSuccess: (res, variables) => {
 			if (res.error !== 0) {
 				if (res.message === "error.emailNotVerified") {
+					const email = variables.usernameOrEmail.includes("@")
+						? variables.usernameOrEmail
+						: undefined;
+
 					toast.error("Please verify your email before signing in", {
-						action: {
-							label: "Resend email",
-							onClick: () => {
-								void authApi
-									.resendVerification({ email: variables.email })
-									.then(() => toast.success("Verification email sent"))
-									.catch(() => toast.error("Failed to resend email"));
-							},
-						},
+						action: email
+							? {
+									label: "Resend email",
+									onClick: () => {
+										void authApi
+											.resendVerification({ email })
+											.then(() => toast.success("Verification email sent"))
+											.catch(() => toast.error("Failed to resend email"));
+									},
+								}
+							: undefined,
 					});
 					return;
 				}
 
-				toast.error("Invalid email or password");
+				if (res.message === "error.userDeactivated") {
+					toast.error("Your account has been deactivated");
+					return;
+				}
+
+				toast.error("Invalid username/email or password");
 				return;
 			}
 
@@ -73,14 +83,14 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
 			navigate({ to: "/" });
 		},
 		onError: () => {
-			toast.error("Invalid email or password");
+			toast.error("Invalid username/email or password");
 		},
 	});
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			email: "",
+			usernameOrEmail: "",
 			password: "",
 		},
 	});
@@ -100,12 +110,12 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
 			>
 				<FormField
 					control={form.control}
-					name="email"
+					name="usernameOrEmail"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Email</FormLabel>
+							<FormLabel>Username or Email</FormLabel>
 							<FormControl>
-								<Input placeholder="name@example.com" {...field} />
+								<Input placeholder="jdoe or name@example.com" {...field} />
 							</FormControl>
 							<FormMessage />
 						</FormItem>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { useTriggerDeviceActionMutation } from "../api/queries";
 import type { IDeviceActionFieldDefinition } from "../api/types";
+import { useIsDeviceAdmin } from "../hooks/use-is-device-admin";
 
 interface Props {
 	deviceId: string;
@@ -108,7 +109,11 @@ export function DeviceActionsPanel({
 	actionSchema,
 	channelSupported,
 }: Props) {
-	if (!actionSchema || actionSchema.length === 0) {
+	// Triggering an action hits the ADMIN/ROOT-only POST /devices/:id/actions
+	// route (see device.controller.ts) — USER accounts are read-only here.
+	const isAdmin = useIsDeviceAdmin();
+
+	if (!actionSchema || actionSchema.length === 0 || !isAdmin) {
 		return null;
 	}
 

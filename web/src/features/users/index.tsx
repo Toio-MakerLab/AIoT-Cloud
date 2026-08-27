@@ -11,8 +11,13 @@ import { UsersPrimaryButtons } from "./components/users-primary-buttons";
 import { UsersTable } from "./components/users-table";
 import UsersProvider from "./context/users-context";
 
+// Backend caps `take` at 50 (see PageOptionsDto), so this fetches a single
+// large page and paginates/filters client-side, same as the
+// `device-templates` feature. User accounts are expected to stay in the
+// tens-to-low-hundreds range; if this grows past 50, switch to real
+// server-driven pagination wired to page/take/q instead.
 export default function Users() {
-	const { data } = useUsersQuery();
+	const { data } = useUsersQuery({ take: 50, order: "ASC" });
 	const userList = data?.data?.map(mapIUserToUser) ?? [];
 
 	return (
@@ -28,9 +33,11 @@ export default function Users() {
 			<Main>
 				<div className="mb-2 flex flex-wrap items-center justify-between space-y-2">
 					<div>
-						<h2 className="text-2xl font-bold tracking-tight">User List</h2>
+						<h2 className="text-2xl font-bold tracking-tight">
+							User Management
+						</h2>
 						<p className="text-muted-foreground">
-							Manage your users and their roles here.
+							Manage user accounts and their roles here.
 						</p>
 					</div>
 					<UsersPrimaryButtons />

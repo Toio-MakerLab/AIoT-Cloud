@@ -9,9 +9,6 @@ import {
 } from '../../../decorators/field.decorators.ts';
 import type { UserEntity } from '../user.entity.ts';
 
-// TODO, remove this class and use constructor's second argument's type
-export type UserDtoOptions = Partial<{ isActive: boolean }>;
-
 export class UserDto extends AbstractDto {
   @StringFieldOptional({ nullable: true })
   firstName?: string | null;
@@ -40,7 +37,7 @@ export class UserDto extends AbstractDto {
   @BooleanFieldOptional()
   isEmailVerified?: boolean;
 
-  constructor(user: UserEntity, options?: UserDtoOptions) {
+  constructor(user: UserEntity) {
     super(user);
     this.firstName = user.firstName;
     this.lastName = user.lastName;
@@ -49,7 +46,7 @@ export class UserDto extends AbstractDto {
     this.email = user.email;
     this.avatar = user.avatar;
     this.phone = user.phone;
-    this.isActive = options?.isActive;
+    this.isActive = user.settings?.isActive ?? true;
     this.isEmailVerified = user.settings?.isEmailVerified ?? false;
   }
 }

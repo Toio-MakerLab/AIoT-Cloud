@@ -1,49 +1,62 @@
+import type { UserRole } from "../data/schema";
+
 export interface IUser {
 	id: string;
-	firstName: string;
-	lastName: string;
 	username: string;
-	email: string;
-	phoneNumber: string;
-	status: string;
-	role: string;
+	firstName?: string | null;
+	lastName?: string | null;
+	email?: string | null;
+	phone?: string | null;
+	role?: UserRole;
+	isActive?: boolean;
+	isEmailVerified?: boolean;
 	createdAt: string;
 	updatedAt: string;
 }
 
 export interface ICreateUser {
-	firstName: string;
-	lastName: string;
 	username: string;
-	email?: string;
-	phoneNumber?: string;
 	password: string;
-	role: string;
-}
-
-export interface IUpdateUser {
 	firstName?: string;
 	lastName?: string;
-	username?: string;
 	email?: string;
-	phoneNumber?: string;
-	password?: string;
-	role?: string;
-	status?: string;
+	phone?: string;
+	role?: UserRole;
 }
 
-export interface IInviteUser {
-	email: string;
-	role: string;
-	desc?: string;
+export type IUpdateUser = Partial<Omit<ICreateUser, "username">> & {
+	username?: string;
+	isActive?: boolean;
+};
+
+export interface IUsersQueryParams {
+	page?: number;
+	take?: number;
+	order?: "ASC" | "DESC";
+	q?: string;
 }
 
-export interface IAssignUserRole {
-	userId: string;
-	role: string;
+// Mirrors backend `ResponseCore<T>` (src/common/dto/response-core.dto.ts):
+// { error: ErrorCode, data: T | null, message: string }. Business failures
+// come back as HTTP 200 with a non-zero `error` code, so callers must check it.
+export interface IResponseCore<T> {
+	error: number;
+	data: T | null;
+	message: string;
 }
 
-export interface IRevokeUserRole {
-	userId: string;
-	role: string;
+export const SUCCESS_CODE = 0;
+
+export interface IPageMeta {
+	page: number;
+	take: number;
+	itemCount: number;
+	pageCount: number;
+	hasPreviousPage: boolean;
+	hasNextPage: boolean;
+}
+
+export interface IPageDto<T> {
+	data: T[];
+	meta: IPageMeta;
 }

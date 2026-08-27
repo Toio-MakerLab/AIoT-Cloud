@@ -1,33 +1,23 @@
 import { z } from "zod";
 
-export const userStatusSchema = z.union([
-	z.literal("active"),
-	z.literal("inactive"),
-	z.literal("invited"),
-	z.literal("suspended"),
-]);
-export type UserStatus = z.infer<typeof userStatusSchema>;
-
-// Values match domain.Role* constants exactly (backend/internal/core/domain/enum.go) —
-// Casbin's g(userID, role) match is case-sensitive, so these must stay lowercase.
+// Values match backend `RoleType` enum exactly (src/constants/role-type.ts).
 export const userRoleSchema = z.union([
-	z.literal("root"),
-	z.literal("admin"),
-	z.literal("staff"),
-	z.literal("anylytics"),
-	z.literal("guest"),
-	z.literal("user"),
+	z.literal("ROOT"),
+	z.literal("ADMIN"),
+	z.literal("USER"),
 ]);
+export type UserRole = z.infer<typeof userRoleSchema>;
 
 const userSchema = z.object({
 	id: z.string(),
-	firstName: z.string(),
-	lastName: z.string(),
 	username: z.string(),
-	email: z.string(),
-	phoneNumber: z.string(),
-	status: userStatusSchema,
-	role: userRoleSchema,
+	firstName: z.string().nullish(),
+	lastName: z.string().nullish(),
+	email: z.string().nullish(),
+	phone: z.string().nullish(),
+	role: userRoleSchema.nullish(),
+	isActive: z.boolean().nullish(),
+	isEmailVerified: z.boolean().nullish(),
 	createdAt: z.coerce.date(),
 	updatedAt: z.coerce.date(),
 });

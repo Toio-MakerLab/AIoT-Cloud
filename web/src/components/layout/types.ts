@@ -1,49 +1,49 @@
-import type { LinkProps } from '@tanstack/react-router';
-import type { Permission } from '@/features/account/api/types';
+import type { LinkProps } from "@tanstack/react-router";
+import type { Permission } from "@/features/account/api/types";
 
 export type { Permission };
 
 interface User {
-  name: string;
-  email: string;
-  avatar: string;
+	name: string;
+	email: string;
+	avatar: string;
 }
 
 interface Team {
-  name: string;
-  logo: React.ElementType;
-  plan: string;
-  disabled?: boolean;
+	name: string;
+	logo: React.ElementType;
+	plan: string;
+	disabled?: boolean;
 }
 
 interface BaseNavItem {
-  title: string;
-  badge?: string;
-  icon?: React.ElementType;
-  permission?: Permission;
+	title: string;
+	badge?: string;
+	icon?: React.ElementType;
+	permission?: Permission;
 }
 
 type NavLink = BaseNavItem & {
-  url: LinkProps['to'];
-  items?: never;
+	url: LinkProps["to"];
+	items?: never;
 };
 
 type NavCollapsible = BaseNavItem & {
-  items: (BaseNavItem & { url: LinkProps['to'] })[];
-  url?: never;
+	items: (BaseNavItem & { url: LinkProps["to"] })[];
+	url?: never;
 };
 
 type NavItem = NavCollapsible | NavLink;
 
 interface NavGroup {
-  title: string;
-  items: NavItem[];
+	title: string;
+	items: NavItem[];
 }
 
 interface SidebarData {
-  user: User;
-  teams: Team[];
-  navGroups: NavGroup[];
+	user: User;
+	teams: Team[];
+	navGroups: NavGroup[];
 }
 
 export type { NavCollapsible, NavGroup, NavItem, NavLink, SidebarData };

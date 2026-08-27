@@ -23,7 +23,7 @@ export type LoginResponse = {
 };
 
 export type LoginInput = {
-	email: string;
+	usernameOrEmail: string;
 	password: string;
 };
 

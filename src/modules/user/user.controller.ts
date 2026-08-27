@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus, Query, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Query, ValidationPipe } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
@@ -9,6 +9,8 @@ import { AuthUser } from '../../decorators/auth-user.decorator.ts';
 import { Auth, UUIDParam } from '../../decorators/http.decorators.ts';
 import { UseLanguageInterceptor } from '../../interceptors/language-interceptor.service.ts';
 import { TranslationService } from '../../shared/services/translation.service.ts';
+import { CreateUserDto } from './dtos/create-user.dto.ts';
+import { UpdateUserDto } from './dtos/update-user.dto.ts';
 import { UserDto } from './dtos/user.dto.ts';
 import { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
@@ -35,7 +37,7 @@ export class UserController {
   }
 
   @Get()
-  @Auth([RoleType.USER])
+  @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   @ApiPageResponse({
     description: 'Get users list',
@@ -49,7 +51,7 @@ export class UserController {
   }
 
   @Get(':id')
-  @Auth([RoleType.USER])
+  @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
     status: HttpStatus.OK,
@@ -58,5 +60,29 @@ export class UserController {
   })
   getUser(@UUIDParam('id') userId: Uuid): Promise<ResponseCore<UserDto>> {
     return this.userService.getUser(userId);
+  }
+
+  @Post()
+  @Auth([RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.CREATED)
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Create user',
+    type: UserDto,
+  })
+  createUser(@Body() createUserDto: CreateUserDto): Promise<ResponseCore<UserDto>> {
+    return this.userService.createUserByAdmin(createUserDto);
+  }
+
+  @Patch(':id')
+  @Auth([RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Update user',
+    type: UserDto,
+  })
+  updateUser(@UUIDParam('id') userId: Uuid, @Body() updateUserDto: UpdateUserDto): Promise<ResponseCore<UserDto>> {
+    return this.userService.updateUser(userId, updateUserDto);
   }
 }

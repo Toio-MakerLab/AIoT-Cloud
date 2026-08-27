@@ -59,11 +59,7 @@ export class AuthController {
       return ResponseCore.fail(result.error, result.message);
     }
 
-    return ResponseCore.ok(
-      result.data.toDto({
-        isActive: true,
-      }),
-    );
+    return ResponseCore.ok(result.data.toDto());
   }
 
   @Post('verify-email')

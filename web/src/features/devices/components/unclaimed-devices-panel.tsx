@@ -19,13 +19,17 @@ import {
 } from "@/components/ui/table";
 import { useUnclaimedDevicesQuery } from "../api/queries";
 import { useDevices } from "../context/devices-context";
+import { useIsDeviceAdmin } from "../hooks/use-is-device-admin";
 
 export function UnclaimedDevicesPanel() {
 	const { data } = useUnclaimedDevicesQuery();
 	const { setOpen, setPrefillDeviceId } = useDevices();
+	// Registering a device hits the ADMIN/ROOT-only POST /devices/register
+	// route (see device.controller.ts) — nothing to act on here for a USER.
+	const isAdmin = useIsDeviceAdmin();
 	const unclaimedDevices = data?.data ?? [];
 
-	if (unclaimedDevices.length === 0) {
+	if (!isAdmin || unclaimedDevices.length === 0) {
 		return null;
 	}
 

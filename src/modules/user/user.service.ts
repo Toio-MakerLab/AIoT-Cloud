@@ -16,6 +16,8 @@ import type { Reference } from '../../types.ts';
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
 import { CreateSettingsCommand } from './commands/create-settings.command.ts';
 import { CreateSettingsDto } from './dtos/create-settings.dto.ts';
+import type { CreateUserDto } from './dtos/create-user.dto.ts';
+import type { UpdateUserDto } from './dtos/update-user.dto.ts';
 import type { UserDto } from './dtos/user.dto.ts';
 import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
@@ -97,6 +99,68 @@ export class UserService {
     await this.mailService.sendVerificationEmail(user.email!, emailVerificationToken);
 
     return ResponseCore.ok(user);
+  }
+
+  /**
+   * Admin/root-driven user creation. Unlike self-registration (createUser
+   * above), this skips the email-verification flow since the account is
+   * being vouched for by an already-trusted operator.
+   */
+  @Transactional()
+  async createUserByAdmin(dto: CreateUserDto): Promise<ResponseCore<UserDto>> {
+    const existing = await this.findByUsernameOrEmail({
+      username: dto.username,
+      email: dto.email,
+    });
+
+    if (existing) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.userAlreadyExists');
+    }
+
+    const user = this.userRepository.create(dto);
+    await this.userRepository.save(user);
+
+    user.settings = await this.userSettingsRepository.save(
+      this.userSettingsRepository.create({
+        userId: user.id,
+        isEmailVerified: true,
+        isPhoneVerified: true,
+      }),
+    );
+
+    return ResponseCore.ok(user.toDto());
+  }
+
+  @Transactional()
+  async updateUser(userId: Uuid, dto: UpdateUserDto): Promise<ResponseCore<UserDto>> {
+    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['settings'] });
+
+    if (!user) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.userNotFound');
+    }
+
+    if (dto.username || dto.email) {
+      const existing = await this.findByUsernameOrEmail({
+        username: dto.username,
+        email: dto.email,
+      });
+
+      if (existing && existing.id !== userId) {
+        return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.userAlreadyExists');
+      }
+    }
+
+    const { isActive, ...userFields } = dto;
+
+    Object.assign(user, userFields);
+    await this.userRepository.save(user);
+
+    if (isActive !== undefined && user.settings) {
+      user.settings.isActive = isActive;
+      await this.userSettingsRepository.save(user.settings);
+    }
+
+    return ResponseCore.ok(user.toDto());
   }
 
   @Transactional()

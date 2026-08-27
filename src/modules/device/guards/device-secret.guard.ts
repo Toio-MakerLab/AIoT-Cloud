@@ -1,8 +1,7 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-
-import { DeviceSecretService } from '../device-secret.service.ts';
 import { DeviceService } from '../device.service.ts';
+import { DeviceSecretService } from '../device-secret.service.ts';
 
 @Injectable()
 export class DeviceSecretGuard implements CanActivate {

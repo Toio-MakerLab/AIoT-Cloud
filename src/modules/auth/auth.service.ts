@@ -32,7 +32,8 @@ export class AuthService {
 
   async validateUser(userLoginDto: UserLoginDto): Promise<ResponseCore<UserEntity>> {
     const user = await this.userService.findByUsernameOrEmail({
-      email: userLoginDto.email,
+      username: userLoginDto.usernameOrEmail,
+      email: userLoginDto.usernameOrEmail,
     });
 
     const isPasswordValid = await validateHash(userLoginDto.password, user?.password);
@@ -43,6 +44,10 @@ export class AuthService {
 
     if (!user!.settings?.isEmailVerified) {
       return ResponseCore.fail(ErrorCode.FORBIDDEN, 'error.emailNotVerified');
+    }
+
+    if (user!.settings?.isActive === false) {
+      return ResponseCore.fail(ErrorCode.FORBIDDEN, 'error.userDeactivated');
     }
 
     return ResponseCore.ok(user!);

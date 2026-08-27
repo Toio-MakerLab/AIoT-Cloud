@@ -1,8 +1,8 @@
-import { EmailField, StringField } from '../../../decorators/field.decorators.ts';
+import { StringField } from '../../../decorators/field.decorators.ts';
 
 export class UserLoginDto {
-  @EmailField()
-  readonly email!: string;
+  @StringField()
+  readonly usernameOrEmail!: string;
 
   @StringField()
   readonly password!: string;
