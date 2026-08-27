@@ -1,5 +1,5 @@
-import ViteLogo from '@/assets/vite.svg';
-import { UserAuthForm } from './components/user-auth-form';
+import ViteLogo from "@/assets/vite.svg"
+import { UserAuthForm } from "./components/user-auth-form"
 
 export default function SignIn2() {
   return (
@@ -20,16 +20,22 @@ export default function SignIn2() {
           >
             <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
           </svg>
-          CMS for vkhangstack
+          Capstone Project
         </div>
 
-        <img src={ViteLogo} className="relative m-auto" width={301} height={60} alt="Vite" />
+        <img
+          src={ViteLogo}
+          className="relative m-auto"
+          width={301}
+          height={60}
+          alt="Vite"
+        />
 
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
             <p className="text-lg">
-              &ldquo;This template has saved me countless hours of work and helped me deliver stunning designs to my clients faster than ever
-              before.&rdquo;
+              &ldquo;This template has saved me countless hours of work and helped me
+              deliver stunning designs to my clients faster than ever before.&rdquo;
             </p>
             <footer className="text-sm">John Doe</footer>
           </blockquote>
@@ -46,12 +52,15 @@ export default function SignIn2() {
           </div>
           <UserAuthForm />
           <p className="text-muted-foreground px-8 text-center text-sm">
-            By clicking login, you agree to our{' '}
+            By clicking login, you agree to our{" "}
             <a href="/terms" className="hover:text-primary underline underline-offset-4">
               Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="/privacy" className="hover:text-primary underline underline-offset-4">
+            </a>{" "}
+            and{" "}
+            <a
+              href="/privacy"
+              className="hover:text-primary underline underline-offset-4"
+            >
               Privacy Policy
             </a>
             .
@@ -59,5 +68,5 @@ export default function SignIn2() {
         </div>
       </div>
     </div>
-  );
+  )
 }

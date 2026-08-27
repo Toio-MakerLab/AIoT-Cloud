@@ -1,5 +1,5 @@
 interface Props {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export default function AuthLayout({ children }: Props) {
@@ -20,10 +20,10 @@ export default function AuthLayout({ children }: Props) {
           >
             <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
           </svg>
-          <h1 className="text-xl font-medium">CMS for vkhangstack</h1>
+          <h1 className="text-xl font-medium">Capstone Project</h1>
         </div>
         {children}
       </div>
     </div>
-  );
+  )
 }
