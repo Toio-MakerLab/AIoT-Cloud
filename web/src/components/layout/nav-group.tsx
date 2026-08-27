@@ -23,9 +23,9 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { renderIcon } from './render-icon';
-import type { NavCollapsible, NavGroup, NavItem, NavLink } from './types';
+import type { NavCollapsible, NavGroup as NavGroupType, NavItem, NavLink } from './types';
 
-export function NavGroup({ title, items }: NavGroup) {
+export function NavGroup({ title, items }: NavGroupType) {
   const { state, isMobile } = useSidebar();
   const href = useLocation({ select: (location) => location.href });
   return (

@@ -31,7 +31,9 @@ function filterUncovered(items: NavItem[], covered: Set<string>): NavItem[] {
 // static nav item whose route isn't already covered by the dynamic response.
 export function mergeWithStaticFallback(dynamicGroups: NavGroup[], staticGroups: NavGroup[]): NavGroup[] {
   const covered = new Set<string>();
-  dynamicGroups.forEach((group) => collectUrls(group.items, covered));
+  dynamicGroups.forEach((group) => {
+    collectUrls(group.items, covered);
+  });
 
   const extraGroups: NavGroup[] = [];
   for (const group of staticGroups) {

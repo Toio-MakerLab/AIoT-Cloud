@@ -87,6 +87,8 @@ export function flattenPermissions(navGroups: IAccountMenuNavGroup[] | null | un
     }
   }
 
-  navGroups.forEach((group) => visit(group.items));
+  navGroups.forEach((group) => {
+    visit(group.items);
+  });
   return map;
 }

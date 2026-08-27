@@ -33,6 +33,7 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
   // already appended by the socket hook, this gives charts both history and a live tail.
   const { data: fetchedHistory } = useDeviceTelemetryHistoryQuery(widget.deviceId);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: seedHistory is an unstable reference from use-device-socket.ts; adding it would re-run the effect on every render.
   useEffect(() => {
     if (fetchedHistory && fetchedHistory.length > 0) {
       seedHistory(
@@ -43,7 +44,6 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
         })),
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchedHistory, widget.deviceId]);
 
   const field = widget.field ?? '';

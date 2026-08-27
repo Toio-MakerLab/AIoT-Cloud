@@ -7,7 +7,18 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!dist", "!coverage", "!docs/.vuepress/dist", "!web/dist", "!web/node_modules", "!node_modules", "!**/node_modules"]
+    "includes": [
+      "**",
+      "!dist",
+      "!coverage",
+      "!docs/.vuepress/dist",
+      "!web/dist",
+      "!web/node_modules",
+      "!node_modules",
+      "!**/node_modules",
+      "!web/src/routeTree.gen.ts",
+      "!**/*.svg"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -24,6 +35,11 @@
       "semicolons": "always",
       "trailingCommas": "all",
       "bracketSpacing": true
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   },
   "linter": {

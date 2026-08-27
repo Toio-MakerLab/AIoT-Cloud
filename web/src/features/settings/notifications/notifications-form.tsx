@@ -54,7 +54,7 @@ function ZaloLinkPanel() {
     const timer = setTimeout(() => setPollAttempts((n) => n + 1), POLL_INTERVAL_MS);
 
     return () => clearTimeout(timer);
-  }, [link, pollExhausted, pollAttempts]);
+  }, [link, pollExhausted]);
 
   const handleRequest = async () => {
     setPollAttempts(0);
