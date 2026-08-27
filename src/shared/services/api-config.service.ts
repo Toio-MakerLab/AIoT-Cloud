@@ -16,11 +16,13 @@ import { AddDeviceSecrets1787900000000 } from '../../database/migrations/1787900
 import { AddDeviceStatus1788000000000 } from '../../database/migrations/1788000000000-AddDeviceStatus.ts';
 import { SeedRelay2ChAcs712Template1788100000000 } from '../../database/migrations/1788100000000-SeedRelay2ChAcs712Template.ts';
 import { AddRelayCurrentNodeTemplateType1788200000000 } from '../../database/migrations/1788200000000-AddRelayCurrentNodeTemplateType.ts';
+import { AddUnclaimedDevices1788300000000 } from '../../database/migrations/1788300000000-AddUnclaimedDevices.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
 import { DeviceSecretEntity } from '../../modules/device/device-secret.entity.ts';
 import { DeviceTelemetryEntity } from '../../modules/device/device-telemetry.entity.ts';
+import { UnclaimedDeviceEntity } from '../../modules/device/unclaimed-device.entity.ts';
 import { DeviceTemplateEntity } from '../../modules/device-template/device-template.entity.ts';
 import { NotificationConfigEntity } from '../../modules/notification/notification-config.entity.ts';
 import { UserEntity } from '../../modules/user/user.entity.ts';
@@ -105,6 +107,7 @@ export class ApiConfigService {
         DeviceEntity,
         DeviceSecretEntity,
         DeviceTelemetryEntity,
+        UnclaimedDeviceEntity,
         DashboardEntity,
         NotificationConfigEntity,
       ],
@@ -121,6 +124,7 @@ export class ApiConfigService {
         AddDeviceStatus1788000000000,
         SeedRelay2ChAcs712Template1788100000000,
         AddRelayCurrentNodeTemplateType1788200000000,
+        AddUnclaimedDevices1788300000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',

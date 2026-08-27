@@ -17,6 +17,7 @@ import { DeviceTelemetryQueryDto } from './dtos/device-telemetry-query.dto.ts';
 import { DevicesPageOptionsDto } from './dtos/devices-page-options.dto.ts';
 import { RegisterDeviceDto } from './dtos/register-device.dto.ts';
 import { TriggerDeviceActionDto } from './dtos/trigger-device-action.dto.ts';
+import type { UnclaimedDeviceDto } from './dtos/unclaimed-device.dto.ts';
 
 @Controller('devices')
 @ApiTags('devices')
@@ -40,6 +41,13 @@ export class DeviceController {
   @HttpCode(HttpStatus.CREATED)
   registerDevice(@AuthUser() user: UserEntity, @Body() dto: RegisterDeviceDto): Promise<ResponseCore<RegisterDeviceResult>> {
     return this.deviceService.registerDevice(user.id as Uuid, dto);
+  }
+
+  @Get('unclaimed')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  getUnclaimedDevices(): Promise<ResponseCore<UnclaimedDeviceDto[]>> {
+    return this.deviceService.listUnclaimedDevices();
   }
 
   @Get(':id')

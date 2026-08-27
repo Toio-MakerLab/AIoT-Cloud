@@ -15,10 +15,11 @@ import { DeviceStatusScheduler } from './device-status.scheduler.ts';
 import { DeviceTelemetryEntity } from './device-telemetry.entity.ts';
 import { DeviceSecretGuard } from './guards/device-secret.guard.ts';
 import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
+import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([DeviceEntity, DeviceTemplateEntity, DeviceTelemetryEntity, DeviceSecretEntity]),
+    TypeOrmModule.forFeature([DeviceEntity, DeviceTemplateEntity, DeviceTelemetryEntity, DeviceSecretEntity, UnclaimedDeviceEntity]),
     ClientsModule.registerAsync([
       {
         name: KAFKA_COMMAND_CLIENT,

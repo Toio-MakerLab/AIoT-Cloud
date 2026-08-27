@@ -21,6 +21,7 @@ export class MqttController {
   @EventPattern('#')
   handleAny(@Payload() data: unknown, @Ctx() context: MqttContext): void {
     const topic = context.getTopic();
+    this.logger.log(`[${topic}] ${JSON.stringify(data)}`);
 
     const telemetryDeviceId = TELEMETRY_TOPIC_REGEX.exec(topic)?.[1];
 
@@ -43,8 +44,6 @@ export class MqttController {
     if (COMMAND_TOPIC_REGEX.test(topic) || CHANNEL_COMMAND_TOPIC_REGEX.test(topic)) {
       return;
     }
-
-    this.logger.log(`[${topic}] ${JSON.stringify(data)}`);
   }
 
   private async handleDeviceTelemetry(deviceId: string, data: unknown): Promise<void> {

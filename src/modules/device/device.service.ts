@@ -26,8 +26,10 @@ import type { DeviceTelemetryDto } from './dtos/device-telemetry.dto.ts';
 import type { DevicesPageOptionsDto } from './dtos/devices-page-options.dto.ts';
 import type { RegisterDeviceDto } from './dtos/register-device.dto.ts';
 import type { TriggerDeviceActionDto } from './dtos/trigger-device-action.dto.ts';
+import type { UnclaimedDeviceDto } from './dtos/unclaimed-device.dto.ts';
 import type { DeviceMqttTopics } from './interfaces/device-network-config.interface.ts';
 import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
+import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
 
 export interface DeviceTelemetryEvent {
   deviceId: string;
@@ -56,6 +58,8 @@ export class DeviceService {
     private deviceTemplateRepository: Repository<DeviceTemplateEntity>,
     @InjectRepository(DeviceTelemetryEntity)
     private deviceTelemetryRepository: Repository<DeviceTelemetryEntity>,
+    @InjectRepository(UnclaimedDeviceEntity)
+    private unclaimedDeviceRepository: Repository<UnclaimedDeviceEntity>,
     private eventEmitter: EventEmitter2,
     private apiConfigService: ApiConfigService,
     @Inject(KAFKA_COMMAND_CLIENT) private kafkaCommandClient: ClientProxy,
@@ -85,6 +89,8 @@ export class DeviceService {
 
     await this.deviceRepository.save(entity);
     entity.template = template;
+
+    await this.unclaimedDeviceRepository.delete({ deviceId: dto.deviceId });
 
     return ResponseCore.ok({ device: entity.toDto() });
   }
@@ -316,6 +322,7 @@ export class DeviceService {
 
     if (!device) {
       this.logger.warn(`Ignoring telemetry for unclaimed device ${deviceId}`);
+      await this.recordUnclaimedDevice(deviceId, 'telemetry', payload);
 
       return;
     }
@@ -357,6 +364,7 @@ export class DeviceService {
 
     if (!device) {
       this.logger.warn(`Ignoring status for unclaimed device ${deviceId}`);
+      await this.recordUnclaimedDevice(deviceId, 'status', payload);
 
       return;
     }
@@ -406,6 +414,29 @@ export class DeviceService {
         changedAt,
       } satisfies DeviceStatusEvent);
     }
+  }
+
+  async listUnclaimedDevices(): Promise<ResponseCore<UnclaimedDeviceDto[]>> {
+    const devices = await this.unclaimedDeviceRepository.find({ order: { lastSeenAt: 'DESC' } });
+
+    return ResponseCore.ok(devices.toDtos());
+  }
+
+  private async recordUnclaimedDevice(deviceId: string, topic: string, payload: unknown): Promise<void> {
+    const lastSeenAt = new Date();
+    const lastPayload = typeof payload === 'string' ? payload : JSON.stringify(payload);
+
+    const existing = await this.unclaimedDeviceRepository.findOneBy({ deviceId });
+
+    if (existing) {
+      await this.unclaimedDeviceRepository.update(existing.id, { lastTopic: topic, lastPayload, lastSeenAt });
+
+      return;
+    }
+
+    const entity = this.unclaimedDeviceRepository.create({ deviceId, lastTopic: topic, lastPayload, lastSeenAt });
+
+    await this.unclaimedDeviceRepository.save(entity);
   }
 
   private parseStatusPayload(payload: unknown): DeviceStatus | null {
