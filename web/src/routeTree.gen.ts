@@ -8,320 +8,335 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root';
-import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index';
-import { Route as AuthenticatedDeviceSecretsIndexRouteImport } from './routes/_authenticated/device-secrets/index';
-import { Route as AuthenticatedDeviceTemplatesIndexRouteImport } from './routes/_authenticated/device-templates/index';
-import { Route as AuthenticatedDevicesDeviceIdRouteImport } from './routes/_authenticated/devices/$deviceId';
-import { Route as AuthenticatedDevicesIndexRouteImport } from './routes/_authenticated/devices/index';
-import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index';
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index';
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile';
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route';
-import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account';
-import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance';
-import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display';
-import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index';
-import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications';
-import { Route as AuthenticatedSettingsRolesRouteImport } from './routes/_authenticated/settings/roles';
-import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route';
-import { Route as AuthenticatedTasksTaskIdEditRouteImport } from './routes/_authenticated/tasks/$taskId.edit';
-import { Route as AuthenticatedTasksTaskIdViewRouteImport } from './routes/_authenticated/tasks/$taskId.view';
-import { Route as AuthenticatedTasksCreateRouteImport } from './routes/_authenticated/tasks/create';
-import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index';
-import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index';
-import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password';
-import { Route as authOtpRouteImport } from './routes/(auth)/otp';
-import { Route as authPostRouteImport } from './routes/(auth)/post';
-import { Route as authSignInRouteImport } from './routes/(auth)/sign-in';
-import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2';
-import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up';
-import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email';
-import { Route as errors401RouteImport } from './routes/(errors)/401';
-import { Route as errors403RouteImport } from './routes/(errors)/403';
-import { Route as errors404RouteImport } from './routes/(errors)/404';
-import { Route as errors500RouteImport } from './routes/(errors)/500';
-import { Route as errors503RouteImport } from './routes/(errors)/503';
-import { Route as CallbackRouteImport } from './routes/callback';
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as CallbackRouteImport } from './routes/callback'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as errors503RouteImport } from './routes/(errors)/503'
+import { Route as errors500RouteImport } from './routes/(errors)/500'
+import { Route as errors404RouteImport } from './routes/(errors)/404'
+import { Route as errors403RouteImport } from './routes/(errors)/403'
+import { Route as errors401RouteImport } from './routes/(errors)/401'
+import { Route as authVerifyEmailRouteImport } from './routes/(auth)/verify-email'
+import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
+import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
+import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
+import { Route as authPostRouteImport } from './routes/(auth)/post'
+import { Route as authOtpRouteImport } from './routes/(auth)/otp'
+import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
+import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedDevicesIndexRouteImport } from './routes/_authenticated/devices/index'
+import { Route as AuthenticatedDeviceTemplatesIndexRouteImport } from './routes/_authenticated/device-templates/index'
+import { Route as AuthenticatedDeviceSecretsIndexRouteImport } from './routes/_authenticated/device-secrets/index'
+import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
+import { Route as AuthenticatedTasksCreateRouteImport } from './routes/_authenticated/tasks/create'
+import { Route as AuthenticatedSettingsRolesRouteImport } from './routes/_authenticated/settings/roles'
+import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
+import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
+import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
+import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
+import { Route as AuthenticatedDevicesDeviceIdRouteImport } from './routes/_authenticated/devices/$deviceId'
+import { Route as AuthenticatedTasksTaskIdViewRouteImport } from './routes/_authenticated/tasks/$taskId.view'
+import { Route as AuthenticatedTasksTaskIdEditRouteImport } from './routes/_authenticated/tasks/$taskId.edit'
 
 const CallbackRoute = CallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
+} as any)
 const errors503Route = errors503RouteImport.update({
   id: '/(errors)/503',
   path: '/503',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const errors500Route = errors500RouteImport.update({
   id: '/(errors)/500',
   path: '/500',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const errors404Route = errors404RouteImport.update({
   id: '/(errors)/404',
   path: '/404',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const errors403Route = errors403RouteImport.update({
   id: '/(errors)/403',
   path: '/403',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const errors401Route = errors401RouteImport.update({
   id: '/(errors)/401',
   path: '/401',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const authVerifyEmailRoute = authVerifyEmailRouteImport.update({
   id: '/(auth)/verify-email',
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const authSignUpRoute = authSignUpRouteImport.update({
   id: '/(auth)/sign-up',
   path: '/sign-up',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const authSignIn2Route = authSignIn2RouteImport.update({
   id: '/(auth)/sign-in-2',
   path: '/sign-in-2',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const authSignInRoute = authSignInRouteImport.update({
   id: '/(auth)/sign-in',
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const authPostRoute = authPostRouteImport.update({
   id: '/(auth)/post',
   path: '/post',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const authOtpRoute = authOtpRouteImport.update({
   id: '/(auth)/otp',
   path: '/otp',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   id: '/(auth)/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
-} as any);
-const AuthenticatedSettingsRouteRoute = AuthenticatedSettingsRouteRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
+} as any)
+const AuthenticatedSettingsRouteRoute =
+  AuthenticatedSettingsRouteRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
+} as any)
 const AuthenticatedTasksIndexRoute = AuthenticatedTasksIndexRouteImport.update({
   id: '/tasks/',
   path: '/tasks/',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
-const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedSettingsRouteRoute,
-} as any);
-const AuthenticatedHelpCenterIndexRoute = AuthenticatedHelpCenterIndexRouteImport.update({
-  id: '/help-center/',
-  path: '/help-center/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
-const AuthenticatedDevicesIndexRoute = AuthenticatedDevicesIndexRouteImport.update({
-  id: '/devices/',
-  path: '/devices/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
-const AuthenticatedDeviceTemplatesIndexRoute = AuthenticatedDeviceTemplatesIndexRouteImport.update({
-  id: '/device-templates/',
-  path: '/device-templates/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
-const AuthenticatedDeviceSecretsIndexRoute = AuthenticatedDeviceSecretsIndexRouteImport.update({
-  id: '/device-secrets/',
-  path: '/device-secrets/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
+} as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedHelpCenterIndexRoute =
+  AuthenticatedHelpCenterIndexRouteImport.update({
+    id: '/help-center/',
+    path: '/help-center/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDevicesIndexRoute =
+  AuthenticatedDevicesIndexRouteImport.update({
+    id: '/devices/',
+    path: '/devices/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDeviceTemplatesIndexRoute =
+  AuthenticatedDeviceTemplatesIndexRouteImport.update({
+    id: '/device-templates/',
+    path: '/device-templates/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDeviceSecretsIndexRoute =
+  AuthenticatedDeviceSecretsIndexRouteImport.update({
+    id: '/device-secrets/',
+    path: '/device-secrets/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
   id: '/apps/',
   path: '/apps/',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
-const AuthenticatedTasksCreateRoute = AuthenticatedTasksCreateRouteImport.update({
-  id: '/tasks/create',
-  path: '/tasks/create',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
-const AuthenticatedSettingsRolesRoute = AuthenticatedSettingsRolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => AuthenticatedSettingsRouteRoute,
-} as any);
-const AuthenticatedSettingsNotificationsRoute = AuthenticatedSettingsNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AuthenticatedSettingsRouteRoute,
-} as any);
-const AuthenticatedSettingsDisplayRoute = AuthenticatedSettingsDisplayRouteImport.update({
-  id: '/display',
-  path: '/display',
-  getParentRoute: () => AuthenticatedSettingsRouteRoute,
-} as any);
-const AuthenticatedSettingsAppearanceRoute = AuthenticatedSettingsAppearanceRouteImport.update({
-  id: '/appearance',
-  path: '/appearance',
-  getParentRoute: () => AuthenticatedSettingsRouteRoute,
-} as any);
-const AuthenticatedSettingsAccountRoute = AuthenticatedSettingsAccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => AuthenticatedSettingsRouteRoute,
-} as any);
-const AuthenticatedDevicesDeviceIdRoute = AuthenticatedDevicesDeviceIdRouteImport.update({
-  id: '/devices/$deviceId',
-  path: '/devices/$deviceId',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
-const AuthenticatedTasksTaskIdViewRoute = AuthenticatedTasksTaskIdViewRouteImport.update({
-  id: '/tasks/$taskId/view',
-  path: '/tasks/$taskId/view',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
-const AuthenticatedTasksTaskIdEditRoute = AuthenticatedTasksTaskIdEditRouteImport.update({
-  id: '/tasks/$taskId/edit',
-  path: '/tasks/$taskId/edit',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any);
+} as any)
+const AuthenticatedTasksCreateRoute =
+  AuthenticatedTasksCreateRouteImport.update({
+    id: '/tasks/create',
+    path: '/tasks/create',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsRolesRoute =
+  AuthenticatedSettingsRolesRouteImport.update({
+    id: '/roles',
+    path: '/roles',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsNotificationsRoute =
+  AuthenticatedSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsDisplayRoute =
+  AuthenticatedSettingsDisplayRouteImport.update({
+    id: '/display',
+    path: '/display',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsAppearanceRoute =
+  AuthenticatedSettingsAppearanceRouteImport.update({
+    id: '/appearance',
+    path: '/appearance',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsAccountRoute =
+  AuthenticatedSettingsAccountRouteImport.update({
+    id: '/account',
+    path: '/account',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedDevicesDeviceIdRoute =
+  AuthenticatedDevicesDeviceIdRouteImport.update({
+    id: '/devices/$deviceId',
+    path: '/devices/$deviceId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTasksTaskIdViewRoute =
+  AuthenticatedTasksTaskIdViewRouteImport.update({
+    id: '/tasks/$taskId/view',
+    path: '/tasks/$taskId/view',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTasksTaskIdEditRoute =
+  AuthenticatedTasksTaskIdEditRouteImport.update({
+    id: '/tasks/$taskId/edit',
+    path: '/tasks/$taskId/edit',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute;
-  '/callback': typeof CallbackRoute;
-  '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren;
-  '/forgot-password': typeof authForgotPasswordRoute;
-  '/otp': typeof authOtpRoute;
-  '/post': typeof authPostRoute;
-  '/sign-in': typeof authSignInRoute;
-  '/sign-in-2': typeof authSignIn2Route;
-  '/sign-up': typeof authSignUpRoute;
-  '/verify-email': typeof authVerifyEmailRoute;
-  '/401': typeof errors401Route;
-  '/403': typeof errors403Route;
-  '/404': typeof errors404Route;
-  '/500': typeof errors500Route;
-  '/503': typeof errors503Route;
-  '/profile': typeof AuthenticatedProfileRoute;
-  '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute;
-  '/settings/account': typeof AuthenticatedSettingsAccountRoute;
-  '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute;
-  '/settings/display': typeof AuthenticatedSettingsDisplayRoute;
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute;
-  '/settings/roles': typeof AuthenticatedSettingsRolesRoute;
-  '/tasks/create': typeof AuthenticatedTasksCreateRoute;
-  '/apps/': typeof AuthenticatedAppsIndexRoute;
-  '/device-secrets/': typeof AuthenticatedDeviceSecretsIndexRoute;
-  '/device-templates/': typeof AuthenticatedDeviceTemplatesIndexRoute;
-  '/devices/': typeof AuthenticatedDevicesIndexRoute;
-  '/help-center/': typeof AuthenticatedHelpCenterIndexRoute;
-  '/settings/': typeof AuthenticatedSettingsIndexRoute;
-  '/tasks/': typeof AuthenticatedTasksIndexRoute;
-  '/users/': typeof AuthenticatedUsersIndexRoute;
-  '/tasks/$taskId/edit': typeof AuthenticatedTasksTaskIdEditRoute;
-  '/tasks/$taskId/view': typeof AuthenticatedTasksTaskIdViewRoute;
+  '/': typeof AuthenticatedIndexRoute
+  '/callback': typeof CallbackRoute
+  '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/forgot-password': typeof authForgotPasswordRoute
+  '/otp': typeof authOtpRoute
+  '/post': typeof authPostRoute
+  '/sign-in': typeof authSignInRoute
+  '/sign-in-2': typeof authSignIn2Route
+  '/sign-up': typeof authSignUpRoute
+  '/verify-email': typeof authVerifyEmailRoute
+  '/401': typeof errors401Route
+  '/403': typeof errors403Route
+  '/404': typeof errors404Route
+  '/500': typeof errors500Route
+  '/503': typeof errors503Route
+  '/profile': typeof AuthenticatedProfileRoute
+  '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
+  '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/display': typeof AuthenticatedSettingsDisplayRoute
+  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/tasks/create': typeof AuthenticatedTasksCreateRoute
+  '/apps/': typeof AuthenticatedAppsIndexRoute
+  '/device-secrets/': typeof AuthenticatedDeviceSecretsIndexRoute
+  '/device-templates/': typeof AuthenticatedDeviceTemplatesIndexRoute
+  '/devices/': typeof AuthenticatedDevicesIndexRoute
+  '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/tasks/': typeof AuthenticatedTasksIndexRoute
+  '/users/': typeof AuthenticatedUsersIndexRoute
+  '/tasks/$taskId/edit': typeof AuthenticatedTasksTaskIdEditRoute
+  '/tasks/$taskId/view': typeof AuthenticatedTasksTaskIdViewRoute
 }
 export interface FileRoutesByTo {
-  '/callback': typeof CallbackRoute;
-  '/forgot-password': typeof authForgotPasswordRoute;
-  '/otp': typeof authOtpRoute;
-  '/post': typeof authPostRoute;
-  '/sign-in': typeof authSignInRoute;
-  '/sign-in-2': typeof authSignIn2Route;
-  '/sign-up': typeof authSignUpRoute;
-  '/verify-email': typeof authVerifyEmailRoute;
-  '/401': typeof errors401Route;
-  '/403': typeof errors403Route;
-  '/404': typeof errors404Route;
-  '/500': typeof errors500Route;
-  '/503': typeof errors503Route;
-  '/profile': typeof AuthenticatedProfileRoute;
-  '/': typeof AuthenticatedIndexRoute;
-  '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute;
-  '/settings/account': typeof AuthenticatedSettingsAccountRoute;
-  '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute;
-  '/settings/display': typeof AuthenticatedSettingsDisplayRoute;
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute;
-  '/settings/roles': typeof AuthenticatedSettingsRolesRoute;
-  '/tasks/create': typeof AuthenticatedTasksCreateRoute;
-  '/apps': typeof AuthenticatedAppsIndexRoute;
-  '/device-secrets': typeof AuthenticatedDeviceSecretsIndexRoute;
-  '/device-templates': typeof AuthenticatedDeviceTemplatesIndexRoute;
-  '/devices': typeof AuthenticatedDevicesIndexRoute;
-  '/help-center': typeof AuthenticatedHelpCenterIndexRoute;
-  '/settings': typeof AuthenticatedSettingsIndexRoute;
-  '/tasks': typeof AuthenticatedTasksIndexRoute;
-  '/users': typeof AuthenticatedUsersIndexRoute;
-  '/tasks/$taskId/edit': typeof AuthenticatedTasksTaskIdEditRoute;
-  '/tasks/$taskId/view': typeof AuthenticatedTasksTaskIdViewRoute;
+  '/callback': typeof CallbackRoute
+  '/forgot-password': typeof authForgotPasswordRoute
+  '/otp': typeof authOtpRoute
+  '/post': typeof authPostRoute
+  '/sign-in': typeof authSignInRoute
+  '/sign-in-2': typeof authSignIn2Route
+  '/sign-up': typeof authSignUpRoute
+  '/verify-email': typeof authVerifyEmailRoute
+  '/401': typeof errors401Route
+  '/403': typeof errors403Route
+  '/404': typeof errors404Route
+  '/500': typeof errors500Route
+  '/503': typeof errors503Route
+  '/profile': typeof AuthenticatedProfileRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
+  '/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/display': typeof AuthenticatedSettingsDisplayRoute
+  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/tasks/create': typeof AuthenticatedTasksCreateRoute
+  '/apps': typeof AuthenticatedAppsIndexRoute
+  '/device-secrets': typeof AuthenticatedDeviceSecretsIndexRoute
+  '/device-templates': typeof AuthenticatedDeviceTemplatesIndexRoute
+  '/devices': typeof AuthenticatedDevicesIndexRoute
+  '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/tasks': typeof AuthenticatedTasksIndexRoute
+  '/users': typeof AuthenticatedUsersIndexRoute
+  '/tasks/$taskId/edit': typeof AuthenticatedTasksTaskIdEditRoute
+  '/tasks/$taskId/view': typeof AuthenticatedTasksTaskIdViewRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren;
-  '/callback': typeof CallbackRoute;
-  '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren;
-  '/(auth)/forgot-password': typeof authForgotPasswordRoute;
-  '/(auth)/otp': typeof authOtpRoute;
-  '/(auth)/post': typeof authPostRoute;
-  '/(auth)/sign-in': typeof authSignInRoute;
-  '/(auth)/sign-in-2': typeof authSignIn2Route;
-  '/(auth)/sign-up': typeof authSignUpRoute;
-  '/(auth)/verify-email': typeof authVerifyEmailRoute;
-  '/(errors)/401': typeof errors401Route;
-  '/(errors)/403': typeof errors403Route;
-  '/(errors)/404': typeof errors404Route;
-  '/(errors)/500': typeof errors500Route;
-  '/(errors)/503': typeof errors503Route;
-  '/_authenticated/profile': typeof AuthenticatedProfileRoute;
-  '/_authenticated/': typeof AuthenticatedIndexRoute;
-  '/_authenticated/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute;
-  '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute;
-  '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute;
-  '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute;
-  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute;
-  '/_authenticated/settings/roles': typeof AuthenticatedSettingsRolesRoute;
-  '/_authenticated/tasks/create': typeof AuthenticatedTasksCreateRoute;
-  '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute;
-  '/_authenticated/device-secrets/': typeof AuthenticatedDeviceSecretsIndexRoute;
-  '/_authenticated/device-templates/': typeof AuthenticatedDeviceTemplatesIndexRoute;
-  '/_authenticated/devices/': typeof AuthenticatedDevicesIndexRoute;
-  '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute;
-  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute;
-  '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute;
-  '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute;
-  '/_authenticated/tasks/$taskId/edit': typeof AuthenticatedTasksTaskIdEditRoute;
-  '/_authenticated/tasks/$taskId/view': typeof AuthenticatedTasksTaskIdViewRoute;
+  __root__: typeof rootRouteImport
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/callback': typeof CallbackRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/(auth)/forgot-password': typeof authForgotPasswordRoute
+  '/(auth)/otp': typeof authOtpRoute
+  '/(auth)/post': typeof authPostRoute
+  '/(auth)/sign-in': typeof authSignInRoute
+  '/(auth)/sign-in-2': typeof authSignIn2Route
+  '/(auth)/sign-up': typeof authSignUpRoute
+  '/(auth)/verify-email': typeof authVerifyEmailRoute
+  '/(errors)/401': typeof errors401Route
+  '/(errors)/403': typeof errors403Route
+  '/(errors)/404': typeof errors404Route
+  '/(errors)/500': typeof errors500Route
+  '/(errors)/503': typeof errors503Route
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/devices/$deviceId': typeof AuthenticatedDevicesDeviceIdRoute
+  '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
+  '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
+  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/_authenticated/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/_authenticated/tasks/create': typeof AuthenticatedTasksCreateRoute
+  '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
+  '/_authenticated/device-secrets/': typeof AuthenticatedDeviceSecretsIndexRoute
+  '/_authenticated/device-templates/': typeof AuthenticatedDeviceTemplatesIndexRoute
+  '/_authenticated/devices/': typeof AuthenticatedDevicesIndexRoute
+  '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
+  '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/tasks/$taskId/edit': typeof AuthenticatedTasksTaskIdEditRoute
+  '/_authenticated/tasks/$taskId/view': typeof AuthenticatedTasksTaskIdViewRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/callback'
@@ -355,8 +370,8 @@ export interface FileRouteTypes {
     | '/tasks/'
     | '/users/'
     | '/tasks/$taskId/edit'
-    | '/tasks/$taskId/view';
-  fileRoutesByTo: FileRoutesByTo;
+    | '/tasks/$taskId/view'
+  fileRoutesByTo: FileRoutesByTo
   to:
     | '/callback'
     | '/forgot-password'
@@ -389,7 +404,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/users'
     | '/tasks/$taskId/edit'
-    | '/tasks/$taskId/view';
+    | '/tasks/$taskId/view'
   id:
     | '__root__'
     | '/_authenticated'
@@ -425,304 +440,309 @@ export interface FileRouteTypes {
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
     | '/_authenticated/tasks/$taskId/edit'
-    | '/_authenticated/tasks/$taskId/view';
-  fileRoutesById: FileRoutesById;
+    | '/_authenticated/tasks/$taskId/view'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren;
-  CallbackRoute: typeof CallbackRoute;
-  authForgotPasswordRoute: typeof authForgotPasswordRoute;
-  authOtpRoute: typeof authOtpRoute;
-  authPostRoute: typeof authPostRoute;
-  authSignInRoute: typeof authSignInRoute;
-  authSignIn2Route: typeof authSignIn2Route;
-  authSignUpRoute: typeof authSignUpRoute;
-  authVerifyEmailRoute: typeof authVerifyEmailRoute;
-  errors401Route: typeof errors401Route;
-  errors403Route: typeof errors403Route;
-  errors404Route: typeof errors404Route;
-  errors500Route: typeof errors500Route;
-  errors503Route: typeof errors503Route;
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  CallbackRoute: typeof CallbackRoute
+  authForgotPasswordRoute: typeof authForgotPasswordRoute
+  authOtpRoute: typeof authOtpRoute
+  authPostRoute: typeof authPostRoute
+  authSignInRoute: typeof authSignInRoute
+  authSignIn2Route: typeof authSignIn2Route
+  authSignUpRoute: typeof authSignUpRoute
+  authVerifyEmailRoute: typeof authVerifyEmailRoute
+  errors401Route: typeof errors401Route
+  errors403Route: typeof errors403Route
+  errors404Route: typeof errors404Route
+  errors500Route: typeof errors500Route
+  errors503Route: typeof errors503Route
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/callback': {
-      id: '/callback';
-      path: '/callback';
-      fullPath: '/callback';
-      preLoaderRoute: typeof CallbackRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/callback'
+      path: '/callback'
+      fullPath: '/callback'
+      preLoaderRoute: typeof CallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
-      id: '/_authenticated';
-      path: '';
-      fullPath: '/';
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/': {
-      id: '/_authenticated/';
-      path: '/';
-      fullPath: '/';
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
-      id: '/_authenticated/profile';
-      path: '/profile';
-      fullPath: '/profile';
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/(errors)/503': {
-      id: '/(errors)/503';
-      path: '/503';
-      fullPath: '/503';
-      preLoaderRoute: typeof errors503RouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(errors)/503'
+      path: '/503'
+      fullPath: '/503'
+      preLoaderRoute: typeof errors503RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(errors)/500': {
-      id: '/(errors)/500';
-      path: '/500';
-      fullPath: '/500';
-      preLoaderRoute: typeof errors500RouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(errors)/500'
+      path: '/500'
+      fullPath: '/500'
+      preLoaderRoute: typeof errors500RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(errors)/404': {
-      id: '/(errors)/404';
-      path: '/404';
-      fullPath: '/404';
-      preLoaderRoute: typeof errors404RouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(errors)/404'
+      path: '/404'
+      fullPath: '/404'
+      preLoaderRoute: typeof errors404RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(errors)/403': {
-      id: '/(errors)/403';
-      path: '/403';
-      fullPath: '/403';
-      preLoaderRoute: typeof errors403RouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(errors)/403'
+      path: '/403'
+      fullPath: '/403'
+      preLoaderRoute: typeof errors403RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(errors)/401': {
-      id: '/(errors)/401';
-      path: '/401';
-      fullPath: '/401';
-      preLoaderRoute: typeof errors401RouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(errors)/401'
+      path: '/401'
+      fullPath: '/401'
+      preLoaderRoute: typeof errors401RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/verify-email': {
-      id: '/(auth)/verify-email';
-      path: '/verify-email';
-      fullPath: '/verify-email';
-      preLoaderRoute: typeof authVerifyEmailRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(auth)/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof authVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/sign-up': {
-      id: '/(auth)/sign-up';
-      path: '/sign-up';
-      fullPath: '/sign-up';
-      preLoaderRoute: typeof authSignUpRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(auth)/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof authSignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/sign-in-2': {
-      id: '/(auth)/sign-in-2';
-      path: '/sign-in-2';
-      fullPath: '/sign-in-2';
-      preLoaderRoute: typeof authSignIn2RouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(auth)/sign-in-2'
+      path: '/sign-in-2'
+      fullPath: '/sign-in-2'
+      preLoaderRoute: typeof authSignIn2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/sign-in': {
-      id: '/(auth)/sign-in';
-      path: '/sign-in';
-      fullPath: '/sign-in';
-      preLoaderRoute: typeof authSignInRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(auth)/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof authSignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/post': {
-      id: '/(auth)/post';
-      path: '/post';
-      fullPath: '/post';
-      preLoaderRoute: typeof authPostRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(auth)/post'
+      path: '/post'
+      fullPath: '/post'
+      preLoaderRoute: typeof authPostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/otp': {
-      id: '/(auth)/otp';
-      path: '/otp';
-      fullPath: '/otp';
-      preLoaderRoute: typeof authOtpRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(auth)/otp'
+      path: '/otp'
+      fullPath: '/otp'
+      preLoaderRoute: typeof authOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/forgot-password': {
-      id: '/(auth)/forgot-password';
-      path: '/forgot-password';
-      fullPath: '/forgot-password';
-      preLoaderRoute: typeof authForgotPasswordRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/(auth)/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof authForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/settings': {
-      id: '/_authenticated/settings';
-      path: '/settings';
-      fullPath: '/settings';
-      preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/users/': {
-      id: '/_authenticated/users/';
-      path: '/users';
-      fullPath: '/users/';
-      preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/users/'
+      path: '/users'
+      fullPath: '/users/'
+      preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tasks/': {
-      id: '/_authenticated/tasks/';
-      path: '/tasks';
-      fullPath: '/tasks/';
-      preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/tasks/'
+      path: '/tasks'
+      fullPath: '/tasks/'
+      preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/': {
-      id: '/_authenticated/settings/';
-      path: '/';
-      fullPath: '/settings/';
-      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport;
-      parentRoute: typeof AuthenticatedSettingsRouteRoute;
-    };
+      id: '/_authenticated/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/help-center/': {
-      id: '/_authenticated/help-center/';
-      path: '/help-center';
-      fullPath: '/help-center/';
-      preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/help-center/'
+      path: '/help-center'
+      fullPath: '/help-center/'
+      preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/devices/': {
-      id: '/_authenticated/devices/';
-      path: '/devices';
-      fullPath: '/devices/';
-      preLoaderRoute: typeof AuthenticatedDevicesIndexRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/devices/'
+      path: '/devices'
+      fullPath: '/devices/'
+      preLoaderRoute: typeof AuthenticatedDevicesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/device-templates/': {
-      id: '/_authenticated/device-templates/';
-      path: '/device-templates';
-      fullPath: '/device-templates/';
-      preLoaderRoute: typeof AuthenticatedDeviceTemplatesIndexRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/device-templates/'
+      path: '/device-templates'
+      fullPath: '/device-templates/'
+      preLoaderRoute: typeof AuthenticatedDeviceTemplatesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/device-secrets/': {
-      id: '/_authenticated/device-secrets/';
-      path: '/device-secrets';
-      fullPath: '/device-secrets/';
-      preLoaderRoute: typeof AuthenticatedDeviceSecretsIndexRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/device-secrets/'
+      path: '/device-secrets'
+      fullPath: '/device-secrets/'
+      preLoaderRoute: typeof AuthenticatedDeviceSecretsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/apps/': {
-      id: '/_authenticated/apps/';
-      path: '/apps';
-      fullPath: '/apps/';
-      preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/apps/'
+      path: '/apps'
+      fullPath: '/apps/'
+      preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tasks/create': {
-      id: '/_authenticated/tasks/create';
-      path: '/tasks/create';
-      fullPath: '/tasks/create';
-      preLoaderRoute: typeof AuthenticatedTasksCreateRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/tasks/create'
+      path: '/tasks/create'
+      fullPath: '/tasks/create'
+      preLoaderRoute: typeof AuthenticatedTasksCreateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/roles': {
-      id: '/_authenticated/settings/roles';
-      path: '/roles';
-      fullPath: '/settings/roles';
-      preLoaderRoute: typeof AuthenticatedSettingsRolesRouteImport;
-      parentRoute: typeof AuthenticatedSettingsRouteRoute;
-    };
+      id: '/_authenticated/settings/roles'
+      path: '/roles'
+      fullPath: '/settings/roles'
+      preLoaderRoute: typeof AuthenticatedSettingsRolesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/notifications': {
-      id: '/_authenticated/settings/notifications';
-      path: '/notifications';
-      fullPath: '/settings/notifications';
-      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport;
-      parentRoute: typeof AuthenticatedSettingsRouteRoute;
-    };
+      id: '/_authenticated/settings/notifications'
+      path: '/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/display': {
-      id: '/_authenticated/settings/display';
-      path: '/display';
-      fullPath: '/settings/display';
-      preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport;
-      parentRoute: typeof AuthenticatedSettingsRouteRoute;
-    };
+      id: '/_authenticated/settings/display'
+      path: '/display'
+      fullPath: '/settings/display'
+      preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/appearance': {
-      id: '/_authenticated/settings/appearance';
-      path: '/appearance';
-      fullPath: '/settings/appearance';
-      preLoaderRoute: typeof AuthenticatedSettingsAppearanceRouteImport;
-      parentRoute: typeof AuthenticatedSettingsRouteRoute;
-    };
+      id: '/_authenticated/settings/appearance'
+      path: '/appearance'
+      fullPath: '/settings/appearance'
+      preLoaderRoute: typeof AuthenticatedSettingsAppearanceRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/account': {
-      id: '/_authenticated/settings/account';
-      path: '/account';
-      fullPath: '/settings/account';
-      preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport;
-      parentRoute: typeof AuthenticatedSettingsRouteRoute;
-    };
+      id: '/_authenticated/settings/account'
+      path: '/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/devices/$deviceId': {
-      id: '/_authenticated/devices/$deviceId';
-      path: '/devices/$deviceId';
-      fullPath: '/devices/$deviceId';
-      preLoaderRoute: typeof AuthenticatedDevicesDeviceIdRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/devices/$deviceId'
+      path: '/devices/$deviceId'
+      fullPath: '/devices/$deviceId'
+      preLoaderRoute: typeof AuthenticatedDevicesDeviceIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tasks/$taskId/view': {
-      id: '/_authenticated/tasks/$taskId/view';
-      path: '/tasks/$taskId/view';
-      fullPath: '/tasks/$taskId/view';
-      preLoaderRoute: typeof AuthenticatedTasksTaskIdViewRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/tasks/$taskId/view'
+      path: '/tasks/$taskId/view'
+      fullPath: '/tasks/$taskId/view'
+      preLoaderRoute: typeof AuthenticatedTasksTaskIdViewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tasks/$taskId/edit': {
-      id: '/_authenticated/tasks/$taskId/edit';
-      path: '/tasks/$taskId/edit';
-      fullPath: '/tasks/$taskId/edit';
-      preLoaderRoute: typeof AuthenticatedTasksTaskIdEditRouteImport;
-      parentRoute: typeof AuthenticatedRouteRoute;
-    };
+      id: '/_authenticated/tasks/$taskId/edit'
+      path: '/tasks/$taskId/edit'
+      fullPath: '/tasks/$taskId/edit'
+      preLoaderRoute: typeof AuthenticatedTasksTaskIdEditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedSettingsRouteRouteChildren {
-  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute;
-  AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute;
-  AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute;
-  AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute;
-  AuthenticatedSettingsRolesRoute: typeof AuthenticatedSettingsRolesRoute;
-  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute;
+  AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
+  AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
+  AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
+  AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
+  AuthenticatedSettingsRolesRoute: typeof AuthenticatedSettingsRolesRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
-const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren = {
-  AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
-  AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
-  AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
-  AuthenticatedSettingsNotificationsRoute: AuthenticatedSettingsNotificationsRoute,
-  AuthenticatedSettingsRolesRoute: AuthenticatedSettingsRolesRoute,
-  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
-};
+const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
+  {
+    AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
+    AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
+    AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
+    AuthenticatedSettingsNotificationsRoute:
+      AuthenticatedSettingsNotificationsRoute,
+    AuthenticatedSettingsRolesRoute: AuthenticatedSettingsRolesRoute,
+    AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+  }
 
-const AuthenticatedSettingsRouteRouteWithChildren = AuthenticatedSettingsRouteRoute._addFileChildren(AuthenticatedSettingsRouteRouteChildren);
+const AuthenticatedSettingsRouteRouteWithChildren =
+  AuthenticatedSettingsRouteRoute._addFileChildren(
+    AuthenticatedSettingsRouteRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren;
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute;
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute;
-  AuthenticatedDevicesDeviceIdRoute: typeof AuthenticatedDevicesDeviceIdRoute;
-  AuthenticatedTasksCreateRoute: typeof AuthenticatedTasksCreateRoute;
-  AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute;
-  AuthenticatedDeviceSecretsIndexRoute: typeof AuthenticatedDeviceSecretsIndexRoute;
-  AuthenticatedDeviceTemplatesIndexRoute: typeof AuthenticatedDeviceTemplatesIndexRoute;
-  AuthenticatedDevicesIndexRoute: typeof AuthenticatedDevicesIndexRoute;
-  AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute;
-  AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute;
-  AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute;
-  AuthenticatedTasksTaskIdEditRoute: typeof AuthenticatedTasksTaskIdEditRoute;
-  AuthenticatedTasksTaskIdViewRoute: typeof AuthenticatedTasksTaskIdViewRoute;
+  AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedDevicesDeviceIdRoute: typeof AuthenticatedDevicesDeviceIdRoute
+  AuthenticatedTasksCreateRoute: typeof AuthenticatedTasksCreateRoute
+  AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
+  AuthenticatedDeviceSecretsIndexRoute: typeof AuthenticatedDeviceSecretsIndexRoute
+  AuthenticatedDeviceTemplatesIndexRoute: typeof AuthenticatedDeviceTemplatesIndexRoute
+  AuthenticatedDevicesIndexRoute: typeof AuthenticatedDevicesIndexRoute
+  AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
+  AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedTasksTaskIdEditRoute: typeof AuthenticatedTasksTaskIdEditRoute
+  AuthenticatedTasksTaskIdViewRoute: typeof AuthenticatedTasksTaskIdViewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -733,16 +753,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTasksCreateRoute: AuthenticatedTasksCreateRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedDeviceSecretsIndexRoute: AuthenticatedDeviceSecretsIndexRoute,
-  AuthenticatedDeviceTemplatesIndexRoute: AuthenticatedDeviceTemplatesIndexRoute,
+  AuthenticatedDeviceTemplatesIndexRoute:
+    AuthenticatedDeviceTemplatesIndexRoute,
   AuthenticatedDevicesIndexRoute: AuthenticatedDevicesIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedTasksTaskIdEditRoute: AuthenticatedTasksTaskIdEditRoute,
   AuthenticatedTasksTaskIdViewRoute: AuthenticatedTasksTaskIdViewRoute,
-};
+}
 
-const AuthenticatedRouteRouteWithChildren = AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren);
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -759,5 +781,7 @@ const rootRouteChildren: RootRouteChildren = {
   errors404Route: errors404Route,
   errors500Route: errors500Route,
   errors503Route: errors503Route,
-};
-export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>();
+}
+export const routeTree = rootRouteImport
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()

@@ -2,12 +2,16 @@ import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react-swc';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig( ({mode}) => {
+  const env = loadEnv(mode, process.cwd(), "VITE_");
+  const version = Number(env.VITE_APP_VERSION ?? "0.0.0");
+  
+  return {
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION ?? '0.0.0'),
+    __APP_VERSION__: JSON.stringify(version),
   },
   plugins: [
     TanStackRouterVite({
@@ -46,4 +50,4 @@ export default defineConfig({
     //   },
     // },
   },
-});
+}});
