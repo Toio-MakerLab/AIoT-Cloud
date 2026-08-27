@@ -1,165 +1,117 @@
-# Awesome NestJS Boilerplate v11
+# AIoT-Cloud
 
-[![Awesome NestJS](https://img.shields.io/badge/Awesome-NestJS-blue.svg?longCache=true&style=flat-square)](https://github.com/juliandavidmr/awesome-nestjs)
+Cloud backend + web dashboard for the **AIoT SIC Capstone Project** — an IoT platform for provisioning devices (via `esp32dev-core` / `provision-pi-gateway`), ingesting their telemetry through an MQTT/Kafka gateway, and giving users a live dashboard to monitor and control them.
 
-> This is an ever-evolving, very opinionated architecture and dev environment for new node projects using [NestJS](https://nestjs.com). Questions, feedback, and for now, even bikeshedding are welcome. 😄
-
-## Getting started
-
-```bash
-# 1. Clone the repository or click on "Use this template" button.
-npx degit NarHakobyan/awesome-nest-boilerplate my-nest-app
-
-# 2. Enter your newly-cloned folder.
-cd my-nest-app
-
-# 3. Create Environment variables file.
-cp .env.example .env
-
-# 3. Install dependencies. (Make sure yarn is installed: https://yarnpkg.com/lang/en/docs/install)
-yarn
-```
-
-## Checklist
-
-When you use this template, try follow the checklist to update your info properly
-
-- [ ] Change the author name in `LICENSE`
-- [ ] Change configurations in `.env`
-- [ ] Remove the `.github` folder which contains the funding info
-- [ ] Clean up the README.md file
-
-And, enjoy :)
-<details>
-  <summary>Node Development</summary>
-
-### Scripts
-
-```bash
-# 4. Run development server and open http://localhost:3000
-yarn start:dev
-
-# 5. Read the documentation linked below for "Setup and development".
-```
-
-### Build
-
-To build the App, run
-
-```bash
-yarn build:prod
-```
-
-And you will see the generated file in `dist` that ready to be served.
-
-</details>
-
-<details>
-  <summary>Deno Development</summary>
-
-We are excited to announce that this project now supports Deno! You can use Deno to run, build, and test your application. 🦕
-
-#### Scripts
-
-Here are the available scripts for Deno:
-
-```bash
-# Start the development server
-deno task start
-
-# Start the server with file watcher
-deno task watch
-
-# Run tests
-deno task test
-
-# Compile the application (not working yet)
-deno task compile
-```
-
-To build the App using Deno, run:
-
-```bash
-deno task buildr
-```
-
-And you will see the generated file in `dist` that is ready to be served.
-
-</details>
-
-<details>
-  <summary>Bun Development</summary>
-
-We are excited to announce that this project now supports Bun! You can use Bun to run, build, and test your application. 🧅
-
-#### Scripts
-
-Here are the available scripts for Bun:
-
-```bash
-# Start the development server
-bun start:dev:bun
-
-# Start the server with file watcher
-bun watch:bun
-
-# Run tests
-
-bun test
-
-# Build the application
-
-bun build:bun
-```
-
-And you will see the generated file in `dist` that is ready to be served.
-
-</details>
-
+Built with **NestJS 11 + TypeScript + PostgreSQL (TypeORM) + Redis**, paired with a **React 19 + Vite + shadcn/ui** admin dashboard in [`web/`](./web). Both are built into a single Docker image: the API is served under `/api` and the built SPA is served for everything else, so the app ships as one deployable unit.
 
 ## Features
 
-<dl>
-  <!-- <dt><b>Quick scaffolding</b></dt>
-  <dd>Create modules, services, controller - right from the CLI!</dd> -->
+- **JWT auth** (access/refresh tokens, role-based guards: `USER` / `ADMIN` / `ROOT`).
+- **Device management** — registration/claiming, per-device config, device templates (telemetry schema + action channels), telemetry history.
+- **MQTT & Kafka ingestion** — telemetry published by devices/gateways is ingested, persisted, and fanned out as `device.telemetry` / `device.status` domain events (`@nestjs/event-emitter`).
+- **Live dashboard** — configurable widget grid (`VALUE` / `CHART` / `ACTION` panels) with two realtime transports, picked per widget type:
+  - **SSE** (`GET /api/devices/stream`) for `CHART` panels — resilient, auto-reconnecting stream of rolling telemetry history.
+  - **WebSocket** (Socket.IO, `AppGateway`) for `ACTION` / `VALUE` panels — lower-latency push for single live values and interactive device controls.
+- **Notifications** — configurable alert rules delivered via a Zalo bot integration.
+- **Health checks** (`@nestjs/terminus`), Swagger API docs, i18n, rate limiting, structured logging (`pino`).
 
-  <dt><b>Instant feedback</b></dt>
-  <dd>Enjoy the best DX (Developer eXperience) and code your app at the speed of thought! Your saved changes are reflected instantaneously.</dd>
+## Tech stack
 
-  <dt><b>JWT Authentication</b></dt>
-  <dd>Installed and configured JWT authentication.</dd>
+| | |
+|---|---|
+| **Backend** | NestJS 11, TypeScript, TypeORM + PostgreSQL, Redis (cache/throttling), Socket.IO, MQTT, KafkaJS, Passport/JWT, Swagger, Pino |
+| **Frontend** (`web/`) | React 19, Vite, TanStack Router/Query, shadcn/ui + Tailwind, react-grid-layout, Recharts |
+| **Infra** | Docker (multi-stage build, single runtime image), PostgreSQL, Redis, pgAdmin (local dev) |
 
-  <dt><b>Next generation Typescript</b></dt>
-  <dd>Always up to date typescript version.</dd>
+## Getting started
 
-  <dt><b>Industry-standard routing</b></dt>
-  <dd>It's natural to want to add pages (e.g. /about`) to your application, and routing makes this possible.</dd>
+### 1. Prerequisites
 
-  <dt><b>Environment Configuration</b></dt>
-  <dd>development, staging and production environment configurations</dd>
+- Node.js 22+, [pnpm](https://pnpm.io/)
+- Docker (for Postgres/Redis, or the full stack via `docker-compose.yml`)
 
-  <dt><b>Swagger Api Documentation</b></dt>
-  <dd>Already integrated API documentation. To see all available endpoints visit http://localhost:3000/documentation</dd>
+### 2. Environment variables
 
-  <dt><b>Node, Bun, Deno</b></dt>
-  <dd>Support for Node, Bun, and Deno. You can run, build, and test your application using any of these runtime.</dd>
+```bash
+cp .env.example .env
+```
 
-  <dt><b>Linter</b></dt>
-  <dd>eslint + prettier = ❤️</dd>
-</dl>
+Fill in at least `DB_*`, `JWT_PRIVATE_KEY`/`JWT_PUBLIC_KEY`, and `REDIS_PASSWORD`. `MQTT_ENABLED`, `KAFKA_ENABLED`, `MAIL_ENABLED`, and `ZALO_ENABLED` default to `false` and can be left off for local API-only development. See `.env.example` for the full list.
 
-## Documentation
+### 3. Backend
 
-This project includes a `docs` folder with more details on:
+```bash
+pnpm install
+# start Postgres + Redis + pgAdmin locally
+docker compose up -d postgres redis pgadmin
 
-1.  [Setup and development](https://narhakobyan.github.io/awesome-nest-boilerplate/docs/development.html#first-time-setup)
-1.  [Architecture](https://narhakobyan.github.io/awesome-nest-boilerplate/docs/architecture.html)
-1.  [Naming Cheatsheet](https://narhakobyan.github.io/awesome-nest-boilerplate/docs/naming-cheatsheet.html)
-1.  [Linting](https://narhakobyan.github.io/awesome-nest-boilerplate/docs/linting.html)
-1.  [Code Generation](https://narhakobyan.github.io/awesome-nest-boilerplate/docs/code-generation.html)
+pnpm start:dev   # http://localhost:3000, API under /api (vite-node dev server, hot reload)
+```
 
-## Community
+API docs (Swagger) are available at `http://localhost:3000/documentation` when `ENABLE_DOCUMENTATION=true`.
 
-For help, discussion about best practices, or any other conversation that would benefit from being searchable:
+### 4. Frontend
 
-[Discuss Awesome NestJS Boilerplate on GitHub](https://github.com/NarHakobyan/awesome-nest-boilerplate/discussions)
+```bash
+cd web
+pnpm install
+pnpm dev              # http://localhost:5173, proxies API calls per VITE_API_URL
+```
+
+### 5. Build & run everything (production-style)
+
+```bash
+pnpm build:prod        # nest build -> dist/
+pnpm build:web         # web/pnpm build -> dist-client/
+pnpm start:prod         # serves API + built SPA from a single process
+```
+
+Or via Docker (mirrors the CI/deploy build exactly):
+
+```bash
+docker compose up -d --build
+```
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `pnpm start:dev` | Backend dev server (vite-node, hot reload) |
+| `pnpm nest:start:dev` | Backend dev server via Nest CLI (`nest start --watch`) instead |
+| `pnpm build:prod` | Compile backend to `dist/` |
+| `pnpm build:web` | Build the frontend to `dist-client/` |
+| `pnpm start:prod` | Run the compiled backend (serves the built SPA too) |
+| `pnpm lint` / `pnpm lint:fix` | Biome lint (backend) |
+| `pnpm test` / `pnpm test:e2e` | Jest unit / e2e tests |
+| `pnpm migration:generate <name>` / `pnpm migration:revert` | TypeORM migrations |
+
+Frontend equivalents live in `web/package.json` (`pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm knip`, ...).
+
+## Project layout
+
+```
+src/
+  modules/
+    auth/             # JWT auth, guards
+    user/             # user accounts
+    device/           # device CRUD, telemetry, SSE stream, action triggers
+    device-template/  # telemetry schema + action channel definitions per device type
+    dashboard/        # saved dashboard layouts (widget grid persistence)
+    websocket/        # Socket.IO gateway for live telemetry/status/actions
+    mqtt/             # MQTT ingestion
+    kafka/            # Kafka ingestion
+    notification/     # alert rules + Zalo bot delivery
+    health-checker/   # /health endpoint
+  common/, decorators/, filters/, guards/, interceptors/, shared/  # cross-cutting NestJS building blocks
+web/
+  src/features/dashboard/  # live dashboard grid, SSE + WebSocket hooks, widgets
+  src/features/devices/    # device management UI
+  ...
+docs/                      # architecture, deployment guide, device template examples
+```
+
+See `docs/` for a deeper dive: [`architecture.md`](./docs/architecture.md), [`deployment-guide.md`](./docs/deployment-guide.md), [`gateway-kafka-integration.md`](./docs/gateway-kafka-integration.md).
+
+## License
+
+MIT — see [`LICENSE`](./LICENSE).
