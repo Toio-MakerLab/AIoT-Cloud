@@ -1,5 +1,5 @@
 import { Transform, TransformationType } from 'class-transformer';
-import { parsePhoneNumber } from 'libphonenumber-js';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import _ from 'lodash';
 
 import { GeneratorProvider } from '../providers/generator.provider.ts';
@@ -158,6 +158,8 @@ export function PhoneNumberSerializer(): PropertyDecorator {
       return params.value;
     }
 
-    return parsePhoneNumber(params.value as string).number;
+    const phoneNumber = parsePhoneNumberFromString(params.value as string);
+
+    return phoneNumber ? phoneNumber.number : params.value;
   });
 }

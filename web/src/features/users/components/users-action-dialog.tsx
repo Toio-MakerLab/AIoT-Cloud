@@ -125,7 +125,9 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>
+                    Username <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="jdoe" {...field} disabled={isEdit} />
                   </FormControl>
@@ -138,7 +140,9 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password{isEdit ? ' (leave blank to keep unchanged)' : ''}</FormLabel>
+                  <FormLabel>
+                    Password{isEdit ? ' (leave blank to keep unchanged)' : ''} {!isEdit && <span className="text-red-500">*</span>}
+                  </FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••" {...field} />
                   </FormControl>
