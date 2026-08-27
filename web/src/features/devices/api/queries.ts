@@ -74,12 +74,3 @@ export const useTriggerDeviceActionMutation = (id: string) => {
 			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY, id] }),
 	});
 };
-
-export const useRegenerateDeviceSecretMutation = () => {
-	const queryClient = useQueryClient();
-	return useMutation({
-		mutationFn: (id: string) => devicesApi.regenerateDeviceSecret(id),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
-	});
-};

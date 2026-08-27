@@ -1,7 +1,6 @@
 import {
 	IconDotsVertical,
 	IconEye,
-	IconKey,
 	IconSettings,
 	IconTrash,
 } from "@tabler/icons-react";
@@ -17,27 +16,13 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useRegenerateDeviceSecretMutation } from "../api/queries";
 import { useDevices } from "../context/devices-context";
 import { deviceStatusColors, getDeviceTemplateTypeLabel } from "../data/data";
 import type { Device } from "../data/schema";
 import { DataTableColumnHeader } from "./data-table-column-header";
 
 function DeviceRowActions({ row }: { row: { original: Device } }) {
-	const { setOpen, setCurrentRow, setDeviceSecret } = useDevices();
-	const regenerateSecret = useRegenerateDeviceSecretMutation();
-
-	const handleRegenerateSecret = async () => {
-		try {
-			const result = await regenerateSecret.mutateAsync(row.original.id);
-			if (result.data) {
-				setDeviceSecret(result.data.deviceSecret);
-				setOpen("secret");
-			}
-		} catch {
-			// Error toast is already shown by the global mutation error handler (see main.tsx).
-		}
-	};
+	const { setOpen, setCurrentRow } = useDevices();
 
 	return (
 		<DropdownMenu>
@@ -68,10 +53,6 @@ function DeviceRowActions({ row }: { row: { original: Device } }) {
 				>
 					Edit Config
 					<IconSettings className="ml-auto h-4 w-4" />
-				</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => void handleRegenerateSecret()}>
-					Regenerate Secret
-					<IconKey className="ml-auto h-4 w-4" />
 				</DropdownMenuItem>
 				<DropdownMenuItem
 					className="text-destructive focus:text-destructive"

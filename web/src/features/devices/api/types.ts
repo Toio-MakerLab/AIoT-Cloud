@@ -115,7 +115,6 @@ export interface IDevice {
 
 export interface IRegisterDeviceResult {
 	device: IDevice;
-	deviceSecret: string;
 }
 
 export interface IDeviceTelemetry {

@@ -8,13 +8,16 @@ import { DeviceController } from './device.controller.ts';
 import { DeviceEntity } from './device.entity.ts';
 import { DeviceService } from './device.service.ts';
 import { DeviceProvisioningController } from './device-provisioning.controller.ts';
+import { DeviceSecretController } from './device-secret.controller.ts';
+import { DeviceSecretEntity } from './device-secret.entity.ts';
+import { DeviceSecretService } from './device-secret.service.ts';
 import { DeviceTelemetryEntity } from './device-telemetry.entity.ts';
 import { DeviceSecretGuard } from './guards/device-secret.guard.ts';
 import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([DeviceEntity, DeviceTemplateEntity, DeviceTelemetryEntity]),
+    TypeOrmModule.forFeature([DeviceEntity, DeviceTemplateEntity, DeviceTelemetryEntity, DeviceSecretEntity]),
     ClientsModule.registerAsync([
       {
         name: KAFKA_COMMAND_CLIENT,
@@ -31,8 +34,8 @@ import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
       },
     ]),
   ],
-  controllers: [DeviceController, DeviceProvisioningController],
+  controllers: [DeviceController, DeviceProvisioningController, DeviceSecretController],
   exports: [DeviceService],
-  providers: [DeviceService, DeviceSecretGuard],
+  providers: [DeviceService, DeviceSecretService, DeviceSecretGuard],
 })
 export class DeviceModule {}

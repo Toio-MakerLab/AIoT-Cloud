@@ -84,11 +84,4 @@ export class DeviceController {
   ): Promise<ResponseCore<{ key: string; value: string; topic: string; publishedAt: Date }>> {
     return this.deviceService.triggerDeviceAction(user.id as Uuid, id, dto);
   }
-
-  @Post(':id/regenerate-secret')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
-  @HttpCode(HttpStatus.OK)
-  regenerateDeviceSecret(@AuthUser() user: UserEntity, @Param('id') id: Uuid): Promise<ResponseCore<{ deviceSecret: string }>> {
-    return this.deviceService.regenerateDeviceSecret(user.id as Uuid, id);
-  }
 }

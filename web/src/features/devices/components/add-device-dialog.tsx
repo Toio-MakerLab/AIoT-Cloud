@@ -39,13 +39,11 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
   const [scanError, setScanError] = useState<string | null>(null);
   const [useCamera, setUseCamera] = useState(true);
   const [registeredDeviceId, setRegisteredDeviceId] = useState<string | null>(null);
-  const [pendingSecret, setPendingSecret] = useState<string | null>(null);
 
   const { data: templatesPage, isLoading: templatesLoading } = useDeviceTemplatesQuery();
   const templates = templatesPage?.data ?? [];
   const registerDevice = useRegisterDeviceMutation();
   const updateDeviceConfig = useUpdateDeviceConfigMutation();
-  const { setOpen: setDevicesOpen, setDeviceSecret } = useDevices();
 
   const form = useForm<DetailsForm>({
     resolver: zodResolver(detailsSchema),
@@ -67,13 +65,6 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
     setScanError(null);
     setUseCamera(true);
     setRegisteredDeviceId(null);
-    setPendingSecret(null);
-  };
-
-  const finishAndShowSecret = (secret: string) => {
-    handleOpenChange(false);
-    setDeviceSecret(secret);
-    setDevicesOpen('secret');
   };
 
   const handleOpenChange = (state: boolean) => {
@@ -100,7 +91,6 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
       toast.success('Device added');
       if (result.data) {
         setRegisteredDeviceId(result.data.device.id);
-        setPendingSecret(result.data.deviceSecret);
         setStep('config');
       } else {
         handleOpenChange(false);
@@ -111,11 +101,11 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
   };
 
   const handleSkipConfig = () => {
-    if (pendingSecret) finishAndShowSecret(pendingSecret);
+    handleOpenChange(false);
   };
 
   const handleSaveConfig = async (values: DeviceConfigFormValues) => {
-    if (!registeredDeviceId || !pendingSecret) return;
+    if (!registeredDeviceId) return;
 
     try {
       await updateDeviceConfig.mutateAsync({
@@ -126,7 +116,7 @@ export function AddDeviceDialog({ open, onOpenChange }: Props) {
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
     }
-    finishAndShowSecret(pendingSecret);
+    handleOpenChange(false);
   };
 
   return (

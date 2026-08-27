@@ -2,18 +2,10 @@ import { useDevices } from "../context/devices-context";
 import { AddDeviceDialog } from "./add-device-dialog";
 import { DeviceConfigDialog } from "./device-config-dialog";
 import { DeviceConfigViewDialog } from "./device-config-view-dialog";
-import { DeviceSecretDialog } from "./device-secret-dialog";
 import { DevicesDeleteDialog } from "./devices-delete-dialog";
 
 export function DevicesDialogs() {
-	const {
-		open,
-		setOpen,
-		currentRow,
-		setCurrentRow,
-		deviceSecret,
-		setDeviceSecret,
-	} = useDevices();
+	const { open, setOpen, currentRow, setCurrentRow } = useDevices();
 
 	return (
 		<>
@@ -21,16 +13,6 @@ export function DevicesDialogs() {
 				key="device-add"
 				open={open === "add"}
 				onOpenChange={(state) => setOpen(state ? "add" : null)}
-			/>
-
-			<DeviceSecretDialog
-				key="device-secret"
-				open={open === "secret"}
-				onOpenChange={(state) => {
-					setOpen(state ? "secret" : null);
-					if (!state) setTimeout(() => setDeviceSecret(null), 300);
-				}}
-				secret={deviceSecret}
 			/>
 
 			{currentRow && (

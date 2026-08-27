@@ -1,5 +1,3 @@
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { ClientProxy } from '@nestjs/microservices';
@@ -35,7 +33,6 @@ export interface DeviceTelemetryEvent {
 
 export interface RegisterDeviceResult {
   device: DeviceDto;
-  deviceSecret: string;
 }
 
 @Injectable()
@@ -68,49 +65,22 @@ export class DeviceService {
       return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceAlreadyRegistered');
     }
 
-    const { plaintext, hash } = this.generateDeviceSecret();
-
     const entity = this.deviceRepository.create({
       deviceId: dto.deviceId,
       name: dto.name,
       templateId: dto.templateId,
       userId,
-      deviceSecretHash: hash,
-      secretIssuedAt: new Date(),
       isActive: dto.isActive ?? true,
     });
 
     await this.deviceRepository.save(entity);
     entity.template = template;
 
-    return ResponseCore.ok({ device: entity.toDto(), deviceSecret: plaintext });
+    return ResponseCore.ok({ device: entity.toDto() });
   }
 
-  private generateDeviceSecret(): { plaintext: string; hash: string } {
-    const plaintext = randomBytes(32).toString('hex');
-
-    return { plaintext, hash: this.hashSecret(plaintext) };
-  }
-
-  private hashSecret(secret: string): string {
-    return createHash('sha256').update(secret).digest('hex');
-  }
-
-  async verifyDeviceSecret(deviceId: string, secret: string): Promise<DeviceEntity | null> {
-    const device = await this.deviceRepository.findOneBy({ deviceId });
-
-    if (!device?.deviceSecretHash) {
-      return null;
-    }
-
-    const providedHash = Buffer.from(this.hashSecret(secret));
-    const storedHash = Buffer.from(device.deviceSecretHash);
-
-    if (providedHash.length !== storedHash.length || !timingSafeEqual(providedHash, storedHash)) {
-      return null;
-    }
-
-    return device;
+  findByDeviceId(deviceId: string): Promise<DeviceEntity | null> {
+    return this.deviceRepository.findOneBy({ deviceId });
   }
 
   async getBootConfig(deviceId: string): Promise<ResponseCore<DeviceConfigDto>> {
@@ -238,22 +208,6 @@ export class DeviceService {
   }
 
   @Transactional()
-  async regenerateDeviceSecret(userId: Uuid, id: Uuid): Promise<ResponseCore<{ deviceSecret: string }>> {
-    const device = await this.deviceRepository.findOneBy({ id, userId });
-
-    if (!device) {
-      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
-    }
-
-    const { plaintext, hash } = this.generateDeviceSecret();
-
-    device.deviceSecretHash = hash;
-    device.secretIssuedAt = new Date();
-    await this.deviceRepository.save(device);
-
-    return ResponseCore.ok({ deviceSecret: plaintext });
-  }
-
   async getUserDevices(userId: Uuid, pageOptionsDto: DevicesPageOptionsDto): Promise<PageDto<DeviceDto>> {
     const queryBuilder = this.deviceRepository
       .createQueryBuilder('device')

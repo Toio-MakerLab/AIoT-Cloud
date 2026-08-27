@@ -40,13 +40,6 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
   @Column({ nullable: true, type: 'jsonb' })
   metadata!: Record<string, unknown> | null;
 
-  /** SHA-256 hex digest of the device secret; the plaintext is only ever returned once, at issuance. */
-  @Column({ nullable: true, type: 'varchar' })
-  deviceSecretHash!: string | null;
-
-  @Column({ nullable: true, type: 'timestamp' })
-  secretIssuedAt!: Date | null;
-
   @Column({ type: 'enum', enum: DevicePushChannel, default: DevicePushChannel.MQTT })
   pushChannel!: DevicePushChannel;
 

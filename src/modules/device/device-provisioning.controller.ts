@@ -9,8 +9,9 @@ import type { DeviceConfigDto } from './dtos/device-config.dto.ts';
 import { DeviceSecretGuard } from './guards/device-secret.guard.ts';
 
 /**
- * Endpoints called by device firmware (ESP32) itself, authenticated with a per-device
- * secret header rather than a human JWT — kept separate from `DeviceController`.
+ * Endpoints called by device firmware (ESP32) itself, authenticated with a shared
+ * secret header (same value for all devices) rather than a human JWT — kept separate
+ * from `DeviceController`.
  */
 @Controller('devices')
 @ApiTags('devices')

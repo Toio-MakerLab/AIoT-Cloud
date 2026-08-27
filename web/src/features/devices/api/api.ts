@@ -54,12 +54,6 @@ export const devicesApi = {
 		);
 		return response.data;
 	},
-	regenerateDeviceSecret: async (id: string) => {
-		const response = await apiClient.post<
-			IResponseCore<{ deviceSecret: string }>
-		>(`/devices/${id}/regenerate-secret`);
-		return response.data;
-	},
 	/** Wired up for reuse by the dashboard feature; not consumed on the list page. */
 	getDeviceTelemetry: async (id: string, limit = 100) => {
 		const response = await apiClient.get<IResponseCore<IDeviceTelemetry[]>>(

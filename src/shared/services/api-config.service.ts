@@ -11,9 +11,12 @@ import { AddDeviceProvisioningConfig1787400000000 } from '../../database/migrati
 import { AddDeviceTemplateActionSchema1787500000000 } from '../../database/migrations/1787500000000-AddDeviceTemplateActionSchema.ts';
 import { AddDeviceIsActive1787600000000 } from '../../database/migrations/1787600000000-AddDeviceIsActive.ts';
 import { AddNotificationConfig1787700000000 } from '../../database/migrations/1787700000000-AddNotificationConfig.ts';
+import { RemoveDevicePerDeviceSecret1787800000000 } from '../../database/migrations/1787800000000-RemoveDevicePerDeviceSecret.ts';
+import { AddDeviceSecrets1787900000000 } from '../../database/migrations/1787900000000-AddDeviceSecrets.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
+import { DeviceSecretEntity } from '../../modules/device/device-secret.entity.ts';
 import { DeviceTelemetryEntity } from '../../modules/device/device-telemetry.entity.ts';
 import { DeviceTemplateEntity } from '../../modules/device-template/device-template.entity.ts';
 import { NotificationConfigEntity } from '../../modules/notification/notification-config.entity.ts';
@@ -97,6 +100,7 @@ export class ApiConfigService {
         UserSettingsEntity,
         DeviceTemplateEntity,
         DeviceEntity,
+        DeviceSecretEntity,
         DeviceTelemetryEntity,
         DashboardEntity,
         NotificationConfigEntity,
@@ -109,6 +113,8 @@ export class ApiConfigService {
         AddDeviceTemplateActionSchema1787500000000,
         AddDeviceIsActive1787600000000,
         AddNotificationConfig1787700000000,
+        RemoveDevicePerDeviceSecret1787800000000,
+        AddDeviceSecrets1787900000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',
