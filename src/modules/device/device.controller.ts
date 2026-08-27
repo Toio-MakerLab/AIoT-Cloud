@@ -37,7 +37,7 @@ export class DeviceController {
   }
 
   @Post('register')
-  @Auth([RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.CREATED)
   registerDevice(@AuthUser() user: UserEntity, @Body() dto: RegisterDeviceDto): Promise<ResponseCore<RegisterDeviceResult>> {
     return this.deviceService.registerDevice(user.id as Uuid, dto);
@@ -58,7 +58,7 @@ export class DeviceController {
   }
 
   @Delete(':id')
-  @Auth([RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   deleteDevice(@AuthUser() user: UserEntity, @Param('id') id: Uuid): Promise<ResponseCore<null>> {
     return this.deviceService.deleteDevice(user.id as Uuid, id);
@@ -76,14 +76,14 @@ export class DeviceController {
   }
 
   @Patch(':id/config')
-  @Auth([RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   updateDeviceConfig(@AuthUser() user: UserEntity, @Param('id') id: Uuid, @Body() dto: UpdateDeviceConfigDto): Promise<ResponseCore<DeviceDto>> {
     return this.deviceService.updateDeviceConfig(user.id as Uuid, id, dto);
   }
 
   @Post(':id/actions')
-  @Auth([RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   triggerDeviceAction(
     @AuthUser() user: UserEntity,
