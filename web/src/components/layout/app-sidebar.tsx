@@ -23,12 +23,23 @@ const ROOT_ONLY_URLS = new Set(["/settings/roles"]);
 // Device Templates and Users management are admin/root-only (see each
 // route's own guard).
 const ADMIN_ONLY_URLS = new Set(["/device-templates", "/users"]);
+// Guests get read-only access to the Dashboard page only (see the backend's
+// DashboardController @Auth guards) — every other page is hidden.
+const GUEST_ALLOWED_URLS = new Set(["/"]);
 
-function stripRootOnlyItems(items: NavItem[], isAdmin: boolean): NavItem[] {
+function stripRootOnlyItems(
+	items: NavItem[],
+	isAdmin: boolean,
+	isGuest: boolean,
+): NavItem[] {
 	const result: NavItem[] = [];
 	for (const item of items) {
 		if ("items" in item && item.items) {
-			const children = stripRootOnlyItems(item.items as NavItem[], isAdmin);
+			const children = stripRootOnlyItems(
+				item.items as NavItem[],
+				isAdmin,
+				isGuest,
+			);
 			if (children.length > 0)
 				result.push({ ...item, items: children } as NavItem);
 			continue;
@@ -42,6 +53,11 @@ function stripRootOnlyItems(items: NavItem[], isAdmin: boolean): NavItem[] {
 			ADMIN_ONLY_URLS.has(String(item.url))
 		)
 			continue;
+		if (
+			isGuest &&
+			(!("url" in item) || !item.url || !GUEST_ALLOWED_URLS.has(String(item.url)))
+		)
+			continue;
 		result.push(item);
 	}
 	return result;
@@ -50,11 +66,12 @@ function stripRootOnlyItems(items: NavItem[], isAdmin: boolean): NavItem[] {
 function stripRootOnlyGroups(
 	groups: NavGroupType[],
 	isAdmin: boolean,
+	isGuest: boolean,
 ): NavGroupType[] {
 	return groups
 		.map((group) => ({
 			...group,
-			items: stripRootOnlyItems(group.items, isAdmin),
+			items: stripRootOnlyItems(group.items, isAdmin, isGuest),
 		}))
 		.filter((group) => group.items.length > 0);
 }
@@ -63,10 +80,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const isRoot = useIsRoot();
 	const role = useAuthStore((state) => state.auth.user?.role);
 	const isAdmin = isRoot || role === RoleType.ADMIN;
+	const isGuest = role === RoleType.GUEST;
 
 	// Menu is defined statically and gated by role — `/v1/account/menu`
 	// isn't implemented by this backend, so there's no dynamic menu to merge.
-	const navGroups = stripRootOnlyGroups(sidebarData.navGroups, isAdmin);
+	const navGroups = stripRootOnlyGroups(sidebarData.navGroups, isAdmin, isGuest);
 
 	return (
 		<Sidebar collapsible="icon" variant="floating" {...props}>

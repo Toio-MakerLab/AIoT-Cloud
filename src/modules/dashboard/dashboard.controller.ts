@@ -6,9 +6,9 @@ import { RoleType } from '../../constants/role-type.ts';
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
 import { Auth } from '../../decorators/http.decorators.ts';
 import type { UserEntity } from '../user/user.entity.ts';
-import { DashboardService } from './dashboard.service.ts';
+import type { DashboardService } from './dashboard.service.ts';
 import type { DashboardDto } from './dtos/dashboard.dto.ts';
-import { SaveDashboardDto } from './dtos/save-dashboard.dto.ts';
+import type { SaveDashboardDto } from './dtos/save-dashboard.dto.ts';
 
 @Controller('dashboards')
 @ApiTags('dashboards')
@@ -16,14 +16,14 @@ export class DashboardController {
   constructor(private dashboardService: DashboardService) {}
 
   @Get()
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDashboards(@AuthUser() user: UserEntity): Promise<DashboardDto[]> {
     return this.dashboardService.getUserDashboards(user.id as Uuid);
   }
 
   @Get(':id')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDashboard(@AuthUser() user: UserEntity, @Param('id') id: Uuid): Promise<ResponseCore<DashboardDto>> {
     return this.dashboardService.getDashboard(user.id as Uuid, id);

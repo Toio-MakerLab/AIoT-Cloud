@@ -5,6 +5,7 @@ export const userRoleSchema = z.union([
 	z.literal("ROOT"),
 	z.literal("ADMIN"),
 	z.literal("USER"),
+	z.literal("GUEST"),
 ]);
 export type UserRole = z.infer<typeof userRoleSchema>;
 

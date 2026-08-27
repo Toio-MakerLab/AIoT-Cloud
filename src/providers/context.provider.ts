@@ -29,7 +29,7 @@ export class ContextProvider {
     return `${ContextProvider.nameSpace}.${key}`;
   }
 
-  static setAuthUser(user: UserEntity): void {
+  static setAuthUser(user: UserEntity | undefined): void {
     ContextProvider.set(ContextProvider.authUserKey, user);
   }
 
