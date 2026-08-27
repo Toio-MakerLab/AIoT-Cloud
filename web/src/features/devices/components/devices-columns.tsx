@@ -19,15 +19,10 @@ import { cn } from "@/lib/utils";
 import { useDevices } from "../context/devices-context";
 import { deviceStatusColors, getDeviceTemplateTypeLabel } from "../data/data";
 import type { Device } from "../data/schema";
-import { useIsDeviceAdmin } from "../hooks/use-is-device-admin";
 import { DataTableColumnHeader } from "./data-table-column-header";
 
 function DeviceRowActions({ row }: { row: { original: Device } }) {
 	const { setOpen, setCurrentRow } = useDevices();
-	// Edit Config / Delete hit ADMIN/ROOT-only backend routes (see
-	// device.controller.ts @Auth decorators) — USER accounts keep View
-	// Config only.
-	const isAdmin = useIsDeviceAdmin();
 
 	return (
 		<DropdownMenu>
@@ -50,29 +45,25 @@ function DeviceRowActions({ row }: { row: { original: Device } }) {
 					View Config
 					<IconEye className="ml-auto h-4 w-4" />
 				</DropdownMenuItem>
-				{isAdmin && (
-					<>
-						<DropdownMenuItem
-							onClick={() => {
-								setCurrentRow(row.original);
-								setOpen("config");
-							}}
-						>
-							Edit Config
-							<IconSettings className="ml-auto h-4 w-4" />
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							className="text-destructive focus:text-destructive"
-							onClick={() => {
-								setCurrentRow(row.original);
-								setOpen("delete");
-							}}
-						>
-							Delete
-							<IconTrash className="ml-auto h-4 w-4" />
-						</DropdownMenuItem>
-					</>
-				)}
+				<DropdownMenuItem
+					onClick={() => {
+						setCurrentRow(row.original);
+						setOpen("config");
+					}}
+				>
+					Edit Config
+					<IconSettings className="ml-auto h-4 w-4" />
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					className="text-destructive focus:text-destructive"
+					onClick={() => {
+						setCurrentRow(row.original);
+						setOpen("delete");
+					}}
+				>
+					Delete
+					<IconTrash className="ml-auto h-4 w-4" />
+				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
