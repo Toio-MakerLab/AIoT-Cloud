@@ -5,14 +5,27 @@ import { DeviceConfigViewDialog } from "./device-config-view-dialog";
 import { DevicesDeleteDialog } from "./devices-delete-dialog";
 
 export function DevicesDialogs() {
-	const { open, setOpen, currentRow, setCurrentRow } = useDevices();
+	const {
+		open,
+		setOpen,
+		currentRow,
+		setCurrentRow,
+		prefillDeviceId,
+		setPrefillDeviceId,
+	} = useDevices();
 
 	return (
 		<>
 			<AddDeviceDialog
 				key="device-add"
 				open={open === "add"}
-				onOpenChange={(state) => setOpen(state ? "add" : null)}
+				initialDeviceId={prefillDeviceId}
+				onOpenChange={(state) => {
+					setOpen(state ? "add" : null);
+					if (!state) {
+						setTimeout(() => setPrefillDeviceId(null), 300);
+					}
+				}}
 			/>
 
 			{currentRow && (

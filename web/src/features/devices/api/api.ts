@@ -10,6 +10,7 @@ import type {
 	IResponseCore,
 	ITriggerDeviceAction,
 	ITriggerDeviceActionResult,
+	IUnclaimedDevice,
 	IUpdateDeviceConfig,
 } from "./types";
 
@@ -34,6 +35,13 @@ export const devicesApi = {
 		);
 		return response.data;
 	},
+	getUnclaimedDevices: async () => {
+		const response =
+			await apiClient.get<IResponseCore<IUnclaimedDevice[]>>(
+				"/devices/unclaimed",
+			);
+		return response.data;
+	},
 	deleteDevice: async (id: string) => {
 		const response = await apiClient.delete<IResponseCore<null>>(
 			`/devices/${id}`,
@@ -48,10 +56,9 @@ export const devicesApi = {
 		return response.data;
 	},
 	triggerDeviceAction: async (id: string, data: ITriggerDeviceAction) => {
-		const response = await apiClient.post<IResponseCore<ITriggerDeviceActionResult>>(
-			`/devices/${id}/actions`,
-			data,
-		);
+		const response = await apiClient.post<
+			IResponseCore<ITriggerDeviceActionResult>
+		>(`/devices/${id}/actions`, data);
 		return response.data;
 	},
 	/** Wired up for reuse by the dashboard feature; not consumed on the list page. */

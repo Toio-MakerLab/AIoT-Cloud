@@ -7,12 +7,7 @@ import { Search } from "@/components/search";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDeviceQuery } from "./api/queries";
 import { DeviceActionsPanel } from "./components/device-actions-panel";
 import { deviceStatusColors, getDevicePushChannelLabel } from "./data/data";
@@ -58,7 +53,9 @@ export default function DeviceDetail() {
 							</div>
 							<Badge
 								variant="outline"
-								className={deviceStatusColors.get(device.status as DeviceStatus)}
+								className={deviceStatusColors.get(
+									device.status as DeviceStatus,
+								)}
 							>
 								{device.status}
 							</Badge>

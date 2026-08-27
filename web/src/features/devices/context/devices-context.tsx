@@ -9,6 +9,8 @@ interface DevicesContextType {
 	setOpen: (str: DevicesDialogType | null) => void;
 	currentRow: Device | null;
 	setCurrentRow: React.Dispatch<React.SetStateAction<Device | null>>;
+	prefillDeviceId: string | null;
+	setPrefillDeviceId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const DevicesContext = React.createContext<DevicesContextType | null>(null);
@@ -20,6 +22,7 @@ interface Props {
 export default function DevicesProvider({ children }: Props) {
 	const [open, setOpen] = useDialogState<DevicesDialogType>(null);
 	const [currentRow, setCurrentRow] = useState<Device | null>(null);
+	const [prefillDeviceId, setPrefillDeviceId] = useState<string | null>(null);
 
 	return (
 		<DevicesContext.Provider
@@ -28,6 +31,8 @@ export default function DevicesProvider({ children }: Props) {
 				setOpen,
 				currentRow,
 				setCurrentRow,
+				prefillDeviceId,
+				setPrefillDeviceId,
 			}}
 		>
 			{children}

@@ -21,7 +21,7 @@ export function mapIDeviceToDevice(d: IDevice): Device {
 			: undefined,
 		userId: d.userId,
 		lastSeenAt: d.lastSeenAt ? new Date(d.lastSeenAt) : null,
-		status: deviceStatusSchema.parse(d.status),
+		status: deviceStatusSchema.catch("OFFLINE").parse(d.status),
 		pushChannel: d.pushChannel,
 		config: d.config,
 		isActive: d.isActive,

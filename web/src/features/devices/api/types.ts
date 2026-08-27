@@ -118,6 +118,16 @@ export interface IRegisterDeviceResult {
 	device: IDevice;
 }
 
+export interface IUnclaimedDevice {
+	id: string;
+	deviceId: string;
+	lastTopic: string;
+	lastPayload: string | null;
+	lastSeenAt: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
 export interface IDeviceTelemetry {
 	id: string;
 	deviceId: string;

@@ -9,6 +9,7 @@ import { columns } from "./components/devices-columns";
 import { DevicesDialogs } from "./components/devices-dialogs";
 import { DevicesPrimaryButtons } from "./components/devices-primary-buttons";
 import { DevicesTable } from "./components/devices-table";
+import { UnclaimedDevicesPanel } from "./components/unclaimed-devices-panel";
 import DevicesProvider from "./context/devices-context";
 
 export default function Devices() {
@@ -35,6 +36,7 @@ export default function Devices() {
 					</div>
 					<DevicesPrimaryButtons />
 				</div>
+				<UnclaimedDevicesPanel />
 				<div className="-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12">
 					<DevicesTable columns={columns} data={deviceList} />
 				</div>

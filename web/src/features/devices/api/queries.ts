@@ -10,6 +10,7 @@ import type {
 export const DEVICES_QUERY_KEY = "devices";
 export const DEVICE_TEMPLATES_QUERY_KEY = "device-templates";
 export const DEVICE_TELEMETRY_QUERY_KEY = "device-telemetry";
+export const UNCLAIMED_DEVICES_QUERY_KEY = "unclaimed-devices";
 
 // Devices are swept to OFFLINE server-side every 10s once idle past the 1-minute
 // threshold; poll at the same cadence so the online/offline badge stays current.
@@ -43,12 +44,23 @@ export const useDeviceTemplatesQuery = () =>
 		queryFn: () => devicesApi.getDeviceTemplates(),
 	});
 
+export const useUnclaimedDevicesQuery = () =>
+	useQuery({
+		queryKey: [UNCLAIMED_DEVICES_QUERY_KEY],
+		queryFn: () => devicesApi.getUnclaimedDevices(),
+		refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
+	});
+
 export const useRegisterDeviceMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (data: IRegisterDevice) => devicesApi.registerDevice(data),
-		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY] });
+			queryClient.invalidateQueries({
+				queryKey: [UNCLAIMED_DEVICES_QUERY_KEY],
+			});
+		},
 	});
 };
 
