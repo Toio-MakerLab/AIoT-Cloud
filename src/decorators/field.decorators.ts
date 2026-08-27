@@ -21,6 +21,7 @@ import {
   Min,
   MinLength,
   NotEquals,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
@@ -333,7 +334,7 @@ export function PhoneField(options: Omit<ApiPropertyOptions, 'type'> & IFieldOpt
 }
 
 export function PhoneFieldOptional(options: Omit<ApiPropertyOptions, 'type' | 'required'> & IFieldOptions = {}): PropertyDecorator {
-  return applyDecorators(IsUndefinable(), PhoneField({ required: false, ...options }));
+  return applyDecorators(IsUndefinable(), ValidateIf((_obj, value) => value !== ''), PhoneField({ required: false, ...options }));
 }
 
 export function UUIDField(options: Omit<ApiPropertyOptions, 'type' | 'format' | 'isArray'> & IFieldOptions = {}): PropertyDecorator {
