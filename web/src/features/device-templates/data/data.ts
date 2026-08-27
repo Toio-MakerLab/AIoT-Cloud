@@ -1,4 +1,5 @@
 import {
+	IconBolt,
 	IconCpu,
 	IconDeviceUnknown,
 	IconRouter,
@@ -9,6 +10,11 @@ import type { DeviceTemplateType } from "./schema";
 export const deviceTemplateTypes = [
 	{ label: "Sensor Node", value: "SENSOR_NODE", icon: IconCpu },
 	{ label: "Relay Node", value: "RELAY_NODE", icon: IconRouter },
+	{
+		label: "Relay + Current Node",
+		value: "RELAY_CURRENT_NODE",
+		icon: IconBolt,
+	},
 	{ label: "Gateway", value: "GATEWAY", icon: IconServer2 },
 	{ label: "Other", value: "OTHER", icon: IconDeviceUnknown },
 ] as const;

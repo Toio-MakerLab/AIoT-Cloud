@@ -13,6 +13,7 @@ export type DeviceStatus = (typeof DeviceStatus)[keyof typeof DeviceStatus];
 export const DeviceTemplateType = {
 	SENSOR_NODE: "SENSOR_NODE",
 	RELAY_NODE: "RELAY_NODE",
+	RELAY_CURRENT_NODE: "RELAY_CURRENT_NODE",
 	GATEWAY: "GATEWAY",
 	OTHER: "OTHER",
 } as const;

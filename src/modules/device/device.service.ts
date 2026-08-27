@@ -147,7 +147,10 @@ export class DeviceService {
   private buildMqttTopics(device: DeviceEntity, baseTopics: DeviceMqttTopics): DeviceMqttTopics {
     const actionSchema = device.template?.actionSchema;
 
-    if (device.template?.type !== DeviceTemplateType.RELAY_NODE || !actionSchema?.length) {
+    const isChannelBasedTemplate =
+      device.template?.type === DeviceTemplateType.RELAY_NODE || device.template?.type === DeviceTemplateType.RELAY_CURRENT_NODE;
+
+    if (!isChannelBasedTemplate || !actionSchema?.length) {
       return baseTopics;
     }
 

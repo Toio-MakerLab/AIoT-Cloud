@@ -5,6 +5,7 @@ import { z } from "zod";
 export const deviceTemplateTypeSchema = z.union([
 	z.literal("SENSOR_NODE"),
 	z.literal("RELAY_NODE"),
+	z.literal("RELAY_CURRENT_NODE"),
 	z.literal("GATEWAY"),
 	z.literal("OTHER"),
 ]);

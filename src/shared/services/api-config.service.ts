@@ -14,6 +14,8 @@ import { AddNotificationConfig1787700000000 } from '../../database/migrations/17
 import { RemoveDevicePerDeviceSecret1787800000000 } from '../../database/migrations/1787800000000-RemoveDevicePerDeviceSecret.ts';
 import { AddDeviceSecrets1787900000000 } from '../../database/migrations/1787900000000-AddDeviceSecrets.ts';
 import { AddDeviceStatus1788000000000 } from '../../database/migrations/1788000000000-AddDeviceStatus.ts';
+import { SeedRelay2ChAcs712Template1788100000000 } from '../../database/migrations/1788100000000-SeedRelay2ChAcs712Template.ts';
+import { AddRelayCurrentNodeTemplateType1788200000000 } from '../../database/migrations/1788200000000-AddRelayCurrentNodeTemplateType.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -117,6 +119,8 @@ export class ApiConfigService {
         RemoveDevicePerDeviceSecret1787800000000,
         AddDeviceSecrets1787900000000,
         AddDeviceStatus1788000000000,
+        SeedRelay2ChAcs712Template1788100000000,
+        AddRelayCurrentNodeTemplateType1788200000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',

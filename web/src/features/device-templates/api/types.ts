@@ -1,6 +1,7 @@
 export const DEVICE_TEMPLATE_TYPES = [
 	"SENSOR_NODE",
 	"RELAY_NODE",
+	"RELAY_CURRENT_NODE",
 	"GATEWAY",
 	"OTHER",
 ] as const;
