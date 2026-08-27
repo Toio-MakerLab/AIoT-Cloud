@@ -599,6 +599,7 @@ export default async () => {
               getDevices: {},
               registerDevice: {},
               getUnclaimedDevices: {},
+              streamDeviceEvents: { type: Object },
               getDevice: {},
               deleteDevice: {},
               getDeviceTelemetry: {},

@@ -6,7 +6,7 @@ import { RoleType } from '../../constants/role-type.ts';
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
 import { Auth } from '../../decorators/http.decorators.ts';
 import type { UserEntity } from '../user/user.entity.ts';
-import type { DashboardService } from './dashboard.service.ts';
+import { DashboardService } from './dashboard.service.ts';
 import type { DashboardDto } from './dtos/dashboard.dto.ts';
 import type { SaveDashboardDto } from './dtos/save-dashboard.dto.ts';
 

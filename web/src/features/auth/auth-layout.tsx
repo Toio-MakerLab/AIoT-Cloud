@@ -1,5 +1,5 @@
 interface Props {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export default function AuthLayout({ children }: Props) {
@@ -25,5 +25,5 @@ export default function AuthLayout({ children }: Props) {
         {children}
       </div>
     </div>
-  )
+  );
 }

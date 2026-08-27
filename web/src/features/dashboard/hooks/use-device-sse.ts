@@ -3,8 +3,8 @@ import { domainConfig } from '@/lib/domain-config';
 import { useAuthStore } from '@/stores/authStore';
 import { type ILatestTelemetry, type ITelemetryPoint, TELEMETRY_HISTORY_LIMIT } from './telemetry-types';
 
-export { TELEMETRY_HISTORY_LIMIT };
 export type { ILatestTelemetry, ITelemetryPoint };
+export { TELEMETRY_HISTORY_LIMIT };
 
 interface TelemetryEventData {
   deviceId: string;
