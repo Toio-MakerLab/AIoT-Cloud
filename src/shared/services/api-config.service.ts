@@ -17,6 +17,7 @@ import { AddDeviceStatus1788000000000 } from '../../database/migrations/17880000
 import { SeedRelay2ChAcs712Template1788100000000 } from '../../database/migrations/1788100000000-SeedRelay2ChAcs712Template.ts';
 import { AddRelayCurrentNodeTemplateType1788200000000 } from '../../database/migrations/1788200000000-AddRelayCurrentNodeTemplateType.ts';
 import { AddUnclaimedDevices1788300000000 } from '../../database/migrations/1788300000000-AddUnclaimedDevices.ts';
+import { SeedGatewayTemplate1788400000000 } from '../../database/migrations/1788400000000-SeedGatewayTemplate.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -125,6 +126,7 @@ export class ApiConfigService {
         SeedRelay2ChAcs712Template1788100000000,
         AddRelayCurrentNodeTemplateType1788200000000,
         AddUnclaimedDevices1788300000000,
+        SeedGatewayTemplate1788400000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',

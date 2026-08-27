@@ -14,3 +14,10 @@ export const KAFKA_TELEMETRY_TOPIC = 'devices.telemetry';
  * telemetry topic.
  */
 export const KAFKA_COMMAND_TOPIC = 'devices.commands';
+
+/**
+ * Shared Kafka topic for gateway -> backend device status (online/offline) uplink.
+ * Each message carries `{ deviceId, status }`, keyed/partitioned by deviceId like the
+ * telemetry topic.
+ */
+export const KAFKA_STATUS_TOPIC = 'devices.status';

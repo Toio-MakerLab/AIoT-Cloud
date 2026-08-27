@@ -1,11 +1,17 @@
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 
-import { KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
+import { KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
 import { DeviceService } from '../device/device.service.ts';
 
 interface KafkaTelemetryPayload {
   deviceId?: string;
+  [key: string]: unknown;
+}
+
+interface KafkaStatusPayload {
+  deviceId?: string;
+  status?: string;
   [key: string]: unknown;
 }
 
@@ -26,5 +32,18 @@ export class KafkaController {
     }
 
     await this.deviceService.recordTelemetry(deviceId, telemetry);
+  }
+
+  @EventPattern(KAFKA_STATUS_TOPIC)
+  async handleStatus(@Payload() data: KafkaStatusPayload): Promise<void> {
+    const { deviceId, ...status } = data ?? {};
+
+    if (!deviceId) {
+      this.logger.warn(`Received Kafka status message without deviceId: ${JSON.stringify(data)}`);
+
+      return;
+    }
+
+    await this.deviceService.handleDeviceStatusMessage(deviceId, status);
   }
 }
