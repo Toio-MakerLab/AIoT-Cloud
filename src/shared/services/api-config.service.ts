@@ -144,9 +144,12 @@ export class ApiConfigService {
 
   get awsS3Config() {
     return {
-      bucketRegion: this.getString('AWS_S3_BUCKET_REGION'),
-      bucketApiVersion: this.getString('AWS_S3_API_VERSION'),
-      bucketName: this.getString('AWS_S3_BUCKET_NAME'),
+    //   bucketRegion: this.getString('AWS_S3_BUCKET_REGION'),
+    //   bucketApiVersion: this.getString('AWS_S3_API_VERSION'),
+    //   bucketName: this.getString('AWS_S3_BUCKET_NAME'),
+        bucketRegion: "",
+        bucketApiVersion: "",
+        bucketName: "",
     };
   }
 
@@ -155,13 +158,16 @@ export class ApiConfigService {
   }
 
   get natsEnabled(): boolean {
-    return this.getBoolean('NATS_ENABLED');
+    // return this.getBoolean('NATS_ENABLED');
+    return false;
   }
 
   get natsConfig() {
     return {
-      host: this.getString('NATS_HOST'),
-      port: this.getNumber('NATS_PORT'),
+    //   host: this.getString('NATS_HOST'),
+    //   port: this.getNumber('NATS_PORT'),
+        host: "",
+        port: 0,
     };
   }
 
