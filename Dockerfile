@@ -8,7 +8,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
-RUN export VITE_APP_VERSION=$(node -p "require('./package.json').version")
+ENV VITE_APP_VERSION=$(node -p "require('./package.json').version")
 
 # ---- backend build ----------------------------------------------------------
 FROM backend-deps AS backend-build
