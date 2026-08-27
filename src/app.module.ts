@@ -5,6 +5,7 @@ import path, { join } from 'node:path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -71,6 +72,7 @@ function redactSensitiveFields(body: unknown): unknown {
     WebsocketModule,
     NotificationModule,
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     ClsModule.forRoot({
       global: true,
       middleware: {

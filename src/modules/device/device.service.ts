@@ -4,12 +4,14 @@ import type { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { lastValueFrom } from 'rxjs';
 import type { Repository } from 'typeorm';
+import { In, LessThan } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
 import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { DeviceActionType } from '../../constants/device-action-type.ts';
 import { DevicePushChannel } from '../../constants/device-push-channel.ts';
+import { DEVICE_OFFLINE_THRESHOLD_MS, DeviceStatus } from '../../constants/device-status.ts';
 import { DeviceTemplateType } from '../../constants/device-template-type.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import { KAFKA_COMMAND_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
@@ -31,6 +33,12 @@ export interface DeviceTelemetryEvent {
   deviceId: string;
   payload: Record<string, unknown>;
   recordedAt: Date;
+}
+
+export interface DeviceStatusEvent {
+  deviceId: string;
+  status: DeviceStatus;
+  changedAt: Date;
 }
 
 export interface RegisterDeviceResult {
@@ -318,12 +326,99 @@ export class DeviceService {
       recordedAt,
     });
 
-    await Promise.all([this.deviceTelemetryRepository.save(telemetry), this.deviceRepository.update(device.id, { lastSeenAt: recordedAt })]);
+    const wasOffline = device.status !== DeviceStatus.ONLINE;
+
+    await Promise.all([
+      this.deviceTelemetryRepository.save(telemetry),
+      this.deviceRepository.update(device.id, { lastSeenAt: recordedAt, status: DeviceStatus.ONLINE }),
+    ]);
 
     this.eventEmitter.emit('device.telemetry', {
       deviceId,
       payload: normalizedPayload,
       recordedAt,
     } satisfies DeviceTelemetryEvent);
+
+    if (wasOffline) {
+      this.eventEmitter.emit('device.status', {
+        deviceId,
+        status: DeviceStatus.ONLINE,
+        changedAt: recordedAt,
+      } satisfies DeviceStatusEvent);
+    }
+  }
+
+  /** Handles the MQTT status topic: explicit online announcements and LWT-triggered offline messages. */
+  async handleDeviceStatusMessage(deviceId: string, payload: unknown): Promise<void> {
+    const device = await this.deviceRepository.findOneBy({ deviceId });
+
+    if (!device) {
+      this.logger.warn(`Ignoring status for unclaimed device ${deviceId}`);
+
+      return;
+    }
+
+    const status = this.parseStatusPayload(payload);
+
+    if (!status) {
+      this.logger.warn(`Ignoring unrecognized status payload from device ${deviceId}: ${JSON.stringify(payload)}`);
+
+      return;
+    }
+
+    const changedAt = new Date();
+
+    if (status === DeviceStatus.ONLINE) {
+      await this.deviceRepository.update(device.id, { status, lastSeenAt: changedAt });
+    } else {
+      await this.deviceRepository.update(device.id, { status });
+    }
+
+    if (status !== device.status) {
+      this.eventEmitter.emit('device.status', { deviceId, status, changedAt } satisfies DeviceStatusEvent);
+    }
+  }
+
+  /** Marks devices OFFLINE once they haven't been heard from (telemetry or status) for `DEVICE_OFFLINE_THRESHOLD_MS`. */
+  async sweepOfflineDevices(): Promise<void> {
+    const cutoff = new Date(Date.now() - DEVICE_OFFLINE_THRESHOLD_MS);
+
+    const staleDevices = await this.deviceRepository.find({
+      where: { status: DeviceStatus.ONLINE, lastSeenAt: LessThan(cutoff) },
+      select: { id: true, deviceId: true },
+    });
+
+    if (staleDevices.length === 0) {
+      return;
+    }
+
+    const changedAt = new Date();
+
+    await this.deviceRepository.update({ id: In(staleDevices.map((device) => device.id)) }, { status: DeviceStatus.OFFLINE });
+
+    for (const device of staleDevices) {
+      this.eventEmitter.emit('device.status', {
+        deviceId: device.deviceId,
+        status: DeviceStatus.OFFLINE,
+        changedAt,
+      } satisfies DeviceStatusEvent);
+    }
+  }
+
+  private parseStatusPayload(payload: unknown): DeviceStatus | null {
+    const raw =
+      typeof payload === 'string'
+        ? payload
+        : payload && typeof payload === 'object' && 'status' in payload
+          ? (payload as { status: unknown }).status
+          : undefined;
+
+    if (typeof raw !== 'string') {
+      return null;
+    }
+
+    const normalized = raw.trim().toUpperCase();
+
+    return normalized === DeviceStatus.ONLINE || normalized === DeviceStatus.OFFLINE ? (normalized as DeviceStatus) : null;
   }
 }

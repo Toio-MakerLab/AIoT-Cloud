@@ -6,7 +6,7 @@ import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/web
 import type { Server, Socket } from 'socket.io';
 
 import { TokenType } from '../../constants/token-type.ts';
-import type { DeviceTelemetryEvent } from '../device/device.service.ts';
+import type { DeviceStatusEvent, DeviceTelemetryEvent } from '../device/device.service.ts';
 import { DeviceService } from '../device/device.service.ts';
 
 interface SocketData {
@@ -79,5 +79,10 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @OnEvent('device.telemetry')
   handleDeviceTelemetry(event: DeviceTelemetryEvent): void {
     this.server.to(deviceRoom(event.deviceId)).emit('telemetry', event);
+  }
+
+  @OnEvent('device.status')
+  handleDeviceStatus(event: DeviceStatusEvent): void {
+    this.server.to(deviceRoom(event.deviceId)).emit('status', event);
   }
 }

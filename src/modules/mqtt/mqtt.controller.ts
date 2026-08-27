@@ -33,7 +33,7 @@ export class MqttController {
     const statusDeviceId = STATUS_TOPIC_REGEX.exec(topic)?.[1];
 
     if (statusDeviceId) {
-      this.logger.log(`Status from device ${statusDeviceId}: ${JSON.stringify(data)}`);
+      void this.handleDeviceStatus(statusDeviceId, data);
 
       return;
     }
@@ -50,5 +50,10 @@ export class MqttController {
   private async handleDeviceTelemetry(deviceId: string, data: unknown): Promise<void> {
     this.logger.log(`Telemetry from device ${deviceId}: ${JSON.stringify(data)}`);
     await this.deviceService.recordTelemetry(deviceId, data);
+  }
+
+  private async handleDeviceStatus(deviceId: string, data: unknown): Promise<void> {
+    this.logger.log(`Status from device ${deviceId}: ${JSON.stringify(data)}`);
+    await this.deviceService.handleDeviceStatusMessage(deviceId, data);
   }
 }

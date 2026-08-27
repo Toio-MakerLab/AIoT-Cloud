@@ -11,6 +11,7 @@ import { DeviceProvisioningController } from './device-provisioning.controller.t
 import { DeviceSecretController } from './device-secret.controller.ts';
 import { DeviceSecretEntity } from './device-secret.entity.ts';
 import { DeviceSecretService } from './device-secret.service.ts';
+import { DeviceStatusScheduler } from './device-status.scheduler.ts';
 import { DeviceTelemetryEntity } from './device-telemetry.entity.ts';
 import { DeviceSecretGuard } from './guards/device-secret.guard.ts';
 import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
@@ -36,6 +37,6 @@ import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
   ],
   controllers: [DeviceController, DeviceProvisioningController, DeviceSecretController],
   exports: [DeviceService],
-  providers: [DeviceService, DeviceSecretService, DeviceSecretGuard],
+  providers: [DeviceService, DeviceSecretService, DeviceSecretGuard, DeviceStatusScheduler],
 })
 export class DeviceModule {}

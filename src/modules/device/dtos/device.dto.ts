@@ -6,8 +6,6 @@ import { DeviceTemplateDto } from '../../device-template/dtos/device-template.dt
 import type { DeviceEntity } from '../device.entity.ts';
 import type { DeviceNetworkConfig, DeviceWarningOverrides } from '../interfaces/device-network-config.interface.ts';
 
-const ONLINE_THRESHOLD_MS = 2 * 60 * 1000;
-
 export class DeviceDto extends AbstractDto {
   @StringField()
   deviceId!: string;
@@ -49,7 +47,7 @@ export class DeviceDto extends AbstractDto {
     this.template = entity.template?.toDto();
     this.userId = entity.userId;
     this.lastSeenAt = entity.lastSeenAt;
-    this.status = entity.lastSeenAt && Date.now() - entity.lastSeenAt.getTime() < ONLINE_THRESHOLD_MS ? DeviceStatus.ONLINE : DeviceStatus.OFFLINE;
+    this.status = entity.status;
     this.pushChannel = entity.pushChannel;
     this.config = entity.config;
     this.isActive = entity.isActive;

@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity.ts';
 import { DevicePushChannel } from '../../constants/device-push-channel.ts';
+import { DeviceStatus } from '../../constants/device-status.ts';
 import { UseDto } from '../../decorators/use-dto.decorator.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
 import { UserEntity } from '../user/user.entity.ts';
@@ -36,6 +37,10 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
 
   @Column({ nullable: true, type: 'timestamp' })
   lastSeenAt!: Date | null;
+
+  /** Persisted online/offline state; set on telemetry/status-topic traffic and swept to OFFLINE by DeviceStatusScheduler. */
+  @Column({ type: 'enum', enum: DeviceStatus, default: DeviceStatus.OFFLINE })
+  status!: DeviceStatus;
 
   @Column({ nullable: true, type: 'jsonb' })
   metadata!: Record<string, unknown> | null;

@@ -11,10 +11,15 @@ export const DEVICES_QUERY_KEY = "devices";
 export const DEVICE_TEMPLATES_QUERY_KEY = "device-templates";
 export const DEVICE_TELEMETRY_QUERY_KEY = "device-telemetry";
 
+// Devices are swept to OFFLINE server-side every 10s once idle past the 1-minute
+// threshold; poll at the same cadence so the online/offline badge stays current.
+const DEVICE_STATUS_POLL_INTERVAL_MS = 10_000;
+
 export const useDevicesQuery = (query: IDevicesQuery = {}) =>
 	useQuery({
 		queryKey: [DEVICES_QUERY_KEY, query],
 		queryFn: () => devicesApi.getDevices(query),
+		refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
 	});
 
 export const useDeviceQuery = (id: string) =>
@@ -22,6 +27,7 @@ export const useDeviceQuery = (id: string) =>
 		queryKey: [DEVICES_QUERY_KEY, id],
 		queryFn: () => devicesApi.getDeviceById(id),
 		enabled: !!id,
+		refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
 	});
 
 export const useDeviceTelemetryQuery = (id: string, limit = 100) =>

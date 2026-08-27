@@ -13,6 +13,7 @@ import { AddDeviceIsActive1787600000000 } from '../../database/migrations/178760
 import { AddNotificationConfig1787700000000 } from '../../database/migrations/1787700000000-AddNotificationConfig.ts';
 import { RemoveDevicePerDeviceSecret1787800000000 } from '../../database/migrations/1787800000000-RemoveDevicePerDeviceSecret.ts';
 import { AddDeviceSecrets1787900000000 } from '../../database/migrations/1787900000000-AddDeviceSecrets.ts';
+import { AddDeviceStatus1788000000000 } from '../../database/migrations/1788000000000-AddDeviceStatus.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -115,6 +116,7 @@ export class ApiConfigService {
         AddNotificationConfig1787700000000,
         RemoveDevicePerDeviceSecret1787800000000,
         AddDeviceSecrets1787900000000,
+        AddDeviceStatus1788000000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',
