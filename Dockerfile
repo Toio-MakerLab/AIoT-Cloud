@@ -26,6 +26,8 @@ COPY web/ ./
 # at a relative path. Overridable at runtime via dist-client/domain.json (see docker-entrypoint.sh).
 ENV VITE_API_URL=/api
 RUN pnpm build
+RUN export VITE_APP_VERSION=$(node -p "require('./package.json').version") && \
+    echo "{\"version\": \"${VITE_APP_VERSION}\"}" > dist-client/domain.json
 
 # ---- production deps (backend, no devDependencies) --------------------------
 FROM node:${NODE_VERSION} AS backend-prod-deps
