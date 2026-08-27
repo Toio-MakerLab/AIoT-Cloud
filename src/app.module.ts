@@ -12,7 +12,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClsModule } from 'nestjs-cls';
 import { AcceptLanguageResolver, HeaderResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { LoggerModule } from 'nestjs-pino';
-import { destination, multistream } from 'pino';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { AuthModule } from './modules/auth/auth.module.ts';
@@ -116,13 +115,24 @@ function redactSensitiveFields(body: unknown): unknown {
 
               return requestId ? { requestId } : {};
             },
-            stream: multistream([
-              { level: consoleLevel, stream: process.stdout },
-              {
-                level: fileLevel,
-                stream: destination({ dest: file, mkdir: true }),
-              },
-            ]),
+            transport: {
+              targets: [
+                {
+                  target: 'pino-pretty',
+                  level: consoleLevel,
+                  options: {
+                    colorize: true,
+                    translateTime: 'SYS:standard',
+                    singleLine: true,
+                  },
+                },
+                {
+                  target: 'pino/file',
+                  level: fileLevel,
+                  options: { destination: file, mkdir: true },
+                },
+              ],
+            },
           },
         };
       },
