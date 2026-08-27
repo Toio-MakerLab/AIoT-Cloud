@@ -65,6 +65,13 @@ export function DeviceConfigViewDialog({
 								value={config?.mqtt?.topics?.command}
 							/>
 							<Row label="Status Topic" value={config?.mqtt?.topics?.status} />
+							{config?.mqtt?.topics?.channels?.map((channel) => (
+								<Row
+									key={channel.index}
+									label={`Ch.${channel.index} (${channel.label})`}
+									value={channel.topic}
+								/>
+							))}
 						</>
 					) : null}
 

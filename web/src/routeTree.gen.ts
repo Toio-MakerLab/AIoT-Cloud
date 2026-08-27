@@ -32,6 +32,7 @@ import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedDevicesIndexRouteImport } from './routes/_authenticated/devices/index'
 import { Route as AuthenticatedDeviceTemplatesIndexRouteImport } from './routes/_authenticated/device-templates/index'
+import { Route as AuthenticatedDeviceSecretsIndexRouteImport } from './routes/_authenticated/device-secrets/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedTasksCreateRouteImport } from './routes/_authenticated/tasks/create'
 import { Route as AuthenticatedSettingsRolesRouteImport } from './routes/_authenticated/settings/roles'
@@ -162,6 +163,12 @@ const AuthenticatedDeviceTemplatesIndexRoute =
     path: '/device-templates/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDeviceSecretsIndexRoute =
+  AuthenticatedDeviceSecretsIndexRouteImport.update({
+    id: '/device-secrets/',
+    path: '/device-secrets/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
   id: '/apps/',
   path: '/apps/',
@@ -247,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/settings/roles': typeof AuthenticatedSettingsRolesRoute
   '/tasks/create': typeof AuthenticatedTasksCreateRoute
   '/apps/': typeof AuthenticatedAppsIndexRoute
+  '/device-secrets/': typeof AuthenticatedDeviceSecretsIndexRoute
   '/device-templates/': typeof AuthenticatedDeviceTemplatesIndexRoute
   '/devices/': typeof AuthenticatedDevicesIndexRoute
   '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
@@ -280,6 +288,7 @@ export interface FileRoutesByTo {
   '/settings/roles': typeof AuthenticatedSettingsRolesRoute
   '/tasks/create': typeof AuthenticatedTasksCreateRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
+  '/device-secrets': typeof AuthenticatedDeviceSecretsIndexRoute
   '/device-templates': typeof AuthenticatedDeviceTemplatesIndexRoute
   '/devices': typeof AuthenticatedDevicesIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
@@ -316,6 +325,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/roles': typeof AuthenticatedSettingsRolesRoute
   '/_authenticated/tasks/create': typeof AuthenticatedTasksCreateRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
+  '/_authenticated/device-secrets/': typeof AuthenticatedDeviceSecretsIndexRoute
   '/_authenticated/device-templates/': typeof AuthenticatedDeviceTemplatesIndexRoute
   '/_authenticated/devices/': typeof AuthenticatedDevicesIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
@@ -352,6 +362,7 @@ export interface FileRouteTypes {
     | '/settings/roles'
     | '/tasks/create'
     | '/apps/'
+    | '/device-secrets/'
     | '/device-templates/'
     | '/devices/'
     | '/help-center/'
@@ -385,6 +396,7 @@ export interface FileRouteTypes {
     | '/settings/roles'
     | '/tasks/create'
     | '/apps'
+    | '/device-secrets'
     | '/device-templates'
     | '/devices'
     | '/help-center'
@@ -420,6 +432,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/roles'
     | '/_authenticated/tasks/create'
     | '/_authenticated/apps/'
+    | '/_authenticated/device-secrets/'
     | '/_authenticated/device-templates/'
     | '/_authenticated/devices/'
     | '/_authenticated/help-center/'
@@ -610,6 +623,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDeviceTemplatesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/device-secrets/': {
+      id: '/_authenticated/device-secrets/'
+      path: '/device-secrets'
+      fullPath: '/device-secrets/'
+      preLoaderRoute: typeof AuthenticatedDeviceSecretsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/apps/': {
       id: '/_authenticated/apps/'
       path: '/apps'
@@ -715,6 +735,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDevicesDeviceIdRoute: typeof AuthenticatedDevicesDeviceIdRoute
   AuthenticatedTasksCreateRoute: typeof AuthenticatedTasksCreateRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
+  AuthenticatedDeviceSecretsIndexRoute: typeof AuthenticatedDeviceSecretsIndexRoute
   AuthenticatedDeviceTemplatesIndexRoute: typeof AuthenticatedDeviceTemplatesIndexRoute
   AuthenticatedDevicesIndexRoute: typeof AuthenticatedDevicesIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
@@ -731,6 +752,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDevicesDeviceIdRoute: AuthenticatedDevicesDeviceIdRoute,
   AuthenticatedTasksCreateRoute: AuthenticatedTasksCreateRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
+  AuthenticatedDeviceSecretsIndexRoute: AuthenticatedDeviceSecretsIndexRoute,
   AuthenticatedDeviceTemplatesIndexRoute:
     AuthenticatedDeviceTemplatesIndexRoute,
   AuthenticatedDevicesIndexRoute: AuthenticatedDevicesIndexRoute,

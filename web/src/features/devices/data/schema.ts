@@ -21,10 +21,19 @@ export const devicePushChannelSchema = z.union([
 ]);
 export type DevicePushChannel = z.infer<typeof devicePushChannelSchema>;
 
+const mqttChannelTopicSchema = z.object({
+	index: z.number(),
+	key: z.string(),
+	label: z.string(),
+	topic: z.string(),
+});
+export type MqttChannelTopic = z.infer<typeof mqttChannelTopicSchema>;
+
 const mqttTopicsSchema = z.object({
 	telemetry: z.string(),
 	command: z.string().nullish(),
 	status: z.string().nullish(),
+	channels: z.array(mqttChannelTopicSchema).nullish(),
 });
 export type MqttTopics = z.infer<typeof mqttTopicsSchema>;
 

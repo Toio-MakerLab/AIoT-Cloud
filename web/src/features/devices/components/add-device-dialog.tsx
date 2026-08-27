@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useDeviceTemplatesQuery, useRegisterDeviceMutation, useUpdateDeviceConfigMutation } from '../api/queries';
-import { useDevices } from '../context/devices-context';
 import { getDeviceTemplateTypeLabel } from '../data/data';
 import { type DeviceConfigFormValues, deviceConfigFormDefaults, deviceConfigFormSchema, deviceConfigFormToPayload } from '../data/device-config-form';
 import { DeviceConfigFields } from './device-config-fields';
