@@ -1,6 +1,6 @@
 {
   "name": "AIoT-Backend",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "NestJS, Typescript, Postgres, TypeORM",
   "author": "Pham Van Khang <phamvankhang.tvi@gmail.com>",
   "private": true,
@@ -70,6 +70,7 @@
     "compression": "^1.7.5",
     "dotenv": "^17.4.2",
     "express": "^5.0.1",
+    "firebase-admin": "^13.10.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",

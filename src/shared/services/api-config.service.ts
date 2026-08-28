@@ -19,6 +19,7 @@ import { AddRelayCurrentNodeTemplateType1788200000000 } from '../../database/mig
 import { AddUnclaimedDevices1788300000000 } from '../../database/migrations/1788300000000-AddUnclaimedDevices.ts';
 import { SeedGatewayTemplate1788400000000 } from '../../database/migrations/1788400000000-SeedGatewayTemplate.ts';
 import { AddUserIsActive1788500000000 } from '../../database/migrations/1788500000000-AddUserIsActive.ts';
+import { AddWebPushNotificationChannel1788600000000 } from '../../database/migrations/1788600000000-AddWebPushNotificationChannel.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -129,6 +130,7 @@ export class ApiConfigService {
         AddUnclaimedDevices1788300000000,
         SeedGatewayTemplate1788400000000,
         AddUserIsActive1788500000000,
+        AddWebPushNotificationChannel1788600000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',
@@ -252,6 +254,21 @@ export class ApiConfigService {
       sendMessageUrl: botToken ? `${apiBaseUrl}/bot${botToken}/sendMessage` : null,
       /** Where users find the bot to send it their link code, e.g. `https://zalo.me/s/<bot-share-id>`. Shown to the client as-is; no start-payload support in the Bot API. */
       shareUrl: this.configService.get<string>('ZALO_BOT_SHARE_URL'),
+    };
+  }
+
+  get firebaseEnabled(): boolean {
+    return this.getBoolean('FIREBASE_ENABLED');
+  }
+
+  get firebaseConfig() {
+    const privateKey = this.configService.get<string>('FIREBASE_PRIVATE_KEY');
+
+    return {
+      projectId: this.configService.get<string>('FIREBASE_PROJECT_ID'),
+      clientEmail: this.configService.get<string>('FIREBASE_CLIENT_EMAIL'),
+      // Env files can't hold literal newlines, so the private key is stored with escaped `\n`s.
+      privateKey: privateKey ? privateKey.replaceAll('\\n', '\n') : undefined,
     };
   }
 

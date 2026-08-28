@@ -3,4 +3,9 @@ export interface ZaloChannelConfig {
   userExtendId: string;
 }
 
-export type NotificationChannelConfig = ZaloChannelConfig;
+/** FCM registration tokens (one per browser/device) this config sends web push notifications to. */
+export interface WebPushChannelConfig {
+  fcmTokens: string[];
+}
+
+export type NotificationChannelConfig = ZaloChannelConfig | WebPushChannelConfig;

@@ -15,4 +15,12 @@ export const notificationSettingsApi = {
     const response = await apiClient.get<Response<IZaloLinkCode>>('/notifications/zalo/link-code');
     return response.data;
   },
+  registerWebPushToken: async (token: string) => {
+    const response = await apiClient.post<Response<INotificationConfig>>('/notifications/web-push/token', { token });
+    return response.data;
+  },
+  unregisterWebPushToken: async (token: string) => {
+    const response = await apiClient.delete<Response<INotificationConfig | null>>('/notifications/web-push/token', { data: { token } });
+    return response.data;
+  },
 };

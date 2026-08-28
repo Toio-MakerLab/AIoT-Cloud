@@ -36,3 +36,29 @@ export function useZaloLinkCodeMutation() {
     mutationFn: () => notificationSettingsApi.getZaloLinkCode(),
   });
 }
+
+export function useRegisterWebPushTokenMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => notificationSettingsApi.registerWebPushToken(token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: NOTIFICATION_CONFIGS_QUERY_KEY,
+      });
+    },
+  });
+}
+
+export function useUnregisterWebPushTokenMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => notificationSettingsApi.unregisterWebPushToken(token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: NOTIFICATION_CONFIGS_QUERY_KEY,
+      });
+    },
+  });
+}

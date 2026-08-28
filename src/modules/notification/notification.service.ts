@@ -8,6 +8,7 @@ import { NotificationChannelType } from '../../constants/notification-channel-ty
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import type { NotificationConfigDto } from './dtos/notification-config.dto.ts';
 import type { UpsertNotificationConfigDto } from './dtos/upsert-notification-config.dto.ts';
+import type { WebPushChannelConfig } from './interfaces/notification-channel-config.interface.ts';
 import type { NotificationSender } from './interfaces/notification-sender.interface.ts';
 import { NOTIFICATION_SENDERS } from './interfaces/notification-sender.interface.ts';
 import type { ZaloWebhookPayload } from './interfaces/zalo-webhook-payload.interface.ts';
@@ -122,12 +123,56 @@ export class NotificationService {
     return Boolean(webhookSecret) && secretHeader === webhookSecret;
   }
 
-  /** Fans a rendered warning message out to every enabled, linked channel the user has configured. */
-  async sendWarning(userId: string, message: string): Promise<void> {
+  /** Registers a browser's FCM token against the user's web push config, creating it (enabled) on first use. */
+  async registerWebPushToken(userId: Uuid, token: string): Promise<ResponseCore<NotificationConfigDto>> {
+    let config = await this.notificationConfigRepository.findOneBy({ userId, channel: NotificationChannelType.WEB_PUSH });
+
+    config ??= this.notificationConfigRepository.create({
+      userId,
+      channel: NotificationChannelType.WEB_PUSH,
+      config: null,
+      isEnabled: true,
+    });
+
+    const fcmTokens = (config.config as WebPushChannelConfig | null)?.fcmTokens ?? [];
+
+    config.config = { fcmTokens: fcmTokens.includes(token) ? fcmTokens : [...fcmTokens, token] };
+
+    await this.notificationConfigRepository.save(config);
+
+    return ResponseCore.ok(config.toDto());
+  }
+
+  /** Removes a browser's FCM token; clears the config (unlinks the channel) once no tokens remain. */
+  async unregisterWebPushToken(userId: Uuid, token: string): Promise<ResponseCore<NotificationConfigDto | null>> {
+    const config = await this.notificationConfigRepository.findOneBy({ userId, channel: NotificationChannelType.WEB_PUSH });
+
+    if (!config) {
+      return ResponseCore.ok(null);
+    }
+
+    const fcmTokens = (config.config as WebPushChannelConfig | null)?.fcmTokens ?? [];
+    const remainingTokens = fcmTokens.filter((fcmToken) => fcmToken !== token);
+
+    config.config = remainingTokens.length > 0 ? { fcmTokens: remainingTokens } : null;
+
+    await this.notificationConfigRepository.save(config);
+
+    return ResponseCore.ok(config.toDto());
+  }
+
+  /**
+   * Fans a rendered warning message out to the user's enabled, linked channels. When `channels` is
+   * provided and non-empty, only those channels receive the message (per-gate channel selection);
+   * otherwise (undefined/empty) it falls back to every enabled, linked channel — preserving behavior
+   * for devices/gates that haven't picked channels yet.
+   */
+  async sendWarning(userId: string, message: string, channels?: NotificationChannelType[]): Promise<void> {
     const configs = await this.notificationConfigRepository.findBy({ userId, isEnabled: true });
+    const targetConfigs = channels && channels.length > 0 ? configs.filter((config) => channels.includes(config.channel)) : configs;
 
     await Promise.all(
-      configs
+      targetConfigs
         .filter((config) => config.config !== null)
         .map(async (config) => {
           const sender = this.senderByChannel.get(config.channel);

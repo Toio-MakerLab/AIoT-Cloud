@@ -1,4 +1,4 @@
-export type NotificationChannel = 'ZALO';
+export type NotificationChannel = 'ZALO' | 'WEB_PUSH';
 
 export const NOTIFICATION_CHANNELS: {
   value: NotificationChannel;
@@ -9,6 +9,11 @@ export const NOTIFICATION_CHANNELS: {
     value: 'ZALO',
     label: 'Zalo',
     description: 'Receive device warnings in a Zalo bot chat.',
+  },
+  {
+    value: 'WEB_PUSH',
+    label: 'Web Push',
+    description: 'Receive device warnings as a browser push notification.',
   },
 ];
 

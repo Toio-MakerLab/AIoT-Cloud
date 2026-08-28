@@ -4,6 +4,15 @@
 // src/constants/device-status.ts
 // src/constants/device-template-type.ts
 
+/** Minimal mirror of settings/notifications' NotificationChannel — this feature keeps its own copy per the existing "minimal shape" convention below. */
+export type NotificationChannel = 'ZALO' | 'WEB_PUSH';
+
+/** Options for picking which channel(s) a warning gate should notify — mirrors NOTIFICATION_CHANNELS in settings/notifications/api/types.ts. */
+export const NOTIFICATION_CHANNEL_OPTIONS: { value: NotificationChannel; label: string }[] = [
+  { value: 'ZALO', label: 'Zalo' },
+  { value: 'WEB_PUSH', label: 'Web Push' },
+];
+
 export const DeviceStatus = {
   ONLINE: 'ONLINE',
   OFFLINE: 'OFFLINE',
@@ -53,11 +62,21 @@ export interface IKafkaConfig {
   password?: string | null;
 }
 
+/** Per-field warning threshold override for a device's telemetry gates. */
+export interface IDeviceWarningThreshold {
+  min?: number;
+  max?: number;
+  enabled?: boolean;
+  /** Unset/empty means "all of the user's enabled channels" — see notification-settings fallback semantics. */
+  channels?: NotificationChannel[];
+}
+
 export interface IDeviceNetworkConfig {
   apiEndpoint?: string | null;
   mqtt?: IMqttConfig | null;
   http?: IHttpPushConfig | null;
   kafka?: IKafkaConfig | null;
+  warningOverrides?: Record<string, IDeviceWarningThreshold> | null;
 }
 
 export interface IUpdateDeviceConfig {
@@ -67,6 +86,7 @@ export interface IUpdateDeviceConfig {
   http?: IHttpPushConfig | null;
   kafka?: IKafkaConfig | null;
   isActive?: boolean;
+  warningOverrides?: Record<string, IDeviceWarningThreshold> | null;
 }
 
 export const DeviceActionType = {
@@ -83,6 +103,15 @@ export interface IDeviceActionFieldDefinition {
   offValue?: string | null;
 }
 
+/** Minimal mirror of the telemetry field schema — device-templates feature owns the full DTO. */
+export interface ITelemetryFieldDefinition {
+  key: string;
+  label: string;
+  unit?: string;
+  warningMin?: number;
+  warningMax?: number;
+}
+
 /** Minimal shape of the templates this feature consumes (device-templates feature owns the full DTO). */
 export interface IDeviceTemplateSummary {
   id: string;
@@ -91,6 +120,7 @@ export interface IDeviceTemplateSummary {
   description?: string | null;
   manufacturer?: string | null;
   actionSchema?: IDeviceActionFieldDefinition[] | null;
+  telemetrySchema?: ITelemetryFieldDefinition[] | null;
   icon?: string | null;
   isActive: boolean;
   createdAt: string;

@@ -9,6 +9,7 @@ import { DeviceWarningListener } from './listeners/device-warning.listener.ts';
 import { NotificationController } from './notification.controller.ts';
 import { NotificationService } from './notification.service.ts';
 import { NotificationConfigEntity } from './notification-config.entity.ts';
+import { FirebaseNotificationSender } from './senders/firebase-notification.sender.ts';
 import { ZaloNotificationSender } from './senders/zalo-notification.sender.ts';
 import { ZaloWebhookController } from './zalo-webhook.controller.ts';
 
@@ -19,10 +20,14 @@ import { ZaloWebhookController } from './zalo-webhook.controller.ts';
     NotificationService,
     DeviceWarningListener,
     ZaloNotificationSender,
+    FirebaseNotificationSender,
     {
       provide: NOTIFICATION_SENDERS,
-      useFactory: (zaloSender: ZaloNotificationSender): NotificationSender[] => [zaloSender],
-      inject: [ZaloNotificationSender],
+      useFactory: (zaloSender: ZaloNotificationSender, firebaseSender: FirebaseNotificationSender): NotificationSender[] => [
+        zaloSender,
+        firebaseSender,
+      ],
+      inject: [ZaloNotificationSender, FirebaseNotificationSender],
     },
   ],
   exports: [NotificationService],

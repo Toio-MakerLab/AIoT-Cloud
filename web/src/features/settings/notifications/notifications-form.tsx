@@ -1,4 +1,4 @@
-import { Check, Copy, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
+import { Bell, Check, Copy, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -9,8 +9,14 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { onForegroundPushMessage, requestWebPushPermission } from '@/lib/firebase';
 import { getResponseMessage } from '@/lib/response-codes';
-import { useNotificationConfigsQuery, useUpsertNotificationConfigMutation, useZaloLinkCodeMutation } from './api/queries';
+import {
+  useNotificationConfigsQuery,
+  useRegisterWebPushTokenMutation,
+  useUpsertNotificationConfigMutation,
+  useZaloLinkCodeMutation,
+} from './api/queries';
 import { type INotificationConfig, NOTIFICATION_CHANNELS } from './api/types';
 
 const POLL_INTERVAL_MS = 4000;
@@ -122,6 +128,50 @@ function ZaloLinkPanel() {
   );
 }
 
+/**
+ * Rendered only while the WEB_PUSH channel isn't linked yet. Registers the FCM service worker,
+ * asks for Notification permission, and if granted, exchanges the resulting token with the
+ * backend. Every failure mode (unsupported browser, denied permission, missing VAPID config) is
+ * a toast + no-op — this is a progressive-enhancement feature, never a hard requirement.
+ */
+function WebPushLinkPanel() {
+  const registerToken = useRegisterWebPushTokenMutation();
+  const [isEnabling, setIsEnabling] = useState(false);
+
+  const handleEnable = async () => {
+    if (!('serviceWorker' in navigator)) {
+      toast.error('This browser does not support push notifications.');
+      return;
+    }
+
+    setIsEnabling(true);
+    try {
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const token = await requestWebPushPermission(registration);
+
+      if (!token) {
+        toast.error('Could not enable browser notifications. Check permission settings and try again.');
+        return;
+      }
+
+      await registerToken.mutateAsync(token);
+      toast.success('Browser notifications enabled');
+    } catch (error) {
+      toast.error(getResponseMessage(error));
+    } finally {
+      setIsEnabling(false);
+    }
+  };
+
+  return (
+    <Button type="button" size="sm" onClick={handleEnable} disabled={isEnabling || registerToken.isPending}>
+      {(isEnabling || registerToken.isPending) && <Loader2 className="size-4 animate-spin" />}
+      <Bell className="size-4" />
+      Enable browser notifications
+    </Button>
+  );
+}
+
 function ChannelRow({ config }: { config: INotificationConfig }) {
   const meta = NOTIFICATION_CHANNELS.find((c) => c.value === config.channel);
   const upsertConfig = useUpsertNotificationConfigMutation();
@@ -162,7 +212,8 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
         </div>
         <Switch checked={config.isEnabled} disabled={!config.isLinked || upsertConfig.isPending} onCheckedChange={handleToggle} />
       </div>
-      {!config.isLinked && <ZaloLinkPanel />}
+      {!config.isLinked && config.channel === 'ZALO' && <ZaloLinkPanel />}
+      {!config.isLinked && config.channel === 'WEB_PUSH' && <WebPushLinkPanel />}
       {config.isLinked && (
         <>
           <Separator />
@@ -188,6 +239,10 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
 export function NotificationsForm() {
   const { data, isLoading } = useNotificationConfigsQuery();
   const configs = data?.data ?? [];
+
+  // Surface web-push notifications as a toast while this tab is focused — the service worker's
+  // onBackgroundMessage handles the tab-unfocused/closed case with a native browser notification.
+  useEffect(() => onForegroundPushMessage((payload) => toast.info(payload.title ?? 'Device warning', { description: payload.body })), []);
 
   if (isLoading) {
     return (

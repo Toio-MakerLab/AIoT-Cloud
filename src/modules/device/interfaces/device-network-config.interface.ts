@@ -1,3 +1,5 @@
+import type { NotificationChannelType } from '../../../constants/notification-channel-type.ts';
+
 /** One downlink topic for a single channel of a multi-channel device (e.g. one relay). */
 export interface DeviceMqttChannelTopic {
   /** 1-based channel number, matching the order of the template's `actionSchema`. */
@@ -51,6 +53,8 @@ export interface DeviceWarningThreshold {
   min?: number;
   max?: number;
   enabled?: boolean;
+  /** Notification channels this gate fans out to; omitted/empty falls back to all enabled+linked channels. */
+  channels?: NotificationChannelType[];
 }
 
 export type DeviceWarningOverrides = Record<string, DeviceWarningThreshold>;

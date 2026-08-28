@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
+import type { NotificationChannelType } from '../../../constants/notification-channel-type.ts';
 import type { DeviceTelemetryEvent } from '../../device/device.service.ts';
 import { DeviceService } from '../../device/device.service.ts';
+import type { DeviceWarningThreshold } from '../../device/interfaces/device-network-config.interface.ts';
 import type { TelemetryFieldDefinition } from '../../device-template/device-template.entity.ts';
 import { NotificationService } from '../notification.service.ts';
 
@@ -37,15 +39,15 @@ export class DeviceWarningListener {
       const message = this.buildMessage(device.name, field, value, breach);
 
       // eslint-disable-next-line no-await-in-loop
-      await this.notificationService.sendWarning(device.userId, message);
+      await this.notificationService.sendWarning(device.userId, message, breach.channels);
     }
   }
 
   private checkThreshold(
     field: TelemetryFieldDefinition,
     value: number,
-    override: { min?: number; max?: number; enabled?: boolean } | undefined,
-  ): { min?: number; max?: number } | null {
+    override: DeviceWarningThreshold | undefined,
+  ): { min?: number; max?: number; channels?: NotificationChannelType[] } | null {
     if (override?.enabled === false) {
       return null;
     }
@@ -58,7 +60,7 @@ export class DeviceWarningListener {
     }
 
     if ((min !== undefined && value < min) || (max !== undefined && value > max)) {
-      return { min, max };
+      return { min, max, channels: override?.channels };
     }
 
     return null;
