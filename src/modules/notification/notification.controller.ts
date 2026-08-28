@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseEnumPipe, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import type { ResponseCore } from '../../common/dto/response-core.dto.ts';
+import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { NotificationChannelType } from '../../constants/notification-channel-type.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
@@ -21,8 +21,10 @@ export class NotificationController {
   @Get('config')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  getConfigs(@AuthUser() user: UserEntity): Promise<NotificationConfigDto[]> {
-    return this.notificationService.getUserConfigs(user.id as Uuid);
+  async getConfigs(@AuthUser() user: UserEntity): Promise<ResponseCore<NotificationConfigDto[]>> {
+    const configs = await this.notificationService.getUserConfigs(user.id as Uuid);
+
+    return ResponseCore.ok(configs);
   }
 
   @Patch('config/:channel')
