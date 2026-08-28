@@ -63,6 +63,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.2.1",
     "@vkhang2stack/snowflake-id": "^1.0.2",
+    "axios": "^1.20.0",
     "bcrypt": "^5.1.1",
     "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "~0.5.1",

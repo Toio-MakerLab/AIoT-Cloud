@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import axios from 'axios';
 
 import { ApiConfigService } from '../../../shared/services/api-config.service.ts';
 import type { ZaloWebhookRegistrationResponse } from '../interfaces/zalo-webhook-registration-response.interface.ts';
@@ -39,44 +40,45 @@ export class ZaloWebhookRegistrationService {
 
   private async deleteWebhook(deleteWebhookUrl: string): Promise<void> {
     try {
-      const response = await fetch(deleteWebhookUrl, { method: 'POST' });
-      const body = (await response.json()) as ZaloWebhookRegistrationResponse;
+      const { data, status } = await axios.post<ZaloWebhookRegistrationResponse>(deleteWebhookUrl, undefined, {
+        validateStatus: () => true,
+      });
 
-      if (!response.ok || !body.ok) {
-        this.logger.warn(`Zalo deleteWebhook responded ${response.status}: ${body.message ?? JSON.stringify(body)}`);
+      if (status < 200 || status >= 300 || !data.ok) {
+        this.logger.warn(`Zalo deleteWebhook (${deleteWebhookUrl}) responded ${status}: ${data.message ?? JSON.stringify(data)}`);
       }
     } catch (error) {
-      this.logger.error(`Failed to call Zalo deleteWebhook: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(`Failed to call Zalo deleteWebhook (${deleteWebhookUrl}): ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   private async setWebhook(setWebhookUrl: string, webhookUrl: string, webhookSecret: string): Promise<void> {
     try {
-      const response = await fetch(setWebhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: webhookUrl, secret_token: webhookSecret }),
-      });
+      const { data, status } = await axios.post<ZaloWebhookRegistrationResponse>(
+        setWebhookUrl,
+        { url: webhookUrl, secret_token: webhookSecret },
+        { validateStatus: () => true },
+      );
 
-      const body = (await response.json()) as ZaloWebhookRegistrationResponse;
-
-      if (!response.ok || !body.ok) {
-        this.logger.error(`Zalo setWebhook responded ${response.status}: ${body.message ?? JSON.stringify(body)}`);
+      if (status < 200 || status >= 300 || !data.ok) {
+        this.logger.error(`Zalo setWebhook (${setWebhookUrl}) responded ${status}: ${data.message ?? JSON.stringify(data)}`);
 
         return;
       }
 
-      const verification = body.result?.verification;
+      const verification = data.result?.verification;
 
       if (verification && !verification.ok) {
-        this.logger.warn(`Zalo setWebhook registered but verification failed: ${verification.outcome} (${verification.hint ?? 'no hint'})`);
+        this.logger.warn(
+          `Zalo setWebhook (${setWebhookUrl}) registered but verification failed: ${verification.outcome} (${verification.hint ?? 'no hint'})`,
+        );
 
         return;
       }
 
       this.logger.log(`Zalo webhook registered at ${webhookUrl}`);
     } catch (error) {
-      this.logger.error(`Failed to call Zalo setWebhook: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(`Failed to call Zalo setWebhook (${setWebhookUrl}): ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

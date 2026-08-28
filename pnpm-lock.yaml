@@ -65,6 +65,9 @@ importers:
       '@vkhang2stack/snowflake-id':
         specifier: ^1.0.2
         version: 1.0.2
+      axios:
+        specifier: ^1.20.0
+        version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1(supports-color@8.1.1)
@@ -3348,6 +3351,9 @@ packages:
     peerDependencies:
       typescript: '>=4.8.2'
 
+  axios@1.20.0:
+    resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
+
   b4a@1.8.1:
     resolution: {integrity: sha512-aiqre1Nr0B/6DgE2N5vwTc+2/oQZ4Wh1t4NznYY4E00y8LCt6NqdRv81so00oo27D8MVKTpUa/MwUUtBLXCoDw==}
     peerDependencies:
@@ -4412,6 +4418,15 @@ packages:
   firebase-admin@13.10.0:
     resolution: {integrity: sha512-rbuCrJvYRwqBqvbccMS8fj/x2zsaMisdf5RQbRzQzr14Rbq9r2UlpuBHqWAwrO6c9dIRF56xF/xoepXsD5yDuQ==}
     engines: {node: '>=18'}
+
+  follow-redirects@1.16.0:
+    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
 
   for-each@0.3.5:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
@@ -6079,6 +6094,10 @@ packages:
 
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
+
+  proxy-from-env@2.1.0:
+    resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
+    engines: {node: '>=10'}
 
   pump@3.0.4:
     resolution: {integrity: sha512-VS7sjc6KR7e1ukRFhQSY5LM2uBWAUPiOPa/A3mkKmiMwSmRFUITt0xuj+/lesgnCv+dPIEYlkzrcyXgquIHMcA==}
@@ -10633,6 +10652,16 @@ snapshots:
     transitivePeerDependencies:
       - chokidar
 
+  axios@1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1):
+    dependencies:
+      follow-redirects: 1.16.0(debug@4.4.3(supports-color@8.1.1))
+      form-data: 4.0.6
+      https-proxy-agent: 5.0.1(supports-color@8.1.1)
+      proxy-from-env: 2.1.0
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+
   b4a@1.8.1: {}
 
   babel-jest@29.7.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1):
@@ -11887,6 +11916,10 @@ snapshots:
       - '@firebase/app-compat'
       - encoding
       - supports-color
+
+  follow-redirects@1.16.0(debug@4.4.3(supports-color@8.1.1)):
+    optionalDependencies:
+      debug: 4.4.3(supports-color@8.1.1)
 
   for-each@0.3.5:
     dependencies:
@@ -13800,6 +13833,8 @@ snapshots:
       - supports-color
 
   proxy-from-env@1.1.0: {}
+
+  proxy-from-env@2.1.0: {}
 
   pump@3.0.4:
     dependencies:
