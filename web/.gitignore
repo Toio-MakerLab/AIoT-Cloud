@@ -27,3 +27,4 @@ dist-ssr
 .serena
 .tokensave
 .claude
+public/firebase-messaging-sw.js

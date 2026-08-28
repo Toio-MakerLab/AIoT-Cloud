@@ -38,7 +38,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
           'connect-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
           'worker-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
           'script-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
-          'script-src-elem': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
+          'script-src-elem': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com'],
         },
       },
     }),

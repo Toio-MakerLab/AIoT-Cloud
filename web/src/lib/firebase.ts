@@ -3,8 +3,8 @@ import { getMessaging, getToken, isSupported, type Messaging, onMessage } from '
 
 /**
  * Firebase web config — non-secret values baked into the bundle (standard for a Firebase SPA).
- * Keep in sync with the hardcoded copy in `public/firebase-messaging-sw.js` (service workers
- * can't read Vite env vars, so that file duplicates this object literally).
+ * The service worker (`src/service-worker/firebase-messaging-sw.ts`) reads the same env vars and
+ * is bundled separately by `scripts/build-firebase-sw.mjs` into `public/firebase-messaging-sw.js`.
  */
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
