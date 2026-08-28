@@ -8,14 +8,11 @@ export interface ZaloWebhookMessage {
 }
 
 export interface ZaloWebhookPayload {
-  ok: boolean;
-  result?: {
-    event_name:
-      | 'message.text.received'
-      | 'message.image.received'
-      | 'message.sticker.received'
-      | 'message.voice.received'
-      | 'message.unsupported.received';
-    message?: ZaloWebhookMessage;
-  };
+  event_name:
+    | 'message.text.received'
+    | 'message.image.received'
+    | 'message.sticker.received'
+    | 'message.voice.received'
+    | 'message.unsupported.received';
+  message?: ZaloWebhookMessage;
 }

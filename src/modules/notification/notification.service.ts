@@ -80,9 +80,9 @@ export class NotificationService {
    * the only point at which we learn which Zalo conversation belongs to which of our users.
    */
   async handleZaloWebhookUpdate(payload: ZaloWebhookPayload): Promise<void> {
-    const message = payload.result?.message;
+    const message = payload.message;
 
-    if (payload.result?.event_name !== 'message.text.received' || !message?.text) {
+    if (payload.event_name !== 'message.text.received' || !message?.text) {
       return;
     }
 
@@ -111,7 +111,7 @@ export class NotificationService {
       isEnabled: true,
     });
 
-    notificationConfig.config = { userExtendId: message.chat.id };
+    notificationConfig.config = { userExtendId: message.from.id };
     await this.notificationConfigRepository.save(notificationConfig);
 
     await this.sendWarning(linkPayload.userId, "You're now linked — this bot will send device warnings here.");
