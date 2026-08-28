@@ -25,6 +25,8 @@ import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { TranslationService } from './shared/services/translation.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
 
+const domainWhitelist = [ 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com', 'https://fcmregistrations.googleapis.com','https://static.cloudflareinsights.com'];
+
 export async function bootstrap(): Promise<NestExpressApplication> {
   initializeTransactionalContext();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, new ExpressAdapter(), { cors: true, bufferLogs: true });
@@ -35,10 +37,10 @@ export async function bootstrap(): Promise<NestExpressApplication> {
       contentSecurityPolicy: {
         directives: {
           ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-          'connect-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com', 'https://fcmregistrations.googleapis.com'],
-          'worker-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com', 'https://fcmregistrations.googleapis.com'],
-          'script-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com','https://fcmregistrations.googleapis.com'],
-          'script-src-elem': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com', 'https://fcmregistrations.googleapis.com'],
+          'connect-src': ["'self'", 'blob:', ...domainWhitelist],
+          'worker-src': ["'self'", 'blob:', ...domainWhitelist],
+          'script-src': ["'self'", 'blob:', ...domainWhitelist],
+          'script-src-elem': ["'self'", 'blob:', ...domainWhitelist],
         },
       },
     }),
