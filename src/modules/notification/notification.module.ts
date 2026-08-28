@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, type OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthModule } from '../auth/auth.module.ts';
@@ -11,6 +11,7 @@ import { NotificationService } from './notification.service.ts';
 import { NotificationConfigEntity } from './notification-config.entity.ts';
 import { FirebaseNotificationSender } from './senders/firebase-notification.sender.ts';
 import { ZaloNotificationSender } from './senders/zalo-notification.sender.ts';
+import { ZaloWebhookRegistrationService } from './services/zalo-webhook-registration.service.ts';
 import { ZaloWebhookController } from './zalo-webhook.controller.ts';
 
 @Module({
@@ -21,6 +22,7 @@ import { ZaloWebhookController } from './zalo-webhook.controller.ts';
     DeviceWarningListener,
     ZaloNotificationSender,
     FirebaseNotificationSender,
+    ZaloWebhookRegistrationService,
     {
       provide: NOTIFICATION_SENDERS,
       useFactory: (zaloSender: ZaloNotificationSender, firebaseSender: FirebaseNotificationSender): NotificationSender[] => [
@@ -32,4 +34,10 @@ import { ZaloWebhookController } from './zalo-webhook.controller.ts';
   ],
   exports: [NotificationService],
 })
-export class NotificationModule {}
+export class NotificationModule implements OnModuleInit {
+  constructor(private readonly zaloWebhookRegistrationService: ZaloWebhookRegistrationService) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.zaloWebhookRegistrationService.registerWebhook();
+  }
+}

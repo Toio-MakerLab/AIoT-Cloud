@@ -249,9 +249,14 @@ export class ApiConfigService {
 
     return {
       botToken,
-      /** Compared against the `X-Bot-Api-Secret-Token` header on every incoming webhook call. */
+      /** Compared against the `X-Bot-Api-Secret-Token` header on every incoming webhook call; also sent as `secret_token` to setWebhook. */
       webhookSecret: this.configService.get<string>('ZALO_BOT_WEBHOOK_SECRET'),
       sendMessageUrl: botToken ? `${apiBaseUrl}/bot${botToken}/sendMessage` : null,
+      setWebhookUrl: botToken ? `${apiBaseUrl}/bot${botToken}/setWebhook` : null,
+      deleteWebhookUrl: botToken ? `${apiBaseUrl}/bot${botToken}/deleteWebhook` : null,
+      testWebhookUrl: botToken ? `${apiBaseUrl}/bot${botToken}/testWebhook` : null,
+      /** Public HTTPS URL of our webhook endpoint, registered with Zalo via setWebhook on startup. */
+      webhookUrl: this.configService.get<string>('ZALO_BOT_WEBHOOK_URL'),
       /** Where users find the bot to send it their link code, e.g. `https://zalo.me/s/<bot-share-id>`. Shown to the client as-is; no start-payload support in the Bot API. */
       shareUrl: this.configService.get<string>('ZALO_BOT_SHARE_URL'),
     };
