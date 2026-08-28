@@ -35,10 +35,10 @@ export async function bootstrap(): Promise<NestExpressApplication> {
       contentSecurityPolicy: {
         directives: {
           ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-          'connect-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
-          'worker-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
-          'script-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net'],
-          'script-src-elem': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com'],
+          'connect-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com'],
+          'worker-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com'],
+          'script-src': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com'],
+          'script-src-elem': ["'self'", 'blob:', 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com'],
         },
       },
     }),
