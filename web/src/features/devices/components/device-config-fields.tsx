@@ -1,4 +1,5 @@
 import type { Control } from 'react-hook-form';
+import { PasswordInput } from '@/components/password-input';
 import { SelectDropdown } from '@/components/select-dropdown';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -110,7 +111,7 @@ export function DeviceConfigFields({ control, pushChannel }: Props) {
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
                 <FormLabel className="col-span-2 text-right">Password</FormLabel>
                 <FormControl className="col-span-4">
-                  <Input type="password" {...field} />
+                  <PasswordInput {...field} />
                 </FormControl>
                 <FormMessage className="col-span-4 col-start-3" />
               </FormItem>
@@ -235,7 +236,7 @@ export function DeviceConfigFields({ control, pushChannel }: Props) {
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
                 <FormLabel className="col-span-2 text-right">Password</FormLabel>
                 <FormControl className="col-span-4">
-                  <Input type="password" {...field} />
+                  <PasswordInput {...field} />
                 </FormControl>
                 <FormMessage className="col-span-4 col-start-3" />
               </FormItem>

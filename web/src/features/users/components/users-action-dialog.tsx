@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { PasswordInput } from '@/components/password-input';
 import { SelectDropdown } from '@/components/select-dropdown';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -146,7 +147,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                     Password{isEdit ? ' (leave blank to keep unchanged)' : ''} {!isEdit && <span className="text-red-500">*</span>}
                   </FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••" {...field} />
+                    <PasswordInput placeholder="••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

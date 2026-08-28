@@ -120,10 +120,11 @@ export function AddDeviceDialog({ open, onOpenChange, initialDeviceId }: Props) 
         data: deviceConfigFormToPayload(values),
       });
       toast.success('Device config saved');
+      handleOpenChange(false);
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
+      // Keep the dialog open so the user can fix the config and retry.
     }
-    handleOpenChange(false);
   };
 
   return (
