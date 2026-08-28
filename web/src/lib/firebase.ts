@@ -1,26 +1,35 @@
 import { type FirebaseApp, initializeApp } from 'firebase/app';
 import { getMessaging, getToken, isSupported, type Messaging, onMessage } from 'firebase/messaging';
+import { domainConfig } from './domain-config';
 
 /**
- * Firebase web config — non-secret values baked into the bundle (standard for a Firebase SPA).
- * The service worker (`src/service-worker/firebase-messaging-sw.ts`) reads the same env vars and
- * is bundled separately by `scripts/build-firebase-sw.mjs` into `public/firebase-messaging-sw.js`.
+ * Firebase web config — non-secret values (standard for a Firebase SPA), read from
+ * `domainConfig` rather than `import.meta.env` directly so the same build can point at a
+ * different Firebase project per deployment via domain.json (see `./domain-config`),
+ * falling back to the build-time env vars when domain.json omits them.
+ * Read lazily (not hoisted to a module-level const) because `loadDomainConfig()` — awaited
+ * in `main.tsx` before the app renders — populates `domainConfig` asynchronously; reading it
+ * eagerly at import time would always see the pre-fetch build-time defaults.
+ * The service worker (`src/service-worker/firebase-messaging-sw.ts`) still reads the build-time
+ * env vars directly and is bundled separately by `scripts/build-firebase-sw.mjs` into
+ * `public/firebase-messaging-sw.js`.
  */
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY as string | undefined;
+function getFirebaseConfig() {
+  return {
+    apiKey: domainConfig.VITE_FIREBASE_API_KEY,
+    authDomain: domainConfig.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: domainConfig.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: domainConfig.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: domainConfig.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: domainConfig.VITE_FIREBASE_APP_ID,
+  };
+}
 
 let app: FirebaseApp | undefined;
 let messagingPromise: Promise<Messaging | null> | undefined;
 
 function getFirebaseApp(): FirebaseApp | null {
+  const firebaseConfig = getFirebaseConfig();
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) {
     return null;
   }
@@ -61,6 +70,7 @@ export async function requestWebPushPermission(serviceWorkerRegistration?: Servi
       return null;
     }
 
+    const vapidKey = domainConfig.VITE_FIREBASE_VAPID_KEY;
     if (!vapidKey) {
       console.warn('[firebase] VITE_FIREBASE_VAPID_KEY is not configured');
       return null;
