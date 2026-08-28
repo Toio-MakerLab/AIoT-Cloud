@@ -19,13 +19,16 @@ export class ZaloWebhookController {
   async handleWebhook(
     @Headers('x-bot-api-secret-token') secretToken: string | undefined,
     @Body() payload: ZaloWebhookPayload,
-  ): Promise<{ ok: true }> {
+  ): Promise<{ ok: boolean }> {
     if (!this.notificationService.isValidWebhookSecret(secretToken)) {
       throw new ForbiddenException('Unauthorized');
     }
+    try {
+      await this.notificationService.handleZaloWebhookUpdate(payload);
 
-    await this.notificationService.handleZaloWebhookUpdate(payload);
-
-    return { ok: true };
+      return { ok: true };
+    } catch {
+      return { ok: false };
+    }
   }
 }

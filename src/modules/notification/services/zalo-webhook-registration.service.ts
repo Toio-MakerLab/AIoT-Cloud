@@ -9,6 +9,8 @@ import type { ZaloWebhookRegistrationResponse } from '../interfaces/zalo-webhook
  * webhook" API to diff against, so we unconditionally delete then re-set it — idempotent,
  * and picks up a changed ZALO_BOT_WEBHOOK_URL/secret without manual intervention.
  */
+const REQUEST_TIMEOUT_MS = 10_000;
+
 @Injectable()
 export class ZaloWebhookRegistrationService {
   private readonly logger = new Logger(ZaloWebhookRegistrationService.name);
@@ -41,6 +43,7 @@ export class ZaloWebhookRegistrationService {
   private async deleteWebhook(deleteWebhookUrl: string): Promise<void> {
     try {
       const { data, status } = await axios.post<ZaloWebhookRegistrationResponse>(deleteWebhookUrl, undefined, {
+        timeout: REQUEST_TIMEOUT_MS,
         validateStatus: () => true,
       });
 
@@ -57,7 +60,7 @@ export class ZaloWebhookRegistrationService {
       const { data, status } = await axios.post<ZaloWebhookRegistrationResponse>(
         setWebhookUrl,
         { url: webhookUrl, secret_token: webhookSecret },
-        { validateStatus: () => true },
+        { timeout: REQUEST_TIMEOUT_MS, validateStatus: () => true },
       );
 
       if (status < 200 || status >= 300 || !data.ok) {

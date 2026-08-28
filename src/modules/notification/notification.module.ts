@@ -1,4 +1,4 @@
-import { Module, type OnModuleInit } from '@nestjs/common';
+import { Logger, Module, type OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthModule } from '../auth/auth.module.ts';
@@ -35,9 +35,13 @@ import { ZaloWebhookController } from './zalo-webhook.controller.ts';
   exports: [NotificationService],
 })
 export class NotificationModule implements OnModuleInit {
+  private readonly logger = new Logger(NotificationModule.name);
+
   constructor(private readonly zaloWebhookRegistrationService: ZaloWebhookRegistrationService) {}
 
-  async onModuleInit(): Promise<void> {
-    await this.zaloWebhookRegistrationService.registerWebhook();
+  onModuleInit(): void {
+    this.zaloWebhookRegistrationService
+      .registerWebhook()
+      .catch((error: unknown) => this.logger.error(`Zalo webhook registration failed: ${error instanceof Error ? error.message : String(error)}`));
   }
 }
