@@ -38,6 +38,17 @@ export class NotificationController {
     return this.notificationService.upsertConfig(user.id as Uuid, channel, dto);
   }
 
+  /** Sends a one-off sample message through the given channel so the user can verify their template/link. */
+  @Post('config/:channel/test')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  sendTestMessage(
+    @AuthUser() user: UserEntity,
+    @Param('channel', new ParseEnumPipe(NotificationChannelType)) channel: NotificationChannelType,
+  ): Promise<ResponseCore<null>> {
+    return this.notificationService.sendTestMessage(user.id as Uuid, channel);
+  }
+
   /** Returns a short-lived code the user pastes as a plain message to the Zalo bot to link their account. */
   @Get('zalo/link-code')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])

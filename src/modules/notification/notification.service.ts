@@ -13,6 +13,7 @@ import type { NotificationSender } from './interfaces/notification-sender.interf
 import { NOTIFICATION_SENDERS } from './interfaces/notification-sender.interface.ts';
 import type { ZaloWebhookPayload } from './interfaces/zalo-webhook-payload.interface.ts';
 import { NotificationConfigEntity } from './notification-config.entity.ts';
+import { ErrorCode } from '../../constants/error-code.ts';
 
 interface ZaloLinkCodePayload {
   userId: string;
@@ -192,6 +193,27 @@ export class NotificationService {
           }
         }),
     );
+  }
+
+  /** Sends a one-off sample message through a single channel so the user can verify their template/link before relying on it. */
+  async sendTestMessage(userId: Uuid, channel: NotificationChannelType): Promise<ResponseCore<null>> {
+    const config = await this.notificationConfigRepository.findOneBy({ userId, channel });
+
+    if (!config || !config.isEnabled || config.config === null) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'Channel is not linked or enabled');
+    }
+
+    const sender = this.senderByChannel.get(channel);
+
+    if (!sender) {
+      return ResponseCore.fail(ErrorCode.CHANNEL_NOT_SUPPORTED, `No sender registered for channel ${channel}`);
+    }
+
+    const testMessage = 'This is a test notification from AIoT Lab.';
+
+    await sender.send(config, config.messageTemplate ? this.renderTemplate(config.messageTemplate, testMessage) : testMessage);
+
+    return ResponseCore.ok(null);
   }
 
   private renderTemplate(template: string, fallbackMessage: string): string {

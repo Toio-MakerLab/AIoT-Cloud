@@ -50,6 +50,12 @@ export function useRegisterWebPushTokenMutation() {
   });
 }
 
+export function useTestChannelMutation() {
+  return useMutation({
+    mutationFn: (channel: NotificationChannel) => notificationSettingsApi.testChannel(channel),
+  });
+}
+
 export function useUnregisterWebPushTokenMutation() {
   const queryClient = useQueryClient();
 

@@ -14,8 +14,9 @@ const ROOT_ONLY_URLS = new Set(['/settings/roles']);
 // Device Templates and Users management are admin/root-only (see each
 // route's own guard).
 const ADMIN_ONLY_URLS = new Set(['/device-templates', '/users']);
-// Guests get read-only access to the Dashboard page only (see the backend's
-// DashboardController @Auth guards) — every other page is hidden.
+// Guests get read-only access to the Dashboard page, plus their own notification
+// settings (see the backend's DashboardController/NotificationController @Auth
+// guards) — every other page is hidden.
 const GUEST_ALLOWED_URLS = new Set(['/']);
 
 function stripRootOnlyItems(items: NavItem[], isAdmin: boolean, isGuest: boolean): NavItem[] {

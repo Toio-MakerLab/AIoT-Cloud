@@ -14,6 +14,7 @@ import { getResponseMessage } from '@/lib/response-codes';
 import {
   useNotificationConfigsQuery,
   useRegisterWebPushTokenMutation,
+  useTestChannelMutation,
   useUpsertNotificationConfigMutation,
   useZaloLinkCodeMutation,
 } from './api/queries';
@@ -184,6 +185,7 @@ function WebPushLinkPanel() {
 function ChannelRow({ config }: { config: INotificationConfig }) {
   const meta = NOTIFICATION_CHANNELS.find((c) => c.value === config.channel);
   const upsertConfig = useUpsertNotificationConfigMutation();
+  const testChannel = useTestChannelMutation();
   const [messageTemplate, setMessageTemplate] = useState(config.messageTemplate ?? '');
 
   const handleToggle = async (enabled: boolean) => {
@@ -204,6 +206,15 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
         data: { messageTemplate: messageTemplate || null },
       });
       toast.success('Message template saved');
+    } catch (error) {
+      toast.error(getResponseMessage(error));
+    }
+  };
+
+  const handleTestMessage = async () => {
+    try {
+      await testChannel.mutateAsync(config.channel);
+      toast.success('Test message sent');
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -234,10 +245,16 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
               value={messageTemplate}
               onChange={(e) => setMessageTemplate(e.target.value)}
             />
-            <Button type="button" size="sm" onClick={handleSaveTemplate} disabled={upsertConfig.isPending}>
-              {upsertConfig.isPending && <Loader2 className="size-4 animate-spin" />}
-              Save template
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" size="sm" onClick={handleSaveTemplate} disabled={upsertConfig.isPending}>
+                {upsertConfig.isPending && <Loader2 className="size-4 animate-spin" />}
+                Save template
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={handleTestMessage} disabled={testChannel.isPending}>
+                {testChannel.isPending && <Loader2 className="size-4 animate-spin" />}
+                Send test message
+              </Button>
+            </div>
           </div>
         </>
       )}

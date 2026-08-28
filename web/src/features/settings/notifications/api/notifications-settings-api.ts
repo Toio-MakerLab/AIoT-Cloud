@@ -23,4 +23,8 @@ export const notificationSettingsApi = {
     const response = await apiClient.delete<Response<INotificationConfig | null>>('/notifications/web-push/token', { data: { token } });
     return response.data;
   },
+  testChannel: async (channel: NotificationChannel) => {
+    const response = await apiClient.post<Response<null>>(`/notifications/config/${channel}/test`);
+    return response.data;
+  },
 };
