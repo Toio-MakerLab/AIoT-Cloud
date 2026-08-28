@@ -11,7 +11,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 export class SeedGatewayTemplate1788400000000 implements MigrationInterface {
   name = 'SeedGatewayTemplate1788400000000';
 
-  private readonly templateName = 'aiot-gate Gateway';
+  private readonly templateName = 'AIoT Gateway';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     const existing = await queryRunner.query(`SELECT id FROM "device_templates" WHERE "name" = $1`, [this.templateName]);
@@ -38,7 +38,7 @@ export class SeedGatewayTemplate1788400000000 implements MigrationInterface {
         this.templateName,
         'GATEWAY',
         'Local gateway bridging devices on a private MQTT broker to the cloud over Kafka. Reports its own health as telemetry rather than sensor/relay data.',
-        'aiot-gate',
+        'Toio Marker Lab',
         JSON.stringify(telemetrySchema),
         JSON.stringify(actionSchema),
         true,
