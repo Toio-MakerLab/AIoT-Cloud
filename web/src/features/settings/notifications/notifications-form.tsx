@@ -114,13 +114,22 @@ function ZaloLinkPanel() {
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 pt-1">
-        <Button type="button" variant="ghost" size="sm" onClick={() => configsQuery.refetch()} disabled={pollExhausted}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setPollAttempts(0);
+            configsQuery.refetch();
+          }}
+          disabled={configsQuery.isFetching}
+        >
           <RefreshCw className="size-4" />
           Check status
         </Button>
         <span className="text-xs text-muted-foreground">
           {pollExhausted
-            ? 'Stopped checking automatically — refresh to try again.'
+            ? 'Stopped checking automatically — click "Check status" to try again.'
             : `Checking automatically... (${pollAttempts}/${MAX_POLL_ATTEMPTS})`}
         </span>
       </div>
