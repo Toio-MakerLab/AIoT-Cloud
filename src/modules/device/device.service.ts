@@ -46,6 +46,12 @@ export interface DeviceStatusEvent {
   changedAt: Date;
 }
 
+export interface DeviceChannelStateEvent {
+  deviceId: string;
+  channelStates: Record<string, string>;
+  changedAt: Date;
+}
+
 export interface RegisterDeviceResult {
   device: DeviceDto;
 }
@@ -476,6 +482,43 @@ export class DeviceService {
     }
   }
 
+  /**
+   * Handles the gateway's raw device-event envelope (`devices.events`): a `key=value` snapshot of
+   * an actuator/channel's applied state (e.g. after relaying a `devices.commands` message down to
+   * the device), rather than a full telemetry payload. Merged into the device's persisted
+   * `channelStates` and broadcast to the dashboard as a `device.channelState` event.
+   */
+  async handleDeviceChannelEvent(deviceId: string, sourceTopic: string, message: unknown): Promise<void> {
+    const device = await this.deviceRepository.findOneBy({ deviceId });
+
+    if (!device) {
+      this.logger.warn(`Ignoring device event for unclaimed device ${deviceId}`);
+      await this.recordUnclaimedDevice(deviceId, sourceTopic, message);
+
+      return;
+    }
+
+    const parsed = this.parseChannelStateMessage(message);
+
+    if (!parsed) {
+      this.logger.warn(`Ignoring unrecognized device event message from ${deviceId} on ${sourceTopic}: ${JSON.stringify(message)}`);
+
+      return;
+    }
+
+    const changedAt = new Date();
+    const channelStates = { ...(device.channelStates ?? {}), [parsed.key]: parsed.value };
+    const wasOffline = device.status !== DeviceStatus.ONLINE;
+
+    await this.deviceRepository.update(device.id, { channelStates, lastSeenAt: changedAt, status: DeviceStatus.ONLINE });
+
+    this.eventEmitter.emit('device.channelState', { deviceId, channelStates, changedAt } satisfies DeviceChannelStateEvent);
+
+    if (wasOffline) {
+      this.eventEmitter.emit('device.status', { deviceId, status: DeviceStatus.ONLINE, changedAt } satisfies DeviceStatusEvent);
+    }
+  }
+
   /** Marks devices OFFLINE once they haven't been heard from (telemetry or status) for `DEVICE_OFFLINE_THRESHOLD_MS`. */
   async sweepOfflineDevices(): Promise<void> {
     const cutoff = new Date(Date.now() - DEVICE_OFFLINE_THRESHOLD_MS);
@@ -540,5 +583,23 @@ export class DeviceService {
     const normalized = raw.trim().toUpperCase();
 
     return normalized === DeviceStatus.ONLINE || normalized === DeviceStatus.OFFLINE ? (normalized as DeviceStatus) : null;
+  }
+
+  /** Parses a raw `"relay1=OFF"`-style device-event message into its channel key/value. */
+  private parseChannelStateMessage(message: unknown): { key: string; value: string } | null {
+    if (typeof message !== 'string') {
+      return null;
+    }
+
+    const separatorIndex = message.indexOf('=');
+
+    if (separatorIndex <= 0) {
+      return null;
+    }
+
+    const key = message.slice(0, separatorIndex).trim();
+    const value = message.slice(separatorIndex + 1).trim();
+
+    return key && value ? { key, value } : null;
   }
 }

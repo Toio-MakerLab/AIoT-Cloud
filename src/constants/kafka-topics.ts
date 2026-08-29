@@ -21,3 +21,13 @@ export const KAFKA_COMMAND_TOPIC = 'devices.commands';
  * telemetry topic.
  */
 export const KAFKA_STATUS_TOPIC = 'devices.status';
+
+/**
+ * Shared Kafka topic for gateway -> backend raw device-event envelopes — distinct from
+ * `devices.telemetry`/`devices.status`. Each message carries `{ device_id, topic, message }`,
+ * where `topic` names the logical channel the event relates to (e.g. `devices.commands` when
+ * it's confirming a command the gateway just relayed downstream) and `message` is a raw
+ * `key=value` string (e.g. `"relay1=OFF"`) describing the resulting per-channel actuator state.
+ * Keyed/partitioned by `device_id` like the other topics.
+ */
+export const KAFKA_DEVICE_EVENTS_TOPIC = 'devices.events';

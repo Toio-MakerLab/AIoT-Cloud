@@ -39,6 +39,8 @@ export class DeviceDto extends AbstractDto {
 
   warningOverrides?: DeviceWarningOverrides | null;
 
+  channelStates?: Record<string, string> | null;
+
   constructor(entity: DeviceEntity) {
     super(entity);
     this.deviceId = entity.deviceId;
@@ -52,5 +54,6 @@ export class DeviceDto extends AbstractDto {
     this.config = entity.config;
     this.isActive = entity.isActive;
     this.warningOverrides = entity.warningOverrides;
+    this.channelStates = entity.channelStates;
   }
 }

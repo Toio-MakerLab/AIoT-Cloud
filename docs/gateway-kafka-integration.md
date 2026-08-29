@@ -48,9 +48,10 @@ doesn't need its own separate copy of these secrets configured out of band.
 
 ## Topics
 
-Three shared topics, **not** per-device. Devices are distinguished by the
-`deviceId` field inside the payload, and every message must be produced with
-`deviceId` as the **Kafka message key** (`kafkajs`: `{ key: deviceId, value: JSON.stringify(payload) }`)
+Four shared topics, **not** per-device. Devices are distinguished by the
+`deviceId` (or `device_id` — see `devices.events` below) field inside the
+payload, and every message must be produced with the device id as the
+**Kafka message key** (`kafkajs`: `{ key: deviceId, value: JSON.stringify(payload) }`)
 so all messages for one device land in the same partition and are processed
 in order.
 
@@ -59,6 +60,7 @@ in order.
 | `devices.telemetry` | gateway → cloud | `KAFKA_TELEMETRY_TOPIC` |
 | `devices.status` | gateway → cloud | `KAFKA_STATUS_TOPIC` |
 | `devices.commands` | cloud → gateway | `KAFKA_COMMAND_TOPIC` |
+| `devices.events` | gateway → cloud | `KAFKA_DEVICE_EVENTS_TOPIC` |
 
 Defined in `src/constants/kafka-topics.ts`.
 
@@ -116,6 +118,36 @@ Defined in `src/constants/kafka-topics.ts`.
 - The gateway consumes this topic, looks up `deviceId` among the devices it
   bridges, and relays `{ key, value }` to that device over its own local
   MQTT (e.g. publishing to the device's per-channel command topic).
+
+### `devices.events` (gateway → cloud)
+
+```json
+{
+  "device_id": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "topic": "devices.commands",
+  "message": "relay1=OFF"
+}
+```
+
+- A raw event envelope, separate from `devices.telemetry`/`devices.status`
+  — used for reporting the applied result of something the gateway did
+  locally (e.g. confirming a `devices.commands` relay actually landed on the
+  device) rather than a periodic telemetry sample.
+- `device_id` (string, required, **snake_case** — this topic's payload shape
+  differs from the other three) — must match a registered device the same
+  way the other topics do.
+- `topic` (string, optional) — names the logical topic/channel the event is
+  about; free-form, stored as-is for unclaimed-device debugging, not
+  interpreted by the backend.
+- `message` (string, required) — a raw `key=value` pair (e.g. `"relay1=OFF"`)
+  describing one channel's resulting actuator state. Merged into the
+  device's persisted `channelStates` (`{ relay1: "OFF" }`), which is
+  broadcast to the dashboard over the `channelState` websocket event.
+  Messages that aren't a parseable `key=value` string are logged and
+  ignored.
+- Also marks the device `ONLINE` (same as telemetry) since receiving one
+  implies the gateway is actively bridging it.
+- Consumed by `KafkaController.handleDeviceEvent` → `DeviceService.handleDeviceChannelEvent`.
 
 ## Fetching device config (REST)
 

@@ -60,4 +60,8 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
   /** Per-field overrides of the template's default warning band; keyed by telemetry field key. */
   @Column({ nullable: true, type: 'jsonb' })
   warningOverrides!: DeviceWarningOverrides | null;
+
+  /** Latest applied per-channel actuator state (e.g. `{ relay1: "OFF" }`), merged in from `devices.events` messages. */
+  @Column({ nullable: true, type: 'jsonb' })
+  channelStates!: Record<string, string> | null;
 }
