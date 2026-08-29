@@ -1,6 +1,6 @@
 {
   "name": "AIoT-Backend",
-  "version": "1.1.21",
+  "version": "1.1.22",
   "description": "NestJS, Typescript, Postgres, TypeORM",
   "author": "Pham Van Khang <phamvankhang.tvi@gmail.com>",
   "private": true,
