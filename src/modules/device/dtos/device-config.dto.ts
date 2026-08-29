@@ -1,4 +1,5 @@
 import { DevicePushChannel } from '../../../constants/device-push-channel.ts';
+import type { DeviceTemplateType } from '../../../constants/device-template-type.ts';
 import {
   BooleanFieldOptional,
   ClassField,
@@ -121,6 +122,8 @@ export class UpdateDeviceConfigDto {
 export class DeviceConfigDto {
   deviceId!: string;
   name!: string;
+  /** Device template type (e.g. RELAY_NODE) — lets firmware branch on behavior without a separate template lookup. */
+  type!: DeviceTemplateType;
   apiEndpoint!: string | null;
   pushChannel!: DevicePushChannel;
   mqtt!: DeviceMqttConfig | null;
