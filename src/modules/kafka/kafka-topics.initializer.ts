@@ -49,6 +49,8 @@ export class KafkaTopicsInitializer implements OnModuleInit {
         return;
       }
 
+      this.logger.log(`Creating missing Kafka topics: ${missingTopics.join(', ')}`);
+
       // replicationFactor: -1 defers to the broker's own default rather than assuming a
       // particular cluster size (dev single-broker vs. a managed multi-broker cluster).
       await admin.createTopics({
@@ -58,7 +60,16 @@ export class KafkaTopicsInitializer implements OnModuleInit {
 
       this.logger.log(`Created missing Kafka topics: ${missingTopics.join(', ')}`);
     } catch (error) {
-      this.logger.error(`Failed to ensure Kafka topics exist: ${error instanceof Error ? error.message : String(error)}`);
+      // Include the KafkaJS protocol error type/code (e.g. INVALID_TOPIC_EXCEPTION) alongside the
+      // attempted topic names — some managed/emulated Kafka services reject admin-driven topic
+      // creation outright (missing ACLs, or no CreateTopics support at all), in which case the
+      // topics must be provisioned out-of-band and this failure is expected/non-fatal.
+      const kafkaError = error as { type?: string; code?: number; message?: string };
+      const detail = kafkaError?.type ? ` (${kafkaError.type}, code ${kafkaError.code})` : '';
+
+      this.logger.error(
+        `Failed to ensure Kafka topics exist [${MANAGED_TOPICS.join(', ')}]: ${error instanceof Error ? error.message : String(error)}${detail}`,
+      );
     } finally {
       await admin.disconnect();
     }

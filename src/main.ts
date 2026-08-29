@@ -107,7 +107,14 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   }
 
   if (configService.natsEnabled || configService.mqttEnabled || configService.kafkaEnabled) {
-    await app.startAllMicroservices();
+    try {
+      await app.startAllMicroservices();
+    } catch (error) {
+      // A broker being unreachable/misconfigured (e.g. Kafka rejecting topic subscriptions on an
+      // unprovisioned managed cluster) shouldn't take the whole HTTP API down with it — log and
+      // keep serving; the affected transport just won't have a working consumer/producer.
+      app.get(Logger).error(`Failed to start one or more microservices (NATS/MQTT/Kafka): ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   if (configService.documentationEnabled) {
