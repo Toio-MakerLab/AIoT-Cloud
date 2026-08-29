@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
 import type { OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { SASLOptions } from 'kafkajs';
 import { Kafka } from 'kafkajs';
 
