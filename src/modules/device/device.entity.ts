@@ -62,6 +62,6 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
   warningOverrides!: DeviceWarningOverrides | null;
 
   /** Latest applied per-channel actuator state (e.g. `{ relay1: "OFF" }`), merged in from `devices.events` messages. */
-  @Column({ nullable: true, type: 'jsonb' })
+  @Column({ nullable: true, type: 'json' })
   channelStates!: Record<string, string> | null;
 }
