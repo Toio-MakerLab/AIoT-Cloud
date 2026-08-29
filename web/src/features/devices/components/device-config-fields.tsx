@@ -10,9 +10,10 @@ import type { DeviceConfigFormValues } from '../data/device-config-form';
 interface Props {
   control: Control<DeviceConfigFormValues>;
   pushChannel: DeviceConfigFormValues['pushChannel'];
+  channelTopics: DeviceConfigFormValues['channelTopics'];
 }
 
-export function DeviceConfigFields({ control, pushChannel }: Props) {
+export function DeviceConfigFields({ control, pushChannel, channelTopics }: Props) {
   return (
     <>
       <FormField
@@ -156,6 +157,26 @@ export function DeviceConfigFields({ control, pushChannel }: Props) {
               </FormItem>
             )}
           />
+
+          {/* One command topic per action in the device template's actionSchema (e.g. one per relay). */}
+          {channelTopics?.map((channel, index) => (
+            <FormField
+              key={channel.key}
+              control={control}
+              name={`channelTopics.${index}.topic`}
+              render={({ field }) => (
+                <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                  <FormLabel className="col-span-2 text-right">
+                    Ch.{index + 1} ({channel.label})
+                  </FormLabel>
+                  <FormControl className="col-span-4">
+                    <Input placeholder={`devices/{deviceId}/channel/${index + 1}/command`} {...field} />
+                  </FormControl>
+                  <FormMessage className="col-span-4 col-start-3" />
+                </FormItem>
+              )}
+            />
+          ))}
         </>
       ) : null}
 

@@ -13,6 +13,7 @@ export function mapIDeviceToDevice(d: IDevice): Device {
           name: d.template.name,
           type: deviceTemplateTypeSchema.parse(d.template.type),
           icon: d.template.icon,
+          actionSchema: d.template.actionSchema,
         }
       : undefined,
     userId: d.userId,

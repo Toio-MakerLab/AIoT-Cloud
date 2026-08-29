@@ -1,6 +1,23 @@
 import { z } from 'zod';
 import type { IUpdateDeviceConfig } from '../api/types';
-import type { DeviceNetworkConfig, DevicePushChannel } from './schema';
+import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from './mqtt-topics';
+import type { DeviceNetworkConfig, DevicePushChannel, DeviceTemplateType, MqttChannelTopic } from './schema';
+
+/** Templates whose `actionSchema` describes one physical channel per action (e.g. a relay per entry). */
+const CHANNEL_BASED_TEMPLATE_TYPES: DeviceTemplateType[] = ['RELAY_NODE', 'RELAY_CURRENT_NODE'];
+
+/** Minimal template shape needed to derive per-channel topic defaults — mirrors device-templates' `actionSchema`. */
+export interface DeviceConfigFormTemplate {
+  type: DeviceTemplateType;
+  actionSchema?: { key: string; label: string }[] | null;
+}
+
+const channelTopicFormSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  topic: z.string().min(1, { message: 'Topic is required.' }),
+});
+export type ChannelTopicFormValue = z.infer<typeof channelTopicFormSchema>;
 
 export const deviceConfigFormSchema = z.object({
   isActive: z.boolean(),
@@ -13,6 +30,8 @@ export const deviceConfigFormSchema = z.object({
   mqttTelemetryTopic: z.string().optional(),
   mqttCommandTopic: z.string().optional(),
   mqttStatusTopic: z.string().optional(),
+  /** One entry per action in the device template's `actionSchema`; only populated for channel-based templates (e.g. relay nodes). */
+  channelTopics: z.array(channelTopicFormSchema).optional(),
   httpUrl: z.string().optional(),
   kafkaBrokers: z.string().optional(),
   kafkaTopic: z.string().optional(),
@@ -22,10 +41,37 @@ export const deviceConfigFormSchema = z.object({
 });
 export type DeviceConfigFormValues = z.infer<typeof deviceConfigFormSchema>;
 
+/**
+ * Builds one form row per action in the template's `actionSchema`, keeping any topic already
+ * stored for that key and falling back to the same `devices/{deviceId}/channel/{n}/command`
+ * default the backend would derive at boot time — see src/constants/mqtt-topics.ts.
+ */
+function buildChannelTopicDefaults(
+  deviceId: string | null | undefined,
+  template: DeviceConfigFormTemplate | null | undefined,
+  existingChannels: MqttChannelTopic[] | null | undefined,
+): ChannelTopicFormValue[] {
+  const actionSchema = template?.actionSchema;
+
+  if (!template || !CHANNEL_BASED_TEMPLATE_TYPES.includes(template.type) || !actionSchema?.length) {
+    return [];
+  }
+
+  const existingTopicByKey = new Map((existingChannels ?? []).map((channel) => [channel.key, channel.topic]));
+
+  return actionSchema.map((action, index) => ({
+    key: action.key,
+    label: action.label,
+    topic: existingTopicByKey.get(action.key) || (deviceId ? defaultChannelCommandTopic(deviceId, index + 1) : ''),
+  }));
+}
+
 export function deviceConfigFormDefaults(
   config: DeviceNetworkConfig | null | undefined,
   pushChannel: DevicePushChannel,
   isActive = true,
+  deviceId?: string | null,
+  template?: DeviceConfigFormTemplate | null,
 ): DeviceConfigFormValues {
   return {
     isActive,
@@ -35,9 +81,10 @@ export function deviceConfigFormDefaults(
     mqttPort: config?.mqtt?.port ? String(config.mqtt.port) : '1883',
     mqttUsername: config?.mqtt?.username ?? '',
     mqttPassword: config?.mqtt?.password ?? '',
-    mqttTelemetryTopic: config?.mqtt?.topics?.telemetry ?? '',
-    mqttCommandTopic: config?.mqtt?.topics?.command ?? '',
-    mqttStatusTopic: config?.mqtt?.topics?.status ?? '',
+    mqttTelemetryTopic: config?.mqtt?.topics?.telemetry ?? (deviceId ? defaultTelemetryTopic(deviceId) : ''),
+    mqttCommandTopic: config?.mqtt?.topics?.command ?? (deviceId ? defaultCommandTopic(deviceId) : ''),
+    mqttStatusTopic: config?.mqtt?.topics?.status ?? (deviceId ? defaultStatusTopic(deviceId) : ''),
+    channelTopics: buildChannelTopicDefaults(deviceId, template, config?.mqtt?.topics?.channels),
     httpUrl: config?.http?.url ?? '',
     kafkaBrokers: config?.kafka?.brokers ?? 'localhost:9092',
     kafkaTopic: config?.kafka?.topic ?? '',
@@ -48,6 +95,15 @@ export function deviceConfigFormDefaults(
 }
 
 export function deviceConfigFormToPayload(values: DeviceConfigFormValues): IUpdateDeviceConfig {
+  const channels = values.channelTopics?.length
+    ? values.channelTopics.map((channel, index) => ({
+        index: index + 1,
+        key: channel.key,
+        label: channel.label,
+        topic: channel.topic,
+      }))
+    : undefined;
+
   return {
     isActive: values.isActive,
     apiEndpoint: values.apiEndpoint || undefined,
@@ -63,6 +119,7 @@ export function deviceConfigFormToPayload(values: DeviceConfigFormValues): IUpda
               telemetry: values.mqttTelemetryTopic ?? '',
               command: values.mqttCommandTopic || undefined,
               status: values.mqttStatusTopic || undefined,
+              channels,
             },
           }
         : undefined,

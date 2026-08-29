@@ -35,10 +35,22 @@ export const DevicePushChannel = {
 } as const;
 export type DevicePushChannel = (typeof DevicePushChannel)[keyof typeof DevicePushChannel];
 
+/** One downlink command topic for a single channel of a multi-channel device (e.g. one relay). */
+export interface IMqttChannelTopic {
+  /** 1-based channel number, matching the order of the template's `actionSchema`. */
+  index: number;
+  /** The action key from the device template's `actionSchema` (e.g. "relay1"). */
+  key: string;
+  label: string;
+  topic: string;
+}
+
 export interface IMqttTopics {
   telemetry: string;
   command?: string | null;
   status?: string | null;
+  /** Auto-derived per-channel command topics; present only for multi-channel templates (e.g. RELAY_NODE). */
+  channels?: IMqttChannelTopic[] | null;
 }
 
 export interface IMqttConfig {

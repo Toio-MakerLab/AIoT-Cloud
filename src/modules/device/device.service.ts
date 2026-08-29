@@ -153,10 +153,13 @@ export class DeviceService {
   }
 
   /**
-   * Appends auto-derived per-channel command topics for multi-channel templates (e.g. a relay
-   * node) on top of the device's base topics. Channel count/order follows the template's
+   * Appends per-channel command topics for multi-channel templates (e.g. a relay node) on top
+   * of the device's base topics. Channel count/order/labels always follow the template's
    * `actionSchema`, so adding/removing an action on the template automatically resizes the list
    * the ESP32 firmware sees in boot-config, without needing a dedicated "channel count" field.
+   * The topic itself keeps whatever value the user configured for that channel key (matched by
+   * `key`, not by array position, so reordering actions on the template doesn't scramble
+   * existing overrides); channels with no stored override fall back to the auto-derived topic.
    */
   private buildMqttTopics(device: DeviceEntity, baseTopics: DeviceMqttTopics): DeviceMqttTopics {
     const actionSchema = device.template?.actionSchema;
@@ -168,11 +171,13 @@ export class DeviceService {
       return baseTopics;
     }
 
+    const overridesByKey = new Map((baseTopics.channels ?? []).map((channel) => [channel.key, channel.topic]));
+
     const channels = actionSchema.map((action, index) => ({
       index: index + 1,
       key: action.key,
       label: action.label,
-      topic: defaultChannelCommandTopic(device.deviceId, index + 1),
+      topic: overridesByKey.get(action.key) || defaultChannelCommandTopic(device.deviceId, index + 1),
     }));
 
     return { ...baseTopics, channels };

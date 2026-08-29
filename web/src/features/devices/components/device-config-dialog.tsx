@@ -20,10 +20,11 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
 
   const form = useForm<DeviceConfigFormValues>({
     resolver: zodResolver(deviceConfigFormSchema),
-    defaultValues: deviceConfigFormDefaults(currentRow.config, currentRow.pushChannel, currentRow.isActive),
+    defaultValues: deviceConfigFormDefaults(currentRow.config, currentRow.pushChannel, currentRow.isActive, currentRow.deviceId, currentRow.template),
   });
 
   const pushChannel = form.watch('pushChannel');
+  const channelTopics = form.watch('channelTopics');
 
   const onSubmit = async (values: DeviceConfigFormValues) => {
     try {
@@ -53,7 +54,7 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
         </DialogHeader>
         <Form {...form}>
           <form id="device-config-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-0.5">
-            <DeviceConfigFields control={form.control} pushChannel={pushChannel} />
+            <DeviceConfigFields control={form.control} pushChannel={pushChannel} channelTopics={channelTopics} />
           </form>
         </Form>
         <DialogFooter>

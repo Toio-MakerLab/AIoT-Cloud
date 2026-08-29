@@ -63,11 +63,24 @@ const deviceNetworkConfigSchema = z.object({
 });
 export type DeviceNetworkConfig = z.infer<typeof deviceNetworkConfigSchema>;
 
+// Values match backend `DeviceActionType` enum exactly (src/constants/device-action-type.ts).
+// Minimal mirror kept self-contained here — same convention as the device-templates feature's
+// own copy — since only `key`/`label` are needed to drive the per-channel topic inputs below.
+const actionFieldSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  type: z.union([z.literal('TOGGLE'), z.literal('BUTTON')]),
+  onValue: z.string().nullish(),
+  offValue: z.string().nullish(),
+});
+export type ActionField = z.infer<typeof actionFieldSchema>;
+
 const deviceTemplateSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   type: deviceTemplateTypeSchema,
   icon: z.string().nullish(),
+  actionSchema: z.array(actionFieldSchema).nullish(),
 });
 export type DeviceTemplateSummary = z.infer<typeof deviceTemplateSummarySchema>;
 
