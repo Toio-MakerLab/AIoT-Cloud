@@ -31,6 +31,7 @@ import { NotificationConfigEntity } from '../../modules/notification/notificatio
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
+import { AddDeviceChannelStates1788700000000 } from '../../database/migrations/1788700000000-AddDeviceChannelStates.ts';
 
 @Injectable()
 export class ApiConfigService {
@@ -131,6 +132,7 @@ export class ApiConfigService {
         SeedGatewayTemplate1788400000000,
         AddUserIsActive1788500000000,
         AddWebPushNotificationChannel1788600000000,
+        AddDeviceChannelStates1788700000000
       ],
       dropSchema: this.isTest,
       type: 'postgres',

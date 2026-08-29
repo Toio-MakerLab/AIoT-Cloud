@@ -1,6 +1,6 @@
 {
   "name": "AIoT-Backend",
-  "version": "1.1.25",
+  "version": "1.1.26",
   "description": "NestJS, Typescript, Postgres, TypeORM",
   "author": "Pham Van Khang <phamvankhang.tvi@gmail.com>",
   "private": true,
@@ -26,6 +26,7 @@
     "migration:create": "sh -c 'npm run typeorm migration:create ./src/database/migrations/$0'",
     "generate": "nest g -c awesome-nestjs-schematics --no-spec --flat",
     "g": "npm generate",
+    "migration:run": "npm run typeorm migration:run -d ormconfig.ts",
     "migration:revert": "npm run typeorm migration:revert -d ormconfig.ts",
     "schema:drop": "npm run typeorm schema:drop -d ormconfig.ts",
     "watch:dev": "nest start --watch ./src/main.ts",
