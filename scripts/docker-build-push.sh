@@ -24,7 +24,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 IMAGE="docker.io/vkhangstack/aiot-lab-service"
 VERSION="$(node -p "require('./package.json').version")"
-PLATFORMS=(linux/amd64 linux/arm64)
+PLATFORMS=(linux/amd64)
 BUILDER_NAME="aiot-lab-service-builder"
 
 if [[ -n "${DOCKERHUB_USERNAME:-}" && -n "${DOCKERHUB_TOKEN:-}" ]]; then
