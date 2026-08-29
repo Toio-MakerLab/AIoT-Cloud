@@ -19,7 +19,7 @@ const channelTopicFormSchema = z.object({
 });
 export type ChannelTopicFormValue = z.infer<typeof channelTopicFormSchema>;
 
-export const deviceConfigFormSchema = z.object({
+const deviceConfigFormObjectSchema = z.object({
   isActive: z.boolean(),
   apiEndpoint: z.string().optional(),
   pushChannel: z.union([z.literal('MQTT'), z.literal('HTTP'), z.literal('KAFKA')]),
@@ -38,6 +38,35 @@ export const deviceConfigFormSchema = z.object({
   kafkaClientId: z.string().optional(),
   kafkaUsername: z.string().optional(),
   kafkaPassword: z.string().optional(),
+});
+
+/**
+ * Most fields above stay `.optional()` at the object level because only the fields for the
+ * currently selected `pushChannel` are actually required — this refinement enforces that
+ * conditional requiredness and attaches the error to the specific field so `FormMessage`
+ * renders it inline instead of the field silently accepting an empty value.
+ */
+export const deviceConfigFormSchema = deviceConfigFormObjectSchema.superRefine((values, ctx) => {
+  const requireField = (value: string | undefined, path: string) => {
+    if (!value?.trim()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'This field is required.', path: [path] });
+    }
+  };
+
+  if (values.pushChannel === 'MQTT') {
+    requireField(values.mqttBroker, 'mqttBroker');
+    requireField(values.mqttPort, 'mqttPort');
+    requireField(values.mqttTelemetryTopic, 'mqttTelemetryTopic');
+  }
+
+  if (values.pushChannel === 'HTTP') {
+    requireField(values.httpUrl, 'httpUrl');
+  }
+
+  if (values.pushChannel === 'KAFKA') {
+    requireField(values.kafkaBrokers, 'kafkaBrokers');
+    requireField(values.kafkaTopic, 'kafkaTopic');
+  }
 });
 export type DeviceConfigFormValues = z.infer<typeof deviceConfigFormSchema>;
 
