@@ -120,6 +120,7 @@ export class UpdateDeviceConfigDto {
 /** Response for the ESP32 boot-config endpoint — never includes the device secret. */
 export class DeviceConfigDto {
   deviceId!: string;
+  name!: string;
   apiEndpoint!: string | null;
   pushChannel!: DevicePushChannel;
   mqtt!: DeviceMqttConfig | null;

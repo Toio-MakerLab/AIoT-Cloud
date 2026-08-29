@@ -143,6 +143,7 @@ export class DeviceService {
 
     return ResponseCore.ok({
       deviceId: device.deviceId,
+      name: device.name,
       apiEndpoint: device.config?.apiEndpoint ?? null,
       pushChannel: device.pushChannel,
       mqtt,
