@@ -30,6 +30,8 @@ export class KafkaController {
 
   @EventPattern(KAFKA_TELEMETRY_TOPIC)
   async handleTelemetry(@Payload() data: KafkaTelemetryPayload): Promise<void> {
+    this.logger.debug(`[${KAFKA_TELEMETRY_TOPIC}] ${JSON.stringify(data)}`);
+
     const { deviceId, ...telemetry } = data ?? {};
 
     if (!deviceId) {
@@ -43,6 +45,8 @@ export class KafkaController {
 
   @EventPattern(KAFKA_STATUS_TOPIC)
   async handleStatus(@Payload() data: KafkaStatusPayload): Promise<void> {
+    this.logger.debug(`[${KAFKA_STATUS_TOPIC}] ${JSON.stringify(data)}`);
+
     const { deviceId, ...status } = data ?? {};
 
     if (!deviceId) {
@@ -56,6 +60,8 @@ export class KafkaController {
 
   @EventPattern(KAFKA_DEVICE_EVENTS_TOPIC)
   async handleDeviceEvent(@Payload() data: KafkaDeviceEventPayload): Promise<void> {
+    this.logger.debug(`[${KAFKA_DEVICE_EVENTS_TOPIC}] ${JSON.stringify(data)}`);
+
     const { device_id: deviceId, topic, message } = data ?? {};
 
     if (!deviceId) {

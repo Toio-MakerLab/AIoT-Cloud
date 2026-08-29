@@ -33,6 +33,11 @@ import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
               ssl: configService.kafkaConfig.ssl,
               sasl: configService.kafkaConfig.sasl as SASLOptions | undefined,
             },
+            // We only ever `.emit()` to devices.commands (fire-and-forget, gateway consumes it) —
+            // never `.send()`/await a reply — so there's no response topic to listen for. Without
+            // this, ClientKafka defaults to also connecting a consumer and joining a group with zero
+            // subscribed topics: a second, pointless listener alongside the real one in main.ts.
+            producerOnlyMode: true,
           },
         }),
         inject: [ApiConfigService],
