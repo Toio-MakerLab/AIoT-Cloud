@@ -1,5 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
-import { EventPattern, Payload } from '@nestjs/microservices';
+import { Ctx, EventPattern, KafkaContext, Payload } from '@nestjs/microservices';
 
 import { KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
 import { DeviceService } from '../device/device.service.ts';
@@ -29,8 +29,14 @@ export class KafkaController {
   constructor(private readonly deviceService: DeviceService) {}
 
   @EventPattern(KAFKA_TELEMETRY_TOPIC)
-  async handleTelemetry(@Payload() data: KafkaTelemetryPayload): Promise<void> {
+  async handleTelemetry(@Payload() data: KafkaTelemetryPayload,@Ctx() context: KafkaContext): Promise<void> {
     this.logger.debug(`[${KAFKA_TELEMETRY_TOPIC}] ${JSON.stringify(data)}`);
+    this.logger.log({
+      topic: context.getTopic(),
+      partition: context.getPartition(),
+      offset: context.getMessage().offset,
+      data: data,
+    });
 
     const { deviceId, ...telemetry } = data ?? {};
 
@@ -44,8 +50,14 @@ export class KafkaController {
   }
 
   @EventPattern(KAFKA_STATUS_TOPIC)
-  async handleStatus(@Payload() data: KafkaStatusPayload): Promise<void> {
+  async handleStatus(@Payload() data: KafkaStatusPayload, @Ctx() context: KafkaContext): Promise<void> {
     this.logger.debug(`[${KAFKA_STATUS_TOPIC}] ${JSON.stringify(data)}`);
+     this.logger.log({
+      topic: context.getTopic(),
+      partition: context.getPartition(),
+      offset: context.getMessage().offset,
+      data: data,
+    });
 
     const { deviceId, ...status } = data ?? {};
 
@@ -59,8 +71,14 @@ export class KafkaController {
   }
 
   @EventPattern(KAFKA_DEVICE_EVENTS_TOPIC)
-  async handleDeviceEvent(@Payload() data: KafkaDeviceEventPayload): Promise<void> {
+  async handleDeviceEvent(@Payload() data: KafkaDeviceEventPayload, @Ctx() context: KafkaContext): Promise<void> {
     this.logger.debug(`[${KAFKA_DEVICE_EVENTS_TOPIC}] ${JSON.stringify(data)}`);
+    this.logger.log({
+      topic: context.getTopic(),
+      partition: context.getPartition(),
+      offset: context.getMessage().offset,
+      data: data,
+    });
 
     const { device_id: deviceId, topic, message } = data ?? {};
 

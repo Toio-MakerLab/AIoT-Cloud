@@ -101,6 +101,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
         },
         consumer: {
           groupId: kafkaConfig.groupId,
+          allowAutoTopicCreation: false,
         },
       },
     });
