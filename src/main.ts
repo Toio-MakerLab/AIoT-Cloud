@@ -34,6 +34,11 @@ const domainWhitelist = [
   'https://static.cloudflareinsights.com',
 ];
 
+// Inline <script> blocks (e.g. injected by third-party tags such as Cloudflare's beacon) that
+// script-src-elem would otherwise reject outright. Allowlisting by hash — rather than
+// 'unsafe-inline' — keeps the policy from accepting *any* injected inline script.
+const inlineScriptHashes = ["'sha256-9Uwsy5XKAOLDN96l8TSQLGybMph7MSsqmkHNckwc8eA='"];
+
 export async function bootstrap(): Promise<NestExpressApplication> {
   initializeTransactionalContext();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, new ExpressAdapter(), { cors: true, bufferLogs: true });
@@ -47,7 +52,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
           'connect-src': ["'self'", 'blob:', ...domainWhitelist],
           'worker-src': ["'self'", 'blob:', ...domainWhitelist],
           'script-src': ["'self'", 'blob:', ...domainWhitelist],
-          'script-src-elem': ["'self'", 'blob:', ...domainWhitelist],
+          'script-src-elem': ["'self'", 'blob:', ...domainWhitelist, ...inlineScriptHashes],
         },
       },
     }),
