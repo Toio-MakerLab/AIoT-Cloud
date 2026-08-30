@@ -50,7 +50,7 @@ export function DeviceConfigViewDialog({ currentRow, open, onOpenChange }: Props
           {pushChannel === 'KAFKA' ? (
             <>
               <Row label="Brokers" value={config?.kafka?.brokers} />
-              <Row label="Topic" value={config?.kafka?.topic} />
+              <Row label="Topics" value={config?.kafka?.topics?.join(', ')} />
               <Row label="Client ID" value={config?.kafka?.clientId} />
               <Row label="Username" value={config?.kafka?.username} />
             </>

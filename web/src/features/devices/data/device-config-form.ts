@@ -34,7 +34,8 @@ const deviceConfigFormObjectSchema = z.object({
   channelTopics: z.array(channelTopicFormSchema).optional(),
   httpUrl: z.string().optional(),
   kafkaBrokers: z.string().optional(),
-  kafkaTopic: z.string().optional(),
+  /** Comma-separated list of topics (e.g. "devices.telemetry, devices.status") — split into an array on submit. */
+  kafkaTopics: z.string().optional(),
   kafkaClientId: z.string().optional(),
   kafkaUsername: z.string().optional(),
   kafkaPassword: z.string().optional(),
@@ -65,7 +66,7 @@ export const deviceConfigFormSchema = deviceConfigFormObjectSchema.superRefine((
 
   if (values.pushChannel === 'KAFKA') {
     requireField(values.kafkaBrokers, 'kafkaBrokers');
-    requireField(values.kafkaTopic, 'kafkaTopic');
+    requireField(values.kafkaTopics, 'kafkaTopics');
   }
 });
 export type DeviceConfigFormValues = z.infer<typeof deviceConfigFormSchema>;
@@ -116,7 +117,7 @@ export function deviceConfigFormDefaults(
     channelTopics: buildChannelTopicDefaults(deviceId, template, config?.mqtt?.topics?.channels),
     httpUrl: config?.http?.url ?? '',
     kafkaBrokers: config?.kafka?.brokers ?? 'localhost:9092',
-    kafkaTopic: config?.kafka?.topic ?? '',
+    kafkaTopics: config?.kafka?.topics?.join(', ') ?? '',
     kafkaClientId: config?.kafka?.clientId ?? '',
     kafkaUsername: config?.kafka?.username ?? '',
     kafkaPassword: config?.kafka?.password ?? '',
@@ -157,7 +158,10 @@ export function deviceConfigFormToPayload(values: DeviceConfigFormValues): IUpda
       values.pushChannel === 'KAFKA'
         ? {
             brokers: values.kafkaBrokers ?? '',
-            topic: values.kafkaTopic ?? '',
+            topics: (values.kafkaTopics ?? '')
+              .split(',')
+              .map((topic) => topic.trim())
+              .filter(Boolean),
             clientId: values.kafkaClientId || undefined,
             username: values.kafkaUsername || undefined,
             password: values.kafkaPassword || undefined,

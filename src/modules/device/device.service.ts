@@ -17,10 +17,11 @@ import { DevicePushChannel } from '../../constants/device-push-channel.ts';
 import { DEVICE_OFFLINE_THRESHOLD_MS, DeviceStatus } from '../../constants/device-status.ts';
 import { DeviceTemplateType } from '../../constants/device-template-type.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
-import { KAFKA_COMMAND_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
+import { KAFKA_COMMAND_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
 import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from '../../constants/mqtt-topics.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
+import { KAFKA_COMMAND_CLIENT } from '../kafka/kafka-command.client.ts';
 import { DeviceEntity } from './device.entity.ts';
 import { DeviceTelemetryEntity } from './device-telemetry.entity.ts';
 import type { DeviceDto } from './dtos/device.dto.ts';
@@ -30,8 +31,7 @@ import type { DevicesPageOptionsDto } from './dtos/devices-page-options.dto.ts';
 import type { RegisterDeviceDto } from './dtos/register-device.dto.ts';
 import type { TriggerDeviceActionDto } from './dtos/trigger-device-action.dto.ts';
 import type { UnclaimedDeviceDto } from './dtos/unclaimed-device.dto.ts';
-import type { DeviceMqttTopics } from './interfaces/device-network-config.interface.ts';
-import { KAFKA_COMMAND_CLIENT } from './kafka-command.client.ts';
+import type { DeviceKafkaConfig, DeviceMqttTopics } from './interfaces/device-network-config.interface.ts';
 import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
 
 export interface DeviceTelemetryEvent {
@@ -134,18 +134,7 @@ export class DeviceService {
 
     const mqtt = device.pushChannel === DevicePushChannel.MQTT ? { ...mqttBase, topics: this.buildMqttTopics(device, mqttBase.topics) } : null;
 
-    const kafkaFallback = this.apiConfigService.kafkaConfig;
-
-    const kafka =
-      device.pushChannel === DevicePushChannel.KAFKA
-        ? (device.config?.kafka ?? {
-            brokers: kafkaFallback.brokers,
-            topic: KAFKA_TELEMETRY_TOPIC,
-            clientId: kafkaFallback.clientId,
-            username: kafkaFallback.sasl?.username ?? null,
-            password: kafkaFallback.sasl?.password ?? null,
-          })
-        : null;
+    const kafka = device.pushChannel === DevicePushChannel.KAFKA ? await this.resolveKafkaConfig(device) : null;
 
     return ResponseCore.ok({
       deviceId: device.deviceId,
@@ -189,6 +178,37 @@ export class DeviceService {
     }));
 
     return { ...baseTopics, channels };
+  }
+
+  /**
+   * Resolves (and, on first boot, registers) the Kafka config handed to a device on the KAFKA
+   * push channel. A GATEWAY sits between many local devices and the cloud, so unlike a single
+   * device it needs the full set of uplink topics (telemetry/status/events) plus the shared
+   * downlink command topic — not just telemetry. It also gets its own dedicated producer
+   * `clientId`, generated once and persisted to `device.config.kafka`, so every message the
+   * gateway sends to Kafka is attributable to that specific gateway instead of every gateway
+   * sharing the platform's single default clientId.
+   */
+  private async resolveKafkaConfig(device: DeviceEntity): Promise<DeviceKafkaConfig> {
+    if (device.config?.kafka) {
+      return device.config.kafka;
+    }
+
+    const kafkaFallback = this.apiConfigService.kafkaConfig;
+    const isGateway = device.template?.type === DeviceTemplateType.GATEWAY;
+
+    const kafka: DeviceKafkaConfig = {
+      brokers: kafkaFallback.brokers,
+      topics: isGateway ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC] : [KAFKA_TELEMETRY_TOPIC],
+      clientId: isGateway ? `${kafkaFallback.clientId}-gw-${device.deviceId}` : kafkaFallback.clientId,
+      username: kafkaFallback.sasl?.username ?? null,
+      password: kafkaFallback.sasl?.password ?? null,
+    };
+
+    device.config = { ...device.config, kafka };
+    await this.deviceRepository.save(device);
+
+    return kafka;
   }
 
   @Transactional()

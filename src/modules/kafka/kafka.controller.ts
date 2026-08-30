@@ -29,7 +29,7 @@ export class KafkaController {
   constructor(private readonly deviceService: DeviceService) {}
 
   @EventPattern(KAFKA_TELEMETRY_TOPIC)
-  async handleTelemetry(@Payload() data: KafkaTelemetryPayload,@Ctx() context: KafkaContext): Promise<void> {
+  async handleTelemetry(@Payload() data: KafkaTelemetryPayload, @Ctx() context: KafkaContext): Promise<void> {
     this.logger.debug(`[${KAFKA_TELEMETRY_TOPIC}] ${JSON.stringify(data)}`);
     this.logger.log({
       topic: context.getTopic(),
@@ -52,7 +52,7 @@ export class KafkaController {
   @EventPattern(KAFKA_STATUS_TOPIC)
   async handleStatus(@Payload() data: KafkaStatusPayload, @Ctx() context: KafkaContext): Promise<void> {
     this.logger.debug(`[${KAFKA_STATUS_TOPIC}] ${JSON.stringify(data)}`);
-     this.logger.log({
+    this.logger.log({
       topic: context.getTopic(),
       partition: context.getPartition(),
       offset: context.getMessage().offset,

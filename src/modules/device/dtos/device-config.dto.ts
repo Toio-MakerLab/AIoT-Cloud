@@ -82,8 +82,8 @@ export class KafkaConfigDto implements DeviceKafkaConfig {
   @StringField()
   brokers!: string;
 
-  @StringField()
-  topic!: string;
+  @StringField({ each: true, isArray: true })
+  topics!: string[];
 
   @StringFieldOptional({ nullable: true })
   clientId?: string | null;

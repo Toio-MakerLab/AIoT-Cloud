@@ -213,12 +213,12 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics }: Prop
           />
           <FormField
             control={control}
-            name="kafkaTopic"
+            name="kafkaTopics"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Topic</FormLabel>
+                <FormLabel className="col-span-2 text-right">Topics</FormLabel>
                 <FormControl className="col-span-4">
-                  <Input placeholder="devices.telemetry" {...field} />
+                  <Input placeholder="devices.telemetry, devices.status" {...field} />
                 </FormControl>
                 <FormMessage className="col-span-4 col-start-3" />
               </FormItem>

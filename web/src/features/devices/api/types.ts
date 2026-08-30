@@ -68,7 +68,7 @@ export interface IHttpPushConfig {
 
 export interface IKafkaConfig {
   brokers: string;
-  topic: string;
+  topics: string[];
   clientId?: string | null;
   username?: string | null;
   password?: string | null;

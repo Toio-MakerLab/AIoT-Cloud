@@ -34,7 +34,13 @@ export interface DeviceHttpPushConfig {
 export interface DeviceKafkaConfig {
   /** Comma-separated list of broker addresses, e.g. "broker1:9092,broker2:9092". */
   brokers: string;
-  topic: string;
+  /** Topics this device (typically a gateway) produces/consumes — e.g. telemetry, status, events, commands. */
+  topics: string[];
+  /**
+   * Unique producer clientId registered for this device/gateway, so every message it sends to
+   * Kafka is attributable to it specifically rather than sharing the platform's default clientId
+   * across every gateway. Generated once on first boot-config fetch and persisted from then on.
+   */
   clientId?: string | null;
   /** SASL credentials, only needed when overriding the platform's default Kafka broker/auth. */
   username?: string | null;
