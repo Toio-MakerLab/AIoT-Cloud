@@ -1,12 +1,13 @@
-import { IconX } from '@tabler/icons-react';
+import { IconBolt, IconCpu, IconDeviceUnknown, IconRouter, IconServer2, IconX } from '@tabler/icons-react';
 import { useEffect } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useDeviceTelemetryHistoryQuery, useTriggerDeviceActionMutation } from '../api/queries';
-import type { IDashboardWidget, IDevice } from '../api/types';
+import type { IDashboardWidget, IDevice, IDeviceTemplate } from '../api/types';
 import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
 
 interface Props {
@@ -16,6 +17,34 @@ interface Props {
   history: ITelemetryPoint[];
   seedHistory: (deviceId: string, points: ITelemetryPoint[]) => void;
   onRemove: () => void;
+}
+
+// Fallback icon per template type, used whenever the template's own `icon` isn't an image URL —
+// same mapping as device-templates' data.ts, duplicated here per this feature's "self-contained
+// types" convention (see api/types.ts).
+const TEMPLATE_TYPE_ICONS: Record<string, typeof IconCpu> = {
+  SENSOR_NODE: IconCpu,
+  RELAY_NODE: IconRouter,
+  RELAY_CURRENT_NODE: IconBolt,
+  GATEWAY: IconServer2,
+  OTHER: IconDeviceUnknown,
+};
+
+/** Small image/icon that visually represents a device, based on its template. */
+function DeviceImage({ template }: { template: IDeviceTemplate | undefined }) {
+  const icon = template?.icon;
+  const isImageUrl = !!icon && (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('/'));
+
+  if (isImageUrl) {
+    return <img src={icon} alt={template?.name ?? 'Device'} className="h-8 w-8 shrink-0 rounded object-cover" />;
+  }
+
+  const FallbackIcon = (template?.type && TEMPLATE_TYPE_ICONS[template.type]) || IconDeviceUnknown;
+  return (
+    <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded">
+      <FallbackIcon className="text-muted-foreground h-4 w-4" />
+    </div>
+  );
 }
 
 function formatValue(value: unknown): string {
@@ -66,6 +95,16 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
     );
   };
 
+  // Relay nodes (and other devices whose action is a stateful on/off, not a momentary press) use a
+  // real toggle switch instead of separate On/Off buttons — its position reflects the latest
+  // telemetry/action value reported for this channel.
+  const isToggleAction = actionDef?.type === 'TOGGLE';
+  const isToggleOn = isToggleAction && currentValue !== undefined && String(currentValue) === String(actionDef?.onValue ?? 'ON');
+  const handleToggle = (checked: boolean) => {
+    if (!actionDef) return;
+    handleTrigger(checked ? (actionDef.onValue ?? 'ON') : (actionDef.offValue ?? 'OFF'));
+  };
+
   const chartData = history.map((point) => ({
     recordedAt: new Date(point.recordedAt).toLocaleTimeString(),
     value: typeof point.payload[field] === 'number' ? (point.payload[field] as number) : null,
@@ -74,11 +113,14 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
   return (
     <Card className="flex h-full w-full flex-col overflow-hidden py-3 gap-2">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 px-4">
-        <div className="min-w-0">
-          <CardTitle className="truncate text-sm font-medium">{widget.title || device?.name || 'Panel'}</CardTitle>
-          <p className="text-muted-foreground truncate text-xs">
-            {device?.name ?? widget.deviceId} · {(widget.widgetType === 'ACTION' ? actionDef?.label : field) || 'no field'}
-          </p>
+        <div className="flex min-w-0 items-center gap-2">
+          <DeviceImage template={device?.template} />
+          <div className="min-w-0">
+            <CardTitle className="truncate text-sm font-medium">{widget.title || device?.name || 'Panel'}</CardTitle>
+            <p className="text-muted-foreground truncate text-xs">
+              {device?.name ?? widget.deviceId} · {(widget.widgetType === 'ACTION' ? actionDef?.label : field) || 'no field'}
+            </p>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span
@@ -94,14 +136,21 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
         {widget.widgetType === 'ACTION' ? (
           <div className="flex h-full flex-col items-center justify-center gap-2">
             {actionDef ? (
-              <div className="flex gap-2">
-                <Button variant="default" disabled={!isOnline || triggerAction.isPending} onClick={() => handleTrigger(actionDef.onValue ?? 'ON')}>
-                  On
-                </Button>
-                <Button variant="outline" disabled={!isOnline || triggerAction.isPending} onClick={() => handleTrigger(actionDef.offValue ?? 'OFF')}>
-                  Off
-                </Button>
-              </div>
+              isToggleAction ? (
+                <div className="flex flex-col items-center gap-1">
+                  <Switch checked={isToggleOn} disabled={!isOnline || triggerAction.isPending} onCheckedChange={handleToggle} />
+                  <span className="text-muted-foreground text-xs">{isToggleOn ? actionDef.onValue ?? 'ON' : actionDef.offValue ?? 'OFF'}</span>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="default" disabled={!isOnline || triggerAction.isPending} onClick={() => handleTrigger(actionDef.onValue ?? 'ON')}>
+                    On
+                  </Button>
+                  <Button variant="outline" disabled={!isOnline || triggerAction.isPending} onClick={() => handleTrigger(actionDef.offValue ?? 'OFF')}>
+                    Off
+                  </Button>
+                </div>
+              )
             ) : (
               <span className="text-muted-foreground text-xs">Channel not found on device template</span>
             )}
