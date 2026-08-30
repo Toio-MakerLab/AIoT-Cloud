@@ -87,6 +87,27 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
 
     this.consumer = kafka.consumer({ groupId, allowAutoTopicCreation: false });
 
+    // kafkajs only auto-restarts a crashed consumer when the triggering error is "retriable"
+    // (see kafkajs' protocol/error.js). A group-protocol mismatch — e.g. a stale/zombie member
+    // from a previous instance of this same service still registered on the broker when a new
+    // one joins (KafkaJSProtocolError: "supported protocols are incompatible with those of
+    // existing members") — is explicitly marked non-retriable, so kafkajs gives up silently and
+    // leaves the consumer dead until the whole process restarts. Wire the crash event into the
+    // same backoff loop used for startup failures so a transient broker-side issue like that
+    // self-heals (the stale member's session expires on the broker in the meantime) instead of
+    // needing a manual restart.
+    this.consumer.on(this.consumer.events.CRASH, ({ payload }) => {
+      this.logger.error(`Kafka consumer crashed: ${payload.error instanceof Error ? payload.error.message : String(payload.error)}`);
+
+      if (this.destroyed || payload.restart) {
+        // Either shutting down, or kafkajs already decided to restart this one itself.
+        return;
+      }
+
+      clearTimeout(this.retryTimer);
+      this.retryTimer = setTimeout(() => void this.connectAndSubscribe(0), KafkaConsumerService.RETRY_DELAYS_MS[0]);
+    });
+
     try {
       await this.consumer.connect();
       await this.consumer.subscribe({
