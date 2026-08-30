@@ -24,7 +24,6 @@ import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { TranslationService } from './shared/services/translation.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
 
-
 export async function bootstrap(): Promise<NestExpressApplication> {
   initializeTransactionalContext();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, new ExpressAdapter(), { cors: true, bufferLogs: true });
@@ -35,50 +34,18 @@ export async function bootstrap(): Promise<NestExpressApplication> {
       contentSecurityPolicy: {
         directives: {
           ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+          'default-src': ["'self'"],
           'connect-src': [
             "'self'",
-            'blob:',
-            'https://cdn.jsdelivr.net',
-            'https://www.gstatic.com',
             'https://firebaseinstallations.googleapis.com',
             'https://fcm.googleapis.com',
-            'https://*.firebaseio.com',
             'https://fcmregistrations.googleapis.com',
-            'https://static.cloudflareinsights.com',
-          ],
-          'worker-src': [
-            "'self'",
-            'blob:',
-            'https://cdn.jsdelivr.net',
-            'https://www.gstatic.com',
-            'https://firebaseinstallations.googleapis.com',
-            'https://fcm.googleapis.com',
             'https://*.firebaseio.com',
-            'https://fcmregistrations.googleapis.com',
-            'https://static.cloudflareinsights.com',
           ],
-          'script-src': [
-            "'self'",
-            'blob:',
-            'https://cdn.jsdelivr.net',
-            'https://www.gstatic.com',
-            'https://firebaseinstallations.googleapis.com',
-            'https://fcm.googleapis.com',
-            'https://*.firebaseio.com',
-            'https://fcmregistrations.googleapis.com',
-            'https://static.cloudflareinsights.com',
-          ],
-          'script-src-elem': [
-            "'self'",
-            'blob:',
-            'https://cdn.jsdelivr.net',
-            'https://www.gstatic.com',
-            'https://firebaseinstallations.googleapis.com',
-            'https://fcm.googleapis.com',
-            'https://*.firebaseio.com',
-            'https://fcmregistrations.googleapis.com',
-            'https://static.cloudflareinsights.com',
-          ],
+          'worker-src': ["'self'"],
+          // Chỉ giữ nếu Cloudflare Analytics đang được nhúng trực tiếp.
+          'script-src': ["'self'", 'https://static.cloudflareinsights.com'],
+          'script-src-elem': ["'self'", 'https://static.cloudflareinsights.com'],
         },
       },
     }),
