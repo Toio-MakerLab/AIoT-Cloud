@@ -32,6 +32,7 @@ import { NotificationConfigEntity } from '../../modules/notification/notificatio
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
+import { RemoveEnumUser1788066551348 } from '../../database/migrations/1788066551348-RemoveEnumUser.ts';
 
 @Injectable()
 export class ApiConfigService {
@@ -133,6 +134,7 @@ export class ApiConfigService {
         AddUserIsActive1788500000000,
         AddWebPushNotificationChannel1788600000000,
         AddDeviceChannelStates1788700000000,
+        RemoveEnumUser1788066551348
       ],
       dropSchema: this.isTest,
       type: 'postgres',
