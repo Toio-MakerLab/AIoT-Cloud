@@ -39,7 +39,13 @@ interface KafkaDeviceEventPayload {
 @Injectable()
 export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(KafkaConsumerService.name);
+  // Capped exponential-ish backoff; holds at the last value instead of growing unbounded so a
+  // still-broken broker gets retried every minute forever rather than giving up.
+  private static readonly RETRY_DELAYS_MS = [5_000, 15_000, 30_000, 60_000];
+
   private consumer?: Consumer;
+  private retryTimer?: NodeJS.Timeout;
+  private destroyed = false;
 
   constructor(
     private readonly apiConfigService: ApiConfigService,
@@ -51,6 +57,25 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    await this.connectAndSubscribe(0);
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    this.destroyed = true;
+    clearTimeout(this.retryTimer);
+    await this.consumer?.disconnect();
+  }
+
+  /**
+   * A broker being unreachable/not-yet-ready (e.g. `__consumer_offsets` hasn't been created yet on
+   * a brand-new single-broker cluster, or a managed cluster rejecting subscriptions before its
+   * topics are fully provisioned — see KafkaTopicsInitializer) shouldn't take the whole HTTP API
+   * down with it, nor should it need a manual app restart once the broker sorts itself out: log
+   * and retry with backoff instead of giving up for the process lifetime. Runs entirely within
+   * this service's own startup lifecycle (onModuleInit -> self-scheduled retries), never a
+   * standalone script reaching for the broker outside of that.
+   */
+  private async connectAndSubscribe(attempt: number): Promise<void> {
     const { brokers, clientId, groupId, ssl, sasl } = this.apiConfigService.kafkaConfig;
 
     const kafka = new Kafka({
@@ -69,16 +94,21 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
         fromBeginning: false,
       });
       await this.consumer.run({ eachMessage: (payload) => this.handleMessage(payload) });
-    } catch (error) {
-      // A broker being unreachable/misconfigured (e.g. Kafka rejecting topic subscriptions on an
-      // unprovisioned managed cluster) shouldn't take the whole HTTP API down with it — log and
-      // keep serving; Kafka just won't have a working consumer until the next restart.
-      this.logger.error(`Failed to start Kafka consumer: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
 
-  async onModuleDestroy(): Promise<void> {
-    await this.consumer?.disconnect();
+      if (attempt > 0) {
+        this.logger.log(`Kafka consumer connected after ${attempt} retr${attempt === 1 ? 'y' : 'ies'}`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to start Kafka consumer (attempt ${attempt + 1}): ${error instanceof Error ? error.message : String(error)}`);
+      await this.consumer.disconnect().catch(() => undefined);
+
+      if (this.destroyed) {
+        return;
+      }
+
+      const delay = KafkaConsumerService.RETRY_DELAYS_MS[Math.min(attempt, KafkaConsumerService.RETRY_DELAYS_MS.length - 1)];
+      this.retryTimer = setTimeout(() => void this.connectAndSubscribe(attempt + 1), delay);
+    }
   }
 
   private async handleMessage({ topic, partition, message }: EachMessagePayload): Promise<void> {
