@@ -14,6 +14,7 @@ import { AddNotificationConfig1787700000000 } from '../../database/migrations/17
 import { RemoveDevicePerDeviceSecret1787800000000 } from '../../database/migrations/1787800000000-RemoveDevicePerDeviceSecret.ts';
 import { AddDeviceSecrets1787900000000 } from '../../database/migrations/1787900000000-AddDeviceSecrets.ts';
 import { AddDeviceStatus1788000000000 } from '../../database/migrations/1788000000000-AddDeviceStatus.ts';
+import { RemoveEnumUser1788066551348 } from '../../database/migrations/1788066551348-RemoveEnumUser.ts';
 import { SeedRelay2ChAcs712Template1788100000000 } from '../../database/migrations/1788100000000-SeedRelay2ChAcs712Template.ts';
 import { AddRelayCurrentNodeTemplateType1788200000000 } from '../../database/migrations/1788200000000-AddRelayCurrentNodeTemplateType.ts';
 import { AddUnclaimedDevices1788300000000 } from '../../database/migrations/1788300000000-AddUnclaimedDevices.ts';
@@ -34,7 +35,6 @@ import { NotificationConfigEntity } from '../../modules/notification/notificatio
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
-import { RemoveEnumUser1788066551348 } from '../../database/migrations/1788066551348-RemoveEnumUser.ts';
 
 @Injectable()
 export class ApiConfigService {

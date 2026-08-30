@@ -139,14 +139,18 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
               isToggleAction ? (
                 <div className="flex flex-col items-center gap-1">
                   <Switch checked={isToggleOn} disabled={!isOnline || triggerAction.isPending} onCheckedChange={handleToggle} />
-                  <span className="text-muted-foreground text-xs">{isToggleOn ? actionDef.onValue ?? 'ON' : actionDef.offValue ?? 'OFF'}</span>
+                  <span className="text-muted-foreground text-xs">{isToggleOn ? (actionDef.onValue ?? 'ON') : (actionDef.offValue ?? 'OFF')}</span>
                 </div>
               ) : (
                 <div className="flex gap-2">
                   <Button variant="default" disabled={!isOnline || triggerAction.isPending} onClick={() => handleTrigger(actionDef.onValue ?? 'ON')}>
                     On
                   </Button>
-                  <Button variant="outline" disabled={!isOnline || triggerAction.isPending} onClick={() => handleTrigger(actionDef.offValue ?? 'OFF')}>
+                  <Button
+                    variant="outline"
+                    disabled={!isOnline || triggerAction.isPending}
+                    onClick={() => handleTrigger(actionDef.offValue ?? 'OFF')}
+                  >
                     Off
                   </Button>
                 </div>

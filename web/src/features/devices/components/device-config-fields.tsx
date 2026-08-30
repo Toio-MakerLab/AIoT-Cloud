@@ -319,7 +319,9 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="failsafeRules"
             render={({ field }) => (
               <FormItem className="space-y-1.5">
-                <FormLabel className="text-muted-foreground text-xs">Failsafe actions — one per line, "&lt;actionKey&gt;=&lt;actionValue&gt;"</FormLabel>
+                <FormLabel className="text-muted-foreground text-xs">
+                  Failsafe actions — one per line, "&lt;actionKey&gt;=&lt;actionValue&gt;"
+                </FormLabel>
                 <FormControl>
                   <Textarea rows={3} placeholder="relay_2=OFF" className="font-mono text-sm" {...field} />
                 </FormControl>

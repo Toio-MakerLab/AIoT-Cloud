@@ -62,7 +62,12 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
         </DialogHeader>
         <Form {...form}>
           <form id="device-config-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-0.5">
-            <DeviceConfigFields control={form.control} pushChannel={pushChannel} channelTopics={channelTopics} templateType={currentRow.template?.type} />
+            <DeviceConfigFields
+              control={form.control}
+              pushChannel={pushChannel}
+              channelTopics={channelTopics}
+              templateType={currentRow.template?.type}
+            />
           </form>
         </Form>
         <DialogFooter>
