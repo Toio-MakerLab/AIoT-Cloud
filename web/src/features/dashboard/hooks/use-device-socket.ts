@@ -15,9 +15,11 @@ interface TelemetryEventPayload {
 
 /**
  * Opens a single socket.io connection for the whole dashboard page, subscribes to the given
- * device ids, and fans out incoming `telemetry` events by deviceId. Used for the dashboard's
- * ACTION/VALUE panels — interactive controls and single live values, where push-on-change
- * WebSocket delivery gives lower latency than SSE. CHART panels use `useDeviceSse` instead.
+ * device ids, and fans out incoming `telemetry` events by deviceId. Used for every dashboard
+ * panel type (CHART, ACTION, VALUE) — CHART panels used to read from a separate SSE feed
+ * (`useDeviceSse`), but that path sat behind reverse-proxy/CDN response buffering in production
+ * and never delivered realtime pushes; WebSocket push doesn't have that problem, so all panel
+ * types now share this one connection.
  *
  * Exposes:
  * - `latestByDevice`: Map<deviceId, ILatestTelemetry> — most recent telemetry per device.

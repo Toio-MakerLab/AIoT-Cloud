@@ -13,9 +13,8 @@ export interface DeviceLiveData {
 interface Props {
   widgets: IDashboardWidget[];
   devices: IDevice[];
-  // CHART widgets read live data from `sse`; ACTION/VALUE widgets read from `socket`.
-  sse: DeviceLiveData;
-  socket: DeviceLiveData;
+  // All widget types (CHART, ACTION, VALUE) read live data from the same WebSocket source.
+  liveData: DeviceLiveData;
   onLayoutChange: (widgets: IDashboardWidget[]) => void;
   onRemoveWidget: (widgetId: string) => void;
 }
@@ -30,7 +29,7 @@ const COLS = 12;
  * children). Grid sizing (cols/rowHeight/margin/containerPadding) is grouped under the
  * `gridConfig` prop in v2 instead of flat props.
  */
-export function DashboardGrid({ widgets, devices, sse, socket, onLayoutChange, onRemoveWidget }: Props) {
+export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRemoveWidget }: Props) {
   const { width, containerRef, mounted } = useContainerWidth();
 
   const layout: Layout = widgets.map((widget) => ({
@@ -78,15 +77,14 @@ export function DashboardGrid({ widgets, devices, sse, socket, onLayoutChange, o
         >
           {widgets.map((widget) => {
             const device = devices.find((d) => d.id === widget.deviceId);
-            const source = widget.widgetType === 'CHART' ? sse : socket;
             return (
               <div key={widget.id}>
                 <DevicePanel
                   widget={widget}
                   device={device}
-                  latest={source.latestByDevice.get(widget.deviceId)}
-                  history={source.historyByDevice.get(widget.deviceId) ?? []}
-                  seedHistory={source.seedHistory}
+                  latest={liveData.latestByDevice.get(widget.deviceId)}
+                  history={liveData.historyByDevice.get(widget.deviceId) ?? []}
+                  seedHistory={liveData.seedHistory}
                   onRemove={() => onRemoveWidget(widget.id)}
                 />
               </div>

@@ -15,7 +15,6 @@ import type { IDashboard, IDashboardWidget } from './api/types';
 import { AddPanelDialog } from './components/add-panel-dialog';
 import { DashboardGrid } from './components/dashboard-grid';
 import { useDeviceSocket } from './hooks/use-device-socket';
-import { useDeviceSse } from './hooks/use-device-sse';
 
 const NEW_DASHBOARD_VALUE = '__new__';
 
@@ -60,18 +59,12 @@ export default function Dashboard() {
     }
   }, [dashboards, hasSelectedInitial]);
 
-  // CHART panels (rolling history, less latency-sensitive) stream over SSE; ACTION/VALUE panels
-  // (interactive controls + single live values) stream over WebSocket for lower-latency push.
-  const chartDeviceIds = useMemo(
-    () => Array.from(new Set(draft.widgets.filter((w) => w.widgetType === 'CHART').map((w) => w.deviceId))),
-    [draft.widgets],
-  );
-  const socketDeviceIds = useMemo(
-    () => Array.from(new Set(draft.widgets.filter((w) => w.widgetType !== 'CHART').map((w) => w.deviceId))),
-    [draft.widgets],
-  );
-  const sse = useDeviceSse(chartDeviceIds);
-  const socket = useDeviceSocket(socketDeviceIds);
+  // All panel types (CHART, ACTION, VALUE) stream over the same WebSocket connection — CHART used
+  // to read from a separate SSE feed, but that path sat behind reverse-proxy/CDN response
+  // buffering in production and never delivered realtime pushes, while the WebSocket path (used by
+  // ACTION/VALUE) already worked reliably. See use-device-socket.ts.
+  const deviceIds = useMemo(() => Array.from(new Set(draft.widgets.map((w) => w.deviceId))), [draft.widgets]);
+  const socket = useDeviceSocket(deviceIds);
 
   const handleSelectDashboard = (value: string) => {
     setHasSelectedInitial(true);
@@ -215,8 +208,7 @@ export default function Dashboard() {
         <DashboardGrid
           widgets={draft.widgets}
           devices={devices}
-          sse={sse}
-          socket={socket}
+          liveData={socket}
           onLayoutChange={handleLayoutChange}
           onRemoveWidget={handleRemoveWidget}
         />
