@@ -274,22 +274,38 @@ export class DeviceService {
       return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceActionChannelUnsupported');
     }
 
-    // The cloud backend has no route to the device-side MQTT broker (it's private to the
-    // local network/gateway), so action delivery always goes out via the shared Kafka
-    // command topic. A gateway (or broker bridge) consumes it and relays to the device over
-    // its own local MQTT.
-    const topic = KAFKA_COMMAND_TOPIC;
+    // The device's own downlink topic for this specific action/channel, used by whatever
+    // gateway/bridge relays the message onto the device's local MQTT — the per-channel topic
+    // (`config.mqtt.topics.channels[].topic`) if the template defines one for this key, else
+    // falling back to the device's general MQTT command topic. Carried in the outbound payload
+    // so the gateway relays to the right place without re-deriving it from a cached boot-config.
+    const channelTopic = device.config?.mqtt?.topics?.channels?.find((channel) => channel.key === dto.key)?.topic;
+    const deviceMqttTopic = channelTopic ?? device.config?.mqtt?.topics?.command ?? undefined;
+
+    // The actual Kafka topic the command is published on. A gateway (or any device configured
+    // directly on the KAFKA push channel) gets its own dedicated commandTopic — accept whatever
+    // is configured on the device instead of always hardcoding the shared bus, so a gateway can
+    // be pointed at its own topic (e.g. "device.gateway.command"). Falls back to the shared bus
+    // topic for devices with no Kafka config of their own (e.g. MQTT-only relay nodes, which are
+    // bridged by a separate gateway device that IS listening on the shared bus).
+    const kafkaTopic = device.config?.kafka?.commandTopic ?? KAFKA_COMMAND_TOPIC;
     const publishedAt = new Date();
 
     try {
-      await this.kafkaProducerService.send(topic, { deviceId: device.deviceId, key: dto.key, value: dto.value }, device.deviceId);
+      await this.kafkaProducerService.send(
+        kafkaTopic,
+        { deviceId: device.deviceId, key: dto.key, value: dto.value, topic: deviceMqttTopic },
+        device.deviceId,
+      );
     } catch (error) {
-      this.logger.error(`Failed to publish action ${dto.key}=${dto.value} to ${topic}: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to publish action ${dto.key}=${dto.value} to ${kafkaTopic}: ${error instanceof Error ? error.message : String(error)}`,
+      );
 
       return ResponseCore.fail(ErrorCode.INTERNAL_SERVER_ERROR, 'error.deviceActionPublishFailed');
     }
 
-    return ResponseCore.ok({ key: dto.key, value: dto.value, topic, publishedAt });
+    return ResponseCore.ok({ key: dto.key, value: dto.value, topic: kafkaTopic, publishedAt });
   }
 
   @Transactional()

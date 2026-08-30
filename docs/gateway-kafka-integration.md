@@ -59,7 +59,7 @@ in order.
 |---|---|---|
 | `devices.telemetry` | gateway → cloud | `KAFKA_TELEMETRY_TOPIC` |
 | `devices.status` | gateway → cloud | `KAFKA_STATUS_TOPIC` |
-| `devices.commands` | cloud → gateway | `KAFKA_COMMAND_TOPIC` |
+| `devices.commands` (default) | cloud → gateway | `KAFKA_COMMAND_TOPIC` |
 | `devices.events` | gateway → cloud | `KAFKA_DEVICE_EVENTS_TOPIC` |
 
 Defined in `src/constants/kafka-topics.ts`.
@@ -105,19 +105,34 @@ Defined in `src/constants/kafka-topics.ts`.
 
 ### `devices.commands` (cloud → gateway)
 
+Published on the device's own `config.kafka.commandTopic` when it has one
+configured (e.g. a gateway pointed at its own dedicated topic, such as
+`device.gateway.command`), falling back to the shared `devices.commands`
+(`KAFKA_COMMAND_TOPIC`) bus for devices with no Kafka config of their own
+(e.g. MQTT-only relay nodes, bridged by a separate gateway device that IS
+listening on the shared bus).
+
 ```json
 {
   "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
   "key": "relay_1",
-  "value": "ON"
+  "value": "ON",
+  "topic": "devices/01a04142-ba64-79c2-b29c-6c8ae29af427/channel/1/command"
 }
 ```
 
 - Published by the backend (`DeviceService.triggerDeviceAction`) when a user
   triggers a device action via `POST /devices/:id/actions`.
+- `topic` (string, optional) — the device's own downlink MQTT command topic
+  for this channel (NOT the Kafka topic the message itself was sent on),
+  resolved server-side from the device's stored config: the per-channel
+  topic matching `key` in `config.mqtt.topics.channels`, falling back to
+  `config.mqtt.topics.command`. Omitted for devices with no MQTT config of
+  their own (e.g. a gateway bridged directly over the KAFKA push channel).
 - The gateway consumes this topic, looks up `deviceId` among the devices it
   bridges, and relays `{ key, value }` to that device over its own local
-  MQTT (e.g. publishing to the device's per-channel command topic).
+  MQTT — publishing on `topic` directly rather than re-deriving it from a
+  separately-cached boot-config.
 
 ### `devices.events` (gateway → cloud)
 
