@@ -20,6 +20,7 @@ import { AddUnclaimedDevices1788300000000 } from '../../database/migrations/1788
 import { SeedGatewayTemplate1788400000000 } from '../../database/migrations/1788400000000-SeedGatewayTemplate.ts';
 import { AddUserIsActive1788500000000 } from '../../database/migrations/1788500000000-AddUserIsActive.ts';
 import { AddWebPushNotificationChannel1788600000000 } from '../../database/migrations/1788600000000-AddWebPushNotificationChannel.ts';
+import { AddDeviceChannelStates1788700000000 } from '../../database/migrations/1788700000000-AddDeviceChannelStates.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -31,7 +32,6 @@ import { NotificationConfigEntity } from '../../modules/notification/notificatio
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
-import { AddDeviceChannelStates1788700000000 } from '../../database/migrations/1788700000000-AddDeviceChannelStates.ts';
 
 @Injectable()
 export class ApiConfigService {
@@ -132,7 +132,7 @@ export class ApiConfigService {
         SeedGatewayTemplate1788400000000,
         AddUserIsActive1788500000000,
         AddWebPushNotificationChannel1788600000000,
-        AddDeviceChannelStates1788700000000
+        AddDeviceChannelStates1788700000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',

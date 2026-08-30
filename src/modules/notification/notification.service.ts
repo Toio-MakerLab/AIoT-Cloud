@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
+import { ErrorCode } from '../../constants/error-code.ts';
 import { NotificationChannelType } from '../../constants/notification-channel-type.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import type { NotificationConfigDto } from './dtos/notification-config.dto.ts';
@@ -13,7 +14,6 @@ import type { NotificationSender } from './interfaces/notification-sender.interf
 import { NOTIFICATION_SENDERS } from './interfaces/notification-sender.interface.ts';
 import type { ZaloWebhookPayload } from './interfaces/zalo-webhook-payload.interface.ts';
 import { NotificationConfigEntity } from './notification-config.entity.ts';
-import { ErrorCode } from '../../constants/error-code.ts';
 
 interface ZaloLinkCodePayload {
   userId: string;
@@ -44,7 +44,11 @@ export class NotificationService {
     return configs.toDtos();
   }
 
-  async upsertConfig(userId: string, channel: NotificationChannelType, dto: UpsertNotificationConfigDto): Promise<ResponseCore<NotificationConfigDto>> {
+  async upsertConfig(
+    userId: string,
+    channel: NotificationChannelType,
+    dto: UpsertNotificationConfigDto,
+  ): Promise<ResponseCore<NotificationConfigDto>> {
     let config = await this.notificationConfigRepository.findOneBy({ userId, channel });
 
     config ??= this.notificationConfigRepository.create({ userId, channel, config: null, isEnabled: true });

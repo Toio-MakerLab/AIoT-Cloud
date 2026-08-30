@@ -25,7 +25,15 @@ import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { TranslationService } from './shared/services/translation.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
 
-const domainWhitelist = [ 'https://cdn.jsdelivr.net', 'https://www.gstatic.com', 'https://firebaseinstallations.googleapis.com', 'https://fcm.googleapis.com', 'https://*.firebaseio.com', 'https://fcmregistrations.googleapis.com','https://static.cloudflareinsights.com'];
+const domainWhitelist = [
+  'https://cdn.jsdelivr.net',
+  'https://www.gstatic.com',
+  'https://firebaseinstallations.googleapis.com',
+  'https://fcm.googleapis.com',
+  'https://*.firebaseio.com',
+  'https://fcmregistrations.googleapis.com',
+  'https://static.cloudflareinsights.com',
+];
 
 export async function bootstrap(): Promise<NestExpressApplication> {
   initializeTransactionalContext();

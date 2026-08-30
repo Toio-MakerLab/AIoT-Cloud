@@ -54,7 +54,10 @@ export class KafkaController {
 
       await this.deviceService.recordTelemetry(deviceId, telemetry);
     } catch (error) {
-      this.logger.error(`Failed to handle [${KAFKA_TELEMETRY_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `Failed to handle [${KAFKA_TELEMETRY_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 
@@ -79,7 +82,10 @@ export class KafkaController {
 
       await this.deviceService.handleDeviceStatusMessage(deviceId, status);
     } catch (error) {
-      this.logger.error(`Failed to handle [${KAFKA_STATUS_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `Failed to handle [${KAFKA_STATUS_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 
@@ -104,7 +110,10 @@ export class KafkaController {
 
       await this.deviceService.handleDeviceChannelEvent(deviceId, topic ?? KAFKA_DEVICE_EVENTS_TOPIC, message);
     } catch (error) {
-      this.logger.error(`Failed to handle [${KAFKA_DEVICE_EVENTS_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `Failed to handle [${KAFKA_DEVICE_EVENTS_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 }

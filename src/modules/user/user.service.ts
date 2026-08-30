@@ -133,34 +133,38 @@ export class UserService {
 
   @Transactional()
   async updateUser(userId: string, dto: UpdateUserDto): Promise<ResponseCore<UserDto>> {
-    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['settings'] });
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['settings'] });
 
-    if (!user) {
-      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.userNotFound');
-    }
-
-    if (dto.username || dto.email) {
-      const existing = await this.findByUsernameOrEmail({
-        username: dto.username,
-        email: dto.email,
-      });
-
-      if (existing && existing.id !== userId) {
-        return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.userAlreadyExists');
+      if (!user) {
+        return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.userNotFound');
       }
+
+      if (dto.username || dto.email) {
+        const existing = await this.findByUsernameOrEmail({
+          username: dto.username,
+          email: dto.email,
+        });
+
+        if (existing && existing.id !== userId) {
+          return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.userAlreadyExists');
+        }
+      }
+
+      const { isActive, ...userFields } = dto;
+
+      Object.assign(user, userFields);
+      await this.userRepository.save(user);
+
+      if (isActive !== undefined && user.settings) {
+        user.settings.isActive = isActive;
+        await this.userSettingsRepository.save(user.settings);
+      }
+
+      return ResponseCore.ok(user.toDto());
+    } catch (error: any) {
+      return ResponseCore.fail(ErrorCode.INTERNAL_SERVER_ERROR, error.message || 'error.internalServerError');
     }
-
-    const { isActive, ...userFields } = dto;
-
-    Object.assign(user, userFields);
-    await this.userRepository.save(user);
-
-    if (isActive !== undefined && user.settings) {
-      user.settings.isActive = isActive;
-      await this.userSettingsRepository.save(user.settings);
-    }
-
-    return ResponseCore.ok(user.toDto());
   }
 
   @Transactional()
