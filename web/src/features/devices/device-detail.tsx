@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDeviceQuery } from './api/queries';
 import { DeviceActionsPanel } from './components/device-actions-panel';
+import { GatewayAutomationPanel } from './components/gateway-automation-panel';
+import { OfflineAlertPanel } from './components/offline-alert-panel';
 import { WarningGatesPanel } from './components/warning-gates-panel';
 import { deviceStatusColors, getDevicePushChannelLabel } from './data/data';
 import type { DeviceStatus } from './data/schema';
@@ -73,10 +75,15 @@ export default function DeviceDetail() {
               channelSupported={device.pushChannel === 'MQTT' || device.pushChannel === 'KAFKA'}
             />
 
-            <WarningGatesPanel
+            <WarningGatesPanel deviceId={device.id} telemetrySchema={device.template?.telemetrySchema} warningOverrides={device.warningOverrides} />
+
+            <OfflineAlertPanel deviceId={device.id} templateType={device.template?.type} offlineAlert={device.offlineAlert} />
+
+            <GatewayAutomationPanel
               deviceId={device.id}
-              telemetrySchema={device.template?.telemetrySchema}
-              warningOverrides={device.config?.warningOverrides}
+              templateType={device.template?.type}
+              alertRules={device.alertRules}
+              failsafe={device.failsafe}
             />
           </div>
         )}

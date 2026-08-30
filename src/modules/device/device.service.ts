@@ -145,6 +145,9 @@ export class DeviceService {
       http: device.pushChannel === DevicePushChannel.HTTP ? (device.config?.http ?? null) : null,
       kafka,
       configVersion: device.configVersion,
+      offlineAlert: device.offlineAlert ?? null,
+      alertRules: device.alertRules ?? null,
+      failsafe: device.failsafe ?? null,
     });
   }
 
@@ -240,6 +243,18 @@ export class DeviceService {
 
     if (dto.warningOverrides !== undefined) {
       device.warningOverrides = dto.warningOverrides;
+    }
+
+    if (dto.offlineAlert !== undefined) {
+      device.offlineAlert = dto.offlineAlert;
+    }
+
+    if (dto.alertRules !== undefined) {
+      device.alertRules = dto.alertRules;
+    }
+
+    if (dto.failsafe !== undefined) {
+      device.failsafe = dto.failsafe;
     }
 
     device.configVersion += 1;

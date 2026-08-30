@@ -85,12 +85,35 @@ export interface IDeviceWarningThreshold {
   channels?: NotificationChannel[];
 }
 
+/**
+ * Notify-on-offline alert rule — mainly for GATEWAY devices, which have no `telemetrySchema` of
+ * their own for `IDeviceWarningThreshold` above to gate on.
+ */
+export interface IDeviceOfflineAlertConfig {
+  enabled: boolean;
+  /** Unset/empty means "all of the user's enabled channels", same fallback as warning gates. */
+  channels?: NotificationChannel[] | null;
+}
+
+/**
+ * A local automation rule a gateway caches and evaluates itself, without a cloud round-trip —
+ * a compact "<field><operator><threshold>:<actionKey>=<actionValue>" string, e.g.
+ * "amps.value>10:relay_2=OFF" -> once amps.value > 10, set relay_2 to OFF.
+ */
+export type IDeviceAlertRule = string;
+
+/** Safe state a gateway falls back to on its own when it loses the cloud (broker/API unreachable). */
+export interface IDeviceFailsafeConfig {
+  enabled: boolean;
+  /** Same "<actionKey>=<actionValue>" shorthand as an alert rule's action half, unconditionally applied. */
+  rules?: string[] | null;
+}
+
 export interface IDeviceNetworkConfig {
   apiEndpoint?: string | null;
   mqtt?: IMqttConfig | null;
   http?: IHttpPushConfig | null;
   kafka?: IKafkaConfig | null;
-  warningOverrides?: Record<string, IDeviceWarningThreshold> | null;
 }
 
 export interface IUpdateDeviceConfig {
@@ -101,6 +124,9 @@ export interface IUpdateDeviceConfig {
   kafka?: IKafkaConfig | null;
   isActive?: boolean;
   warningOverrides?: Record<string, IDeviceWarningThreshold> | null;
+  offlineAlert?: IDeviceOfflineAlertConfig | null;
+  alertRules?: IDeviceAlertRule[] | null;
+  failsafe?: IDeviceFailsafeConfig | null;
 }
 
 export const DeviceActionType = {
@@ -153,6 +179,11 @@ export interface IDevice {
   pushChannel: DevicePushChannel;
   config?: IDeviceNetworkConfig | null;
   isActive: boolean;
+  /** Sibling of `config` on the backend response (DeviceDto), not nested inside it. */
+  warningOverrides?: Record<string, IDeviceWarningThreshold> | null;
+  offlineAlert?: IDeviceOfflineAlertConfig | null;
+  alertRules?: IDeviceAlertRule[] | null;
+  failsafe?: IDeviceFailsafeConfig | null;
   createdAt: string;
   updatedAt: string;
 }

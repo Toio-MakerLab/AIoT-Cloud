@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 
+import { DeviceStatus } from '../../../constants/device-status.ts';
 import type { NotificationChannelType } from '../../../constants/notification-channel-type.ts';
-import type { DeviceTelemetryEvent } from '../../device/device.service.ts';
+import type { DeviceStatusEvent, DeviceTelemetryEvent } from '../../device/device.service.ts';
 import { DeviceService } from '../../device/device.service.ts';
 import type { DeviceWarningThreshold } from '../../device/interfaces/device-network-config.interface.ts';
 import type { TelemetryFieldDefinition } from '../../device-template/device-template.entity.ts';
@@ -14,6 +15,27 @@ export class DeviceWarningListener {
     private readonly deviceService: DeviceService,
     private readonly notificationService: NotificationService,
   ) {}
+
+  // Gateways (and any other device with no telemetrySchema of their own) have nothing for
+  // handleTelemetry below to threshold on, so this is their equivalent alert rule — see
+  // DeviceEntity.offlineAlert. `sweepOfflineDevices`/`handleDeviceStatusMessage` only emit this
+  // event on an actual ONLINE -> OFFLINE transition, so this fires once per outage, not per sweep tick.
+  @OnEvent('device.status')
+  async handleStatusChange(event: DeviceStatusEvent): Promise<void> {
+    if (event.status !== DeviceStatus.OFFLINE) {
+      return;
+    }
+
+    const device = await this.deviceService.findByDeviceIdWithTemplate(event.deviceId);
+
+    if (!device?.offlineAlert?.enabled) {
+      return;
+    }
+
+    const message = `[Warning] ${device.name} went offline`;
+
+    await this.notificationService.sendWarning(device.userId, message, device.offlineAlert.channels ?? undefined);
+  }
 
   @OnEvent('device.telemetry')
   async handleTelemetry(event: DeviceTelemetryEvent): Promise<void> {

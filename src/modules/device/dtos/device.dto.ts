@@ -4,7 +4,13 @@ import { DeviceStatus } from '../../../constants/device-status.ts';
 import { BooleanField, ClassFieldOptional, DateFieldOptional, EnumField, StringField } from '../../../decorators/field.decorators.ts';
 import { DeviceTemplateDto } from '../../device-template/dtos/device-template.dto.ts';
 import type { DeviceEntity } from '../device.entity.ts';
-import type { DeviceNetworkConfig, DeviceWarningOverrides } from '../interfaces/device-network-config.interface.ts';
+import type {
+  DeviceAlertRule,
+  DeviceFailsafeConfig,
+  DeviceNetworkConfig,
+  DeviceOfflineAlertConfig,
+  DeviceWarningOverrides,
+} from '../interfaces/device-network-config.interface.ts';
 
 export class DeviceDto extends AbstractDto {
   @StringField()
@@ -41,6 +47,12 @@ export class DeviceDto extends AbstractDto {
 
   channelStates?: Record<string, string> | null;
 
+  offlineAlert?: DeviceOfflineAlertConfig | null;
+
+  alertRules?: DeviceAlertRule[] | null;
+
+  failsafe?: DeviceFailsafeConfig | null;
+
   constructor(entity: DeviceEntity) {
     super(entity);
     this.deviceId = entity.deviceId;
@@ -55,5 +67,8 @@ export class DeviceDto extends AbstractDto {
     this.isActive = entity.isActive;
     this.warningOverrides = entity.warningOverrides;
     this.channelStates = entity.channelStates;
+    this.offlineAlert = entity.offlineAlert;
+    this.alertRules = entity.alertRules;
+    this.failsafe = entity.failsafe;
   }
 }

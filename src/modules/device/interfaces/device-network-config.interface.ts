@@ -70,3 +70,39 @@ export interface DeviceWarningThreshold {
 }
 
 export type DeviceWarningOverrides = Record<string, DeviceWarningThreshold>;
+
+/**
+ * Alert rule for a device going offline. Distinct from `DeviceWarningThreshold` above since that
+ * one gates on a telemetry field value — gateways (and any other device with no `telemetrySchema`
+ * of their own) have nothing to threshold on directly, but still want to be notified when they
+ * drop offline (see `DeviceStatusScheduler`/`DeviceWarningListener`).
+ */
+export interface DeviceOfflineAlertConfig {
+  enabled: boolean;
+  /** Unset/empty means "all of the user's enabled channels", same fallback as warning gates. */
+  channels?: NotificationChannelType[] | null;
+}
+
+/**
+ * A local automation rule a gateway evaluates and acts on itself, without a cloud round-trip —
+ * e.g. trip a relay the instant an over-current reading comes in from a node it bridges. Stored
+ * and shipped to the gateway (via boot-config) as a compact string so firmware can parse and cache
+ * it directly, in the same shape it'd expect from an env var:
+ *   "<field><operator><threshold>:<actionKey>=<actionValue>"
+ * e.g. "amps.value>10:relay_2=OFF" -> once amps.value > 10, set relay_2 to OFF.
+ * `field` is a telemetry key reported by (or bridged through) the gateway; `actionKey` is an
+ * action key from some device's `actionSchema`. Parsing/evaluation happens entirely on the
+ * gateway; the cloud only stores and relays the raw rule string.
+ */
+export type DeviceAlertRule = string;
+
+/**
+ * The safe state a gateway falls back to on its own when it loses the cloud (broker/API
+ * unreachable) and can no longer wait on cloud-side alert rules or manual commands. `rules` reuses
+ * the alert rule's action shorthand ("<actionKey>=<actionValue>") but unconditionally, since by the
+ * time this applies the gateway has already decided it's failed safe.
+ */
+export interface DeviceFailsafeConfig {
+  enabled: boolean;
+  rules?: string[] | null;
+}

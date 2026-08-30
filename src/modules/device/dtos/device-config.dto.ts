@@ -12,11 +12,14 @@ import {
   URLFieldOptional,
 } from '../../../decorators/field.decorators.ts';
 import type {
+  DeviceAlertRule,
+  DeviceFailsafeConfig,
   DeviceHttpPushConfig,
   DeviceKafkaConfig,
   DeviceMqttChannelTopic,
   DeviceMqttConfig,
   DeviceMqttTopics,
+  DeviceOfflineAlertConfig,
   DeviceWarningOverrides,
 } from '../interfaces/device-network-config.interface.ts';
 
@@ -119,6 +122,19 @@ export class UpdateDeviceConfigDto {
 
   /** Per-field overrides of the template's default warning band; keyed by telemetry field key. */
   warningOverrides?: DeviceWarningOverrides | null;
+
+  /** Notify-on-offline rule — mainly for GATEWAY devices, which have no telemetrySchema of their own. */
+  offlineAlert?: DeviceOfflineAlertConfig | null;
+
+  /**
+   * Local automation rules a gateway caches and evaluates itself — each entry is
+   * "<field><operator><threshold>:<actionKey>=<actionValue>", e.g. "amps.value>10:relay_2=OFF".
+   * See DeviceAlertRule.
+   */
+  alertRules?: DeviceAlertRule[] | null;
+
+  /** Safe state a gateway falls back to on its own when it loses the cloud. */
+  failsafe?: DeviceFailsafeConfig | null;
 }
 
 /** Response for the ESP32 boot-config endpoint — never includes the device secret. */
@@ -133,4 +149,10 @@ export class DeviceConfigDto {
   http!: DeviceHttpPushConfig | null;
   kafka!: DeviceKafkaConfig | null;
   configVersion!: number;
+  /** Notify-on-offline rule, if the device has one configured — see UpdateDeviceConfigDto.offlineAlert. */
+  offlineAlert!: DeviceOfflineAlertConfig | null;
+  /** Local automation rules for the gateway to cache and evaluate itself — see UpdateDeviceConfigDto.alertRules. */
+  alertRules!: DeviceAlertRule[] | null;
+  /** Safe state to fall back to when the gateway loses the cloud — see UpdateDeviceConfigDto.failsafe. */
+  failsafe!: DeviceFailsafeConfig | null;
 }

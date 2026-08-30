@@ -7,7 +7,13 @@ import { UseDto } from '../../decorators/use-dto.decorator.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
 import { UserEntity } from '../user/user.entity.ts';
 import { DeviceDto } from './dtos/device.dto.ts';
-import type { DeviceNetworkConfig, DeviceWarningOverrides } from './interfaces/device-network-config.interface.ts';
+import type {
+  DeviceAlertRule,
+  DeviceFailsafeConfig,
+  DeviceNetworkConfig,
+  DeviceOfflineAlertConfig,
+  DeviceWarningOverrides,
+} from './interfaces/device-network-config.interface.ts';
 
 @Entity({ name: 'devices' })
 @UseDto(DeviceDto)
@@ -64,4 +70,16 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
   /** Latest applied per-channel actuator state (e.g. `{ relay1: "OFF" }`), merged in from `devices.events` messages. */
   @Column({ nullable: true, type: 'json' })
   channelStates!: Record<string, string> | null;
+
+  /** Notify-on-offline rule — mainly for GATEWAY devices, which have no telemetrySchema of their own to gate warnings on. */
+  @Column({ nullable: true, type: 'jsonb' })
+  offlineAlert!: DeviceOfflineAlertConfig | null;
+
+  /** Local automation rules a gateway evaluates and acts on itself — shipped via boot-config and cached on-device. */
+  @Column({ nullable: true, type: 'jsonb' })
+  alertRules!: DeviceAlertRule[] | null;
+
+  /** Safe state a gateway falls back to on its own when it loses the cloud. */
+  @Column({ nullable: true, type: 'jsonb' })
+  failsafe!: DeviceFailsafeConfig | null;
 }
