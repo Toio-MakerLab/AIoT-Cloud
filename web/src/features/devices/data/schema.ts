@@ -49,6 +49,7 @@ export type HttpPushConfig = z.infer<typeof httpPushConfigSchema>;
 const kafkaConfigSchema = z.object({
   brokers: z.string(),
   topics: z.array(z.string()),
+  commandTopic: z.string().nullish(),
   clientId: z.string().nullish(),
   username: z.string().nullish(),
   password: z.string().nullish(),

@@ -36,6 +36,8 @@ const deviceConfigFormObjectSchema = z.object({
   kafkaBrokers: z.string().optional(),
   /** Comma-separated list of topics (e.g. "devices.telemetry, devices.status") — split into an array on submit. */
   kafkaTopics: z.string().optional(),
+  /** Topic the cloud sends events/commands down to this device on — only meaningful for gateways. */
+  kafkaCommandTopic: z.string().optional(),
   kafkaClientId: z.string().optional(),
   kafkaUsername: z.string().optional(),
   kafkaPassword: z.string().optional(),
@@ -118,6 +120,7 @@ export function deviceConfigFormDefaults(
     httpUrl: config?.http?.url ?? '',
     kafkaBrokers: config?.kafka?.brokers ?? 'localhost:9092',
     kafkaTopics: config?.kafka?.topics?.join(', ') ?? '',
+    kafkaCommandTopic: config?.kafka?.commandTopic ?? '',
     kafkaClientId: config?.kafka?.clientId ?? '',
     kafkaUsername: config?.kafka?.username ?? '',
     kafkaPassword: config?.kafka?.password ?? '',
@@ -162,6 +165,7 @@ export function deviceConfigFormToPayload(values: DeviceConfigFormValues): IUpda
               .split(',')
               .map((topic) => topic.trim())
               .filter(Boolean),
+            commandTopic: values.kafkaCommandTopic || undefined,
             clientId: values.kafkaClientId || undefined,
             username: values.kafkaUsername || undefined,
             password: values.kafkaPassword || undefined,

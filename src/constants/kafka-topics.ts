@@ -4,7 +4,7 @@
  * a topic-per-device we use one shared topic and key/partition by deviceId. Each message
  * is expected to carry `{ deviceId, ...telemetry }`.
  */
-export const KAFKA_TELEMETRY_TOPIC = 'devices.telemetry';
+export const KAFKA_TELEMETRY_TOPIC = 'devices.cloud.telemetry';
 
 /**
  * Shared Kafka topic for backend -> gateway command delivery. Devices on the KAFKA push
@@ -13,14 +13,14 @@ export const KAFKA_TELEMETRY_TOPIC = 'devices.telemetry';
  * message carries `{ deviceId, key, value }`, keyed/partitioned by deviceId like the
  * telemetry topic.
  */
-export const KAFKA_COMMAND_TOPIC = 'devices.commands';
+export const KAFKA_COMMAND_TOPIC = 'devices.cloud.commands';
 
 /**
  * Shared Kafka topic for gateway -> backend device status (online/offline) uplink.
  * Each message carries `{ deviceId, status }`, keyed/partitioned by deviceId like the
  * telemetry topic.
  */
-export const KAFKA_STATUS_TOPIC = 'devices.status';
+export const KAFKA_STATUS_TOPIC = 'devices.cloud.status';
 
 /**
  * Shared Kafka topic for gateway -> backend raw device-event envelopes — distinct from
@@ -30,4 +30,4 @@ export const KAFKA_STATUS_TOPIC = 'devices.status';
  * `key=value` string (e.g. `"relay1=OFF"`) describing the resulting per-channel actuator state.
  * Keyed/partitioned by `device_id` like the other topics.
  */
-export const KAFKA_DEVICE_EVENTS_TOPIC = 'devices.events';
+export const KAFKA_DEVICE_EVENTS_TOPIC = 'devices.cloud.events';

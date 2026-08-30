@@ -1,0 +1,160 @@
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import type { Consumer, EachMessagePayload, SASLOptions } from 'kafkajs';
+import { Kafka } from 'kafkajs';
+
+import { KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
+import { ApiConfigService } from '../../shared/services/api-config.service.ts';
+import { DeviceService } from '../device/device.service.ts';
+
+interface KafkaTelemetryPayload {
+  deviceId?: string;
+  [key: string]: unknown;
+}
+
+interface KafkaStatusPayload {
+  deviceId?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+interface KafkaDeviceEventPayload {
+  device_id?: string;
+  topic?: string;
+  message?: unknown;
+  [key: string]: unknown;
+}
+
+/**
+ * Raw kafkajs consumer for the three inbound gateway->cloud topics, replacing
+ * @nestjs/microservices' ServerKafka + @EventPattern controller. Connects/subscribes once on app
+ * startup (onModuleInit — part of Nest's normal bootstrap, never a standalone script) and runs
+ * for the process lifetime.
+ *
+ * Every handler below must never let an error escape `eachMessage`: kafkajs awaits that promise
+ * inside its own consume loop, and an unhandled rejection there crashes the whole consumer (all
+ * topics, not just one) with no auto-restart — one bad message (malformed payload, a transient DB
+ * error, whatever) would silently kill the consumer for good instead of just failing that message.
+ */
+@Injectable()
+export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(KafkaConsumerService.name);
+  private consumer?: Consumer;
+
+  constructor(
+    private readonly apiConfigService: ApiConfigService,
+    private readonly deviceService: DeviceService,
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    if (!this.apiConfigService.kafkaEnabled) {
+      return;
+    }
+
+    const { brokers, clientId, groupId, ssl, sasl } = this.apiConfigService.kafkaConfig;
+
+    const kafka = new Kafka({
+      clientId,
+      brokers: brokers.split(','),
+      ssl,
+      sasl: sasl as SASLOptions | undefined,
+    });
+
+    this.consumer = kafka.consumer({ groupId, allowAutoTopicCreation: false });
+
+    try {
+      await this.consumer.connect();
+      await this.consumer.subscribe({
+        topics: [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC],
+        fromBeginning: false,
+      });
+      await this.consumer.run({ eachMessage: (payload) => this.handleMessage(payload) });
+    } catch (error) {
+      // A broker being unreachable/misconfigured (e.g. Kafka rejecting topic subscriptions on an
+      // unprovisioned managed cluster) shouldn't take the whole HTTP API down with it — log and
+      // keep serving; Kafka just won't have a working consumer until the next restart.
+      this.logger.error(`Failed to start Kafka consumer: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.consumer?.disconnect();
+  }
+
+  private async handleMessage({ topic, partition, message }: EachMessagePayload): Promise<void> {
+    const raw = message.value?.toString('utf8');
+    let data: Record<string, unknown>;
+
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch (error) {
+      this.logger.error(`Failed to parse Kafka message on [${topic}]: ${error instanceof Error ? error.message : String(error)}`);
+
+      return;
+    }
+
+    this.logger.debug(`[${topic}] ${raw}`);
+    this.logger.log({ topic, partition, offset: message.offset, data });
+
+    try {
+      switch (topic) {
+        case KAFKA_TELEMETRY_TOPIC: {
+          await this.handleTelemetry(data);
+          break;
+        }
+        case KAFKA_STATUS_TOPIC: {
+          await this.handleStatus(data);
+          break;
+        }
+        case KAFKA_DEVICE_EVENTS_TOPIC: {
+          await this.handleDeviceEvent(data);
+          break;
+        }
+        default: {
+          this.logger.warn(`Received Kafka message on unhandled topic: ${topic}`);
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to handle [${topic}] message: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    }
+  }
+
+  private async handleTelemetry(data: KafkaTelemetryPayload): Promise<void> {
+    const { deviceId, ...telemetry } = data ?? {};
+
+    if (!deviceId) {
+      this.logger.warn(`Received Kafka telemetry message without deviceId: ${JSON.stringify(data)}`);
+
+      return;
+    }
+
+    await this.deviceService.recordTelemetry(deviceId, telemetry);
+  }
+
+  private async handleStatus(data: KafkaStatusPayload): Promise<void> {
+    const { deviceId, ...status } = data ?? {};
+
+    if (!deviceId) {
+      this.logger.warn(`Received Kafka status message without deviceId: ${JSON.stringify(data)}`);
+
+      return;
+    }
+
+    await this.deviceService.handleDeviceStatusMessage(deviceId, status);
+  }
+
+  private async handleDeviceEvent(data: KafkaDeviceEventPayload): Promise<void> {
+    const { device_id: deviceId, topic, message } = data ?? {};
+
+    if (!deviceId) {
+      this.logger.warn(`Received Kafka device event without device_id: ${JSON.stringify(data)}`);
+
+      return;
+    }
+
+    await this.deviceService.handleDeviceChannelEvent(deviceId, topic ?? KAFKA_DEVICE_EVENTS_TOPIC, message);
+  }
+}

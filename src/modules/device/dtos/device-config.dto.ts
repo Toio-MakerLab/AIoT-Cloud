@@ -86,6 +86,9 @@ export class KafkaConfigDto implements DeviceKafkaConfig {
   topics!: string[];
 
   @StringFieldOptional({ nullable: true })
+  commandTopic?: string | null;
+
+  @StringFieldOptional({ nullable: true })
   clientId?: string | null;
 
   @StringFieldOptional({ nullable: true })

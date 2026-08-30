@@ -69,6 +69,8 @@ export interface IHttpPushConfig {
 export interface IKafkaConfig {
   brokers: string;
   topics: string[];
+  /** Topic the cloud publishes to for sending events/commands down to this device — only set for gateways. */
+  commandTopic?: string | null;
   clientId?: string | null;
   username?: string | null;
   password?: string | null;

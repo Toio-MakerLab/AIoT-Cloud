@@ -34,8 +34,14 @@ export interface DeviceHttpPushConfig {
 export interface DeviceKafkaConfig {
   /** Comma-separated list of broker addresses, e.g. "broker1:9092,broker2:9092". */
   brokers: string;
-  /** Topics this device (typically a gateway) produces/consumes — e.g. telemetry, status, events, commands. */
+  /** Topics this device (typically a gateway) produces to — e.g. telemetry, status, events. */
   topics: string[];
+  /**
+   * Topic the cloud publishes to for sending events/commands down to this device — only set for
+   * gateways, since they're the ones that consume it and relay to the devices they bridge (see
+   * `KAFKA_COMMAND_TOPIC`). Not part of `topics` above since that list is produce-only.
+   */
+  commandTopic?: string | null;
   /**
    * Unique producer clientId registered for this device/gateway, so every message it sends to
    * Kafka is attributable to it specifically rather than sharing the platform's default clientId

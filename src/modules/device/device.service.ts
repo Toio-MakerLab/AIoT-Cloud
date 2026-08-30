@@ -1,10 +1,9 @@
 import type { MessageEvent } from '@nestjs/common';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Observable } from 'rxjs';
-import { defer, from, fromEvent, interval, lastValueFrom, merge } from 'rxjs';
+import { defer, from, fromEvent, interval, merge } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
 import type { Repository } from 'typeorm';
 import { In, LessThan } from 'typeorm';
@@ -21,7 +20,7 @@ import { KAFKA_COMMAND_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAF
 import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from '../../constants/mqtt-topics.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
-import { KAFKA_COMMAND_CLIENT } from '../kafka/kafka-command.client.ts';
+import { KafkaProducerService } from '../kafka/kafka-producer.service.ts';
 import { DeviceEntity } from './device.entity.ts';
 import { DeviceTelemetryEntity } from './device-telemetry.entity.ts';
 import type { DeviceDto } from './dtos/device.dto.ts';
@@ -74,7 +73,7 @@ export class DeviceService {
     private unclaimedDeviceRepository: Repository<UnclaimedDeviceEntity>,
     private eventEmitter: EventEmitter2,
     private apiConfigService: ApiConfigService,
-    @Inject(KAFKA_COMMAND_CLIENT) private kafkaCommandClient: ClientProxy,
+    private kafkaProducerService: KafkaProducerService,
   ) {}
 
   @Transactional()
@@ -199,7 +198,11 @@ export class DeviceService {
 
     const kafka: DeviceKafkaConfig = {
       brokers: kafkaFallback.brokers,
-      topics: isGateway ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC] : [KAFKA_TELEMETRY_TOPIC],
+      topics: isGateway ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC] : [KAFKA_TELEMETRY_TOPIC],
+      // Only gateways consume this — they relay cloud -> device commands to whatever they bridge
+      // locally (see docs/gateway-kafka-integration.md). Standalone (non-gateway) Kafka devices
+      // have nothing to relay to, so they're never told about it.
+      commandTopic: isGateway ? KAFKA_COMMAND_TOPIC : null,
       clientId: isGateway ? `${kafkaFallback.clientId}-gw-${device.deviceId}` : kafkaFallback.clientId,
       username: kafkaFallback.sasl?.username ?? null,
       password: kafkaFallback.sasl?.password ?? null,
@@ -279,7 +282,7 @@ export class DeviceService {
     const publishedAt = new Date();
 
     try {
-      await lastValueFrom(this.kafkaCommandClient.emit(topic, { deviceId: device.deviceId, key: dto.key, value: dto.value }));
+      await this.kafkaProducerService.send(topic, { deviceId: device.deviceId, key: dto.key, value: dto.value }, device.deviceId);
     } catch (error) {
       this.logger.error(`Failed to publish action ${dto.key}=${dto.value} to ${topic}: ${error instanceof Error ? error.message : String(error)}`);
 

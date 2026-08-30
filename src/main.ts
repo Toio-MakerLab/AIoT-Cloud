@@ -11,7 +11,6 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import compression from 'compression';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
-import type { SASLOptions } from 'kafkajs';
 import { Logger } from 'nestjs-pino';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 
@@ -95,34 +94,18 @@ export async function bootstrap(): Promise<NestExpressApplication> {
     });
   }
 
-  // only start kafka if it is enabled
-  if (configService.kafkaEnabled) {
-    const kafkaConfig = configService.kafkaConfig;
-    app.connectMicroservice({
-      transport: Transport.KAFKA,
-      options: {
-        client: {
-          clientId: kafkaConfig.clientId,
-          brokers: kafkaConfig.brokers.split(','),
-          ssl: kafkaConfig.ssl,
-          sasl: kafkaConfig.sasl as SASLOptions | undefined,
-        },
-        consumer: {
-          groupId: kafkaConfig.groupId,
-          allowAutoTopicCreation: false,
-        },
-      },
-    });
-  }
+  // Kafka isn't wired through @nestjs/microservices' connectMicroservice/startAllMicroservices —
+  // KafkaProducerService/KafkaConsumerService (raw kafkajs) connect themselves from their own
+  // onModuleInit, which already ran as part of NestFactory.create() above, same as
+  // KafkaTopicsInitializer. See src/modules/kafka/.
 
-  if (configService.natsEnabled || configService.mqttEnabled || configService.kafkaEnabled) {
+  if (configService.natsEnabled || configService.mqttEnabled) {
     try {
       await app.startAllMicroservices();
     } catch (error) {
-      // A broker being unreachable/misconfigured (e.g. Kafka rejecting topic subscriptions on an
-      // unprovisioned managed cluster) shouldn't take the whole HTTP API down with it — log and
-      // keep serving; the affected transport just won't have a working consumer/producer.
-      app.get(Logger).error(`Failed to start one or more microservices (NATS/MQTT/Kafka): ${error instanceof Error ? error.message : String(error)}`);
+      // A broker being unreachable/misconfigured shouldn't take the whole HTTP API down with it —
+      // log and keep serving; the affected transport just won't have a working consumer/producer.
+      app.get(Logger).error(`Failed to start one or more microservices (NATS/MQTT): ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

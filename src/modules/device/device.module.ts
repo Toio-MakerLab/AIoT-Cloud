@@ -18,8 +18,8 @@ import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
 @Module({
   imports: [
     TypeOrmModule.forFeature([DeviceEntity, DeviceTemplateEntity, DeviceTelemetryEntity, DeviceSecretEntity, UnclaimedDeviceEntity]),
-    // Kafka's shared producer client (KAFKA_COMMAND_CLIENT) lives in KafkaModule, imported here so
-    // DeviceService can inject it. KafkaModule also owns the @EventPattern handlers and needs
+    // KafkaProducerService (a raw kafkajs producer) lives in KafkaModule, imported here so
+    // DeviceService can inject it. KafkaModule also owns the inbound Kafka consumer and needs
     // DeviceService back, so forwardRef() on both sides breaks the resulting circular import.
     forwardRef(() => KafkaModule),
   ],
