@@ -37,7 +37,7 @@ const domainWhitelist = [
 // Inline <script> blocks (e.g. injected by third-party tags such as Cloudflare's beacon) that
 // script-src-elem would otherwise reject outright. Allowlisting by hash — rather than
 // 'unsafe-inline' — keeps the policy from accepting *any* injected inline script.
-const inlineScriptHashes = ["'sha256-9Uwsy5XKAOLDN96l8TSQLGybMph7MSsqmkHNckwc8eA='"];
+const inlineScriptHashes = ["'sha256-9Uwsy5XKAOLDN96l8TSQLGybMph7MSsqmkHNckwc8eA='", "'sha256-A9JfFQn1ufYrRoHDXY1mkPvs4BkHo5hTe5JHTDxRBrY='"];
 
 export async function bootstrap(): Promise<NestExpressApplication> {
   initializeTransactionalContext();
@@ -58,7 +58,17 @@ export async function bootstrap(): Promise<NestExpressApplication> {
     }),
   );
   app.setGlobalPrefix('/api'); // use api as global prefix if you don't have subdomain
-  app.use(compression());
+  app.use(
+    compression({
+      // `compression` buffers writes until `chunkSize` (16KB) worth of data has accumulated and
+      // never flushes early on its own, which is fine for regular responses but starves the
+      // dashboard's SSE feed (GET /api/devices/stream): each `telemetry`/`status`/`ping` write is
+      // small, so live pushes sit stuck in the compression buffer instead of reaching the browser
+      // — the chart only ever shows the initial REST-fetched history. Skip compressing that route
+      // so its writes go straight to the client uncompressed and unbuffered.
+      filter: (req, res) => (req.path === '/api/devices/stream' ? false : compression.filter(req, res)),
+    }),
+  );
   app.enableVersioning();
 
   const reflector = app.get(Reflector);
