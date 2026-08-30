@@ -43,8 +43,20 @@ export function useDeviceSocket(deviceIds: string[]) {
       return;
     }
 
-    const url = domainConfig.VITE_API_URL || 'http://localhost:3000';
-    const socket = io(url, {
+    // AppGateway registers on the default namespace ("/") at the default engine.io path
+    // ("/socket.io"), independent of Nest's HTTP `setGlobalPrefix('/api')` — so passing
+    // VITE_API_URL (e.g. "https://host/api") straight to io() makes socket.io-client treat
+    // "/api" as the *namespace* instead of a path, which the server rejects with
+    // "Invalid namespace". Strip down to the origin and let socket.io use its own default path.
+    const apiUrl = domainConfig.VITE_API_URL || 'http://localhost:3000';
+    const origin = (() => {
+      try {
+        return new URL(apiUrl, window.location.origin).origin;
+      } catch {
+        return window.location.origin;
+      }
+    })();
+    const socket = io(origin, {
       auth: { token: accessToken },
       transports: ['websocket', 'polling'],
     });
