@@ -27,6 +27,10 @@ import { KafkaTopicsInitializer } from './kafka-topics.initializer.ts';
               ssl: configService.kafkaConfig.ssl,
               sasl: configService.kafkaConfig.sasl as SASLOptions | undefined,
             },
+            consumer: {
+              groupId: configService.kafkaConfig.groupId,
+              allowAutoTopicCreation: false,
+            },
             // We only ever `.emit()` to devices.commands (fire-and-forget, gateway consumes it) —
             // never `.send()`/await a reply — so there's no response topic to listen for. Without
             // this, ClientKafka defaults to also connecting a consumer and joining a group with zero
