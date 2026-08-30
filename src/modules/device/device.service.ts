@@ -11,6 +11,7 @@ import { Transactional } from 'typeorm-transactional';
 
 import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
+import { decodeBase64, encodeBase64 } from '../../common/utils.ts';
 import { DeviceActionType } from '../../constants/device-action-type.ts';
 import { DevicePushChannel } from '../../constants/device-push-channel.ts';
 import { DEVICE_OFFLINE_THRESHOLD_MS, DeviceStatus } from '../../constants/device-status.ts';
@@ -119,17 +120,21 @@ export class DeviceService {
 
     const mqttFallback = this.apiConfigService.mqttConfig;
 
-    const mqttBase = device.config?.mqtt ?? {
-      broker: mqttFallback.url,
-      port: 1883,
-      username: mqttFallback.username,
-      password: mqttFallback.password,
-      topics: {
-        telemetry: defaultTelemetryTopic(device.deviceId),
-        command: defaultCommandTopic(device.deviceId),
-        status: defaultStatusTopic(device.deviceId),
-      },
-    };
+    // `device.config.mqtt.password` is stored base64-encoded (see updateDeviceConfig); the
+    // env-sourced fallback below is already plaintext, so only decode the stored branch.
+    const mqttBase = device.config?.mqtt
+      ? { ...device.config.mqtt, password: decodeBase64(device.config.mqtt.password) }
+      : {
+          broker: mqttFallback.url,
+          port: 1883,
+          username: mqttFallback.username,
+          password: mqttFallback.password,
+          topics: {
+            telemetry: defaultTelemetryTopic(device.deviceId),
+            command: defaultCommandTopic(device.deviceId),
+            status: defaultStatusTopic(device.deviceId),
+          },
+        };
 
     const mqtt = device.pushChannel === DevicePushChannel.MQTT ? { ...mqttBase, topics: this.buildMqttTopics(device, mqttBase.topics) } : null;
 
@@ -193,7 +198,7 @@ export class DeviceService {
    */
   private async resolveKafkaConfig(device: DeviceEntity): Promise<DeviceKafkaConfig> {
     if (device.config?.kafka) {
-      return device.config.kafka;
+      return { ...device.config.kafka, password: decodeBase64(device.config.kafka.password) };
     }
 
     const kafkaFallback = this.apiConfigService.kafkaConfig;
@@ -211,7 +216,7 @@ export class DeviceService {
       password: kafkaFallback.sasl?.password ?? null,
     };
 
-    device.config = { ...device.config, kafka };
+    device.config = { ...device.config, kafka: { ...kafka, password: encodeBase64(kafka.password) } };
     await this.deviceRepository.save(device);
 
     return kafka;
@@ -225,12 +230,18 @@ export class DeviceService {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
     }
 
+    // Broker passwords are stored base64-encoded rather than plaintext — decoded back out
+    // wherever they're actually needed (getBootConfig, for the device itself; DeviceDto, for the
+    // admin dashboard's edit form).
+    const mqtt = dto.mqtt !== undefined && dto.mqtt !== null ? { ...dto.mqtt, password: encodeBase64(dto.mqtt.password) } : dto.mqtt;
+    const kafka = dto.kafka !== undefined && dto.kafka !== null ? { ...dto.kafka, password: encodeBase64(dto.kafka.password) } : dto.kafka;
+
     device.config = {
       ...device.config,
       ...(dto.apiEndpoint !== undefined && { apiEndpoint: dto.apiEndpoint }),
-      ...(dto.mqtt !== undefined && { mqtt: dto.mqtt }),
+      ...(dto.mqtt !== undefined && { mqtt }),
       ...(dto.http !== undefined && { http: dto.http }),
-      ...(dto.kafka !== undefined && { kafka: dto.kafka }),
+      ...(dto.kafka !== undefined && { kafka }),
     };
 
     if (dto.pushChannel !== undefined) {

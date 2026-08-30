@@ -1,4 +1,5 @@
 import { AbstractDto } from '../../../common/dto/abstract.dto.ts';
+import { decodeBase64 } from '../../../common/utils.ts';
 import { DevicePushChannel } from '../../../constants/device-push-channel.ts';
 import { DeviceStatus } from '../../../constants/device-status.ts';
 import { BooleanField, ClassFieldOptional, DateFieldOptional, EnumField, StringField } from '../../../decorators/field.decorators.ts';
@@ -63,7 +64,14 @@ export class DeviceDto extends AbstractDto {
     this.lastSeenAt = entity.lastSeenAt;
     this.status = entity.status;
     this.pushChannel = entity.pushChannel;
-    this.config = entity.config;
+    // Broker passwords are stored base64-encoded (see DeviceService.updateDeviceConfig) — decode
+    // back to plaintext here so the admin dashboard's edit form pre-fills the real password
+    // instead of the encoded blob (which would otherwise get double-encoded on the next save).
+    this.config = entity.config && {
+      ...entity.config,
+      mqtt: entity.config.mqtt && { ...entity.config.mqtt, password: decodeBase64(entity.config.mqtt.password) },
+      kafka: entity.config.kafka && { ...entity.config.kafka, password: decodeBase64(entity.config.kafka.password) },
+    };
     this.isActive = entity.isActive;
     this.warningOverrides = entity.warningOverrides;
     this.channelStates = entity.channelStates;
