@@ -4,16 +4,20 @@ import { SelectDropdown } from '@/components/select-dropdown';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { devicePushChannels } from '../data/data';
 import type { DeviceConfigFormValues } from '../data/device-config-form';
+import type { DeviceTemplateType } from '../data/schema';
 
 interface Props {
   control: Control<DeviceConfigFormValues>;
   pushChannel: DeviceConfigFormValues['pushChannel'];
   channelTopics: DeviceConfigFormValues['channelTopics'];
+  /** Gates the GATEWAY-only local automation fields below — undefined (e.g. still registering) hides them. */
+  templateType?: DeviceTemplateType;
 }
 
-export function DeviceConfigFields({ control, pushChannel, channelTopics }: Props) {
+export function DeviceConfigFields({ control, pushChannel, channelTopics, templateType }: Props) {
   return (
     <>
       <FormField
@@ -273,6 +277,53 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics }: Prop
                   <PasswordInput {...field} />
                 </FormControl>
                 <FormMessage className="col-span-4 col-start-3" />
+              </FormItem>
+            )}
+          />
+        </>
+      ) : null}
+
+      {templateType === 'GATEWAY' ? (
+        <>
+          <FormField
+            control={control}
+            name="alertRules"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-muted-foreground text-xs">
+                  Alert rules — one per line, "&lt;field&gt;&lt;operator&gt;&lt;threshold&gt;:&lt;actionKey&gt;=&lt;actionValue&gt;"
+                </FormLabel>
+                <FormControl>
+                  <Textarea rows={4} placeholder="amps.value>10:relay_2=OFF" className="font-mono text-sm" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="failsafeEnabled"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Failsafe</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="failsafeRules"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-muted-foreground text-xs">Failsafe actions — one per line, "&lt;actionKey&gt;=&lt;actionValue&gt;"</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} placeholder="relay_2=OFF" className="font-mono text-sm" {...field} />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

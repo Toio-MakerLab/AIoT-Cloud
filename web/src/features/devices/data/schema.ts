@@ -85,6 +85,13 @@ const deviceTemplateSummarySchema = z.object({
 });
 export type DeviceTemplateSummary = z.infer<typeof deviceTemplateSummarySchema>;
 
+// Gateway-only local automation — see DeviceAlertRule/DeviceFailsafeConfig on the backend.
+const deviceFailsafeConfigSchema = z.object({
+  enabled: z.boolean(),
+  rules: z.array(z.string()).nullish(),
+});
+export type DeviceFailsafeConfig = z.infer<typeof deviceFailsafeConfigSchema>;
+
 const deviceSchema = z.object({
   id: z.string(),
   deviceId: z.string(),
@@ -97,6 +104,8 @@ const deviceSchema = z.object({
   pushChannel: devicePushChannelSchema,
   config: deviceNetworkConfigSchema.nullish(),
   isActive: z.boolean(),
+  alertRules: z.array(z.string()).nullish(),
+  failsafe: deviceFailsafeConfigSchema.nullish(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });

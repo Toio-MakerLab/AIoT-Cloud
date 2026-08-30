@@ -18,7 +18,7 @@ function Row({ label, value }: { label: string; value?: string | null }) {
 }
 
 export function DeviceConfigViewDialog({ currentRow, open, onOpenChange }: Props) {
-  const { config, pushChannel } = currentRow;
+  const { config, pushChannel, alertRules, failsafe, template } = currentRow;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,6 +54,13 @@ export function DeviceConfigViewDialog({ currentRow, open, onOpenChange }: Props
               <Row label="Command Topic" value={config?.kafka?.commandTopic} />
               <Row label="Client ID" value={config?.kafka?.clientId} />
               <Row label="Username" value={config?.kafka?.username} />
+            </>
+          ) : null}
+
+          {template?.type === 'GATEWAY' ? (
+            <>
+              <Row label="Alert rules" value={alertRules?.join(', ')} />
+              <Row label="Failsafe" value={failsafe?.enabled ? failsafe.rules?.join(', ') || 'enabled (no actions)' : 'disabled'} />
             </>
           ) : null}
         </div>

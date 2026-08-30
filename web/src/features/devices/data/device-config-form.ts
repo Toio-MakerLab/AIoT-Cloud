@@ -1,7 +1,15 @@
 import { z } from 'zod';
-import type { IUpdateDeviceConfig } from '../api/types';
+import type { IDeviceAlertRule, IDeviceFailsafeConfig, IUpdateDeviceConfig } from '../api/types';
 import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from './mqtt-topics';
 import type { DeviceNetworkConfig, DevicePushChannel, DeviceTemplateType, MqttChannelTopic } from './schema';
+
+/** One rule per line -> trimmed, empty lines dropped. Same convention as GatewayAutomationPanel's textareas. */
+function parseRuleLines(text: string | undefined): string[] {
+  return (text ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+}
 
 /** Templates whose `actionSchema` describes one physical channel per action (e.g. a relay per entry). */
 const CHANNEL_BASED_TEMPLATE_TYPES: DeviceTemplateType[] = ['RELAY_NODE', 'RELAY_CURRENT_NODE'];
@@ -41,6 +49,10 @@ const deviceConfigFormObjectSchema = z.object({
   kafkaClientId: z.string().optional(),
   kafkaUsername: z.string().optional(),
   kafkaPassword: z.string().optional(),
+  /** GATEWAY-only local automation, one rule per line — see DeviceConfigFields' gating. */
+  alertRules: z.string().optional(),
+  failsafeEnabled: z.boolean().optional(),
+  failsafeRules: z.string().optional(),
 });
 
 /**
@@ -104,6 +116,8 @@ export function deviceConfigFormDefaults(
   isActive = true,
   deviceId?: string | null,
   template?: DeviceConfigFormTemplate | null,
+  alertRules?: IDeviceAlertRule[] | null,
+  failsafe?: IDeviceFailsafeConfig | null,
 ): DeviceConfigFormValues {
   return {
     isActive,
@@ -124,10 +138,13 @@ export function deviceConfigFormDefaults(
     kafkaClientId: config?.kafka?.clientId ?? '',
     kafkaUsername: config?.kafka?.username ?? '',
     kafkaPassword: config?.kafka?.password ?? '',
+    alertRules: (alertRules ?? []).join('\n'),
+    failsafeEnabled: failsafe?.enabled ?? false,
+    failsafeRules: (failsafe?.rules ?? []).join('\n'),
   };
 }
 
-export function deviceConfigFormToPayload(values: DeviceConfigFormValues): IUpdateDeviceConfig {
+export function deviceConfigFormToPayload(values: DeviceConfigFormValues, templateType?: DeviceTemplateType): IUpdateDeviceConfig {
   const channels = values.channelTopics?.length
     ? values.channelTopics.map((channel, index) => ({
         index: index + 1,
@@ -171,5 +188,16 @@ export function deviceConfigFormToPayload(values: DeviceConfigFormValues): IUpda
             password: values.kafkaPassword || undefined,
           }
         : undefined,
+    // Local automation only applies to gateways — omit so a non-gateway save doesn't clobber
+    // fields it never showed an editor for (see DeviceConfigFields' GATEWAY-only block).
+    ...(templateType === 'GATEWAY'
+      ? {
+          alertRules: parseRuleLines(values.alertRules).length > 0 ? parseRuleLines(values.alertRules) : null,
+          failsafe: {
+            enabled: values.failsafeEnabled ?? false,
+            rules: parseRuleLines(values.failsafeRules).length > 0 ? parseRuleLines(values.failsafeRules) : undefined,
+          },
+        }
+      : {}),
   };
 }

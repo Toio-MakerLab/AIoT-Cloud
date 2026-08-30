@@ -22,6 +22,8 @@ export function mapIDeviceToDevice(d: IDevice): Device {
     pushChannel: d.pushChannel,
     config: d.config,
     isActive: d.isActive,
+    alertRules: d.alertRules,
+    failsafe: d.failsafe,
     createdAt: new Date(d.createdAt),
     updatedAt: new Date(d.updatedAt),
   };

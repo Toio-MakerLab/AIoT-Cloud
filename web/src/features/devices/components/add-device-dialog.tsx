@@ -101,7 +101,9 @@ export function AddDeviceDialog({ open, onOpenChange, initialDeviceId }: Props) 
       if (result.data) {
         const registered = result.data.device;
         setRegisteredDevice(registered);
-        configForm.reset(deviceConfigFormDefaults(null, 'MQTT', true, registered.deviceId, registered.template));
+        configForm.reset(
+          deviceConfigFormDefaults(null, 'MQTT', true, registered.deviceId, registered.template, registered.alertRules, registered.failsafe),
+        );
         setStep('config');
       } else {
         handleOpenChange(false);
@@ -121,7 +123,7 @@ export function AddDeviceDialog({ open, onOpenChange, initialDeviceId }: Props) 
     try {
       await updateDeviceConfig.mutateAsync({
         id: registeredDevice.id,
-        data: deviceConfigFormToPayload(values),
+        data: deviceConfigFormToPayload(values, registeredDevice.template?.type),
       });
       toast.success('Device config saved');
       handleOpenChange(false);
@@ -258,7 +260,12 @@ export function AddDeviceDialog({ open, onOpenChange, initialDeviceId }: Props) 
             </DialogHeader>
             <Form {...configForm}>
               <form id="device-add-config-form" onSubmit={configForm.handleSubmit(handleSaveConfig)} className="space-y-4 p-0.5">
-                <DeviceConfigFields control={configForm.control} pushChannel={configPushChannel} channelTopics={configChannelTopics} />
+                <DeviceConfigFields
+                  control={configForm.control}
+                  pushChannel={configPushChannel}
+                  channelTopics={configChannelTopics}
+                  templateType={registeredDevice?.template?.type}
+                />
               </form>
             </Form>
             <DialogFooter>

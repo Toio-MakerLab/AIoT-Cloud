@@ -20,7 +20,15 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
 
   const form = useForm<DeviceConfigFormValues>({
     resolver: zodResolver(deviceConfigFormSchema),
-    defaultValues: deviceConfigFormDefaults(currentRow.config, currentRow.pushChannel, currentRow.isActive, currentRow.deviceId, currentRow.template),
+    defaultValues: deviceConfigFormDefaults(
+      currentRow.config,
+      currentRow.pushChannel,
+      currentRow.isActive,
+      currentRow.deviceId,
+      currentRow.template,
+      currentRow.alertRules,
+      currentRow.failsafe,
+    ),
   });
 
   const pushChannel = form.watch('pushChannel');
@@ -30,7 +38,7 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
     try {
       await updateDeviceConfig.mutateAsync({
         id: currentRow.id,
-        data: deviceConfigFormToPayload(values),
+        data: deviceConfigFormToPayload(values, currentRow.template?.type),
       });
       toast.success('Device config updated');
       onOpenChange(false);
@@ -54,7 +62,7 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
         </DialogHeader>
         <Form {...form}>
           <form id="device-config-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-0.5">
-            <DeviceConfigFields control={form.control} pushChannel={pushChannel} channelTopics={channelTopics} />
+            <DeviceConfigFields control={form.control} pushChannel={pushChannel} channelTopics={channelTopics} templateType={currentRow.template?.type} />
           </form>
         </Form>
         <DialogFooter>
