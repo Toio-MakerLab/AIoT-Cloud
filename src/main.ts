@@ -24,20 +24,6 @@ import { ApiConfigService } from './shared/services/api-config.service.ts';
 import { TranslationService } from './shared/services/translation.service.ts';
 import { SharedModule } from './shared/shared.module.ts';
 
-const domainWhitelist = [
-  'https://cdn.jsdelivr.net',
-  'https://www.gstatic.com',
-  'https://firebaseinstallations.googleapis.com',
-  'https://fcm.googleapis.com',
-  'https://*.firebaseio.com',
-  'https://fcmregistrations.googleapis.com',
-  'https://static.cloudflareinsights.com',
-];
-
-// Inline <script> blocks (e.g. injected by third-party tags such as Cloudflare's beacon) that
-// script-src-elem would otherwise reject outright. Allowlisting by hash — rather than
-// 'unsafe-inline' — keeps the policy from accepting *any* injected inline script.
-const inlineScriptHashes = ["'sha256-9Uwsy5XKAOLDN96l8TSQLGybMph7MSsqmkHNckwc8eA='", "'sha256-A9JfFQn1ufYrRoHDXY1mkPvs4BkHo5hTe5JHTDxRBrY='"];
 
 export async function bootstrap(): Promise<NestExpressApplication> {
   initializeTransactionalContext();
