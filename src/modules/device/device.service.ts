@@ -123,7 +123,7 @@ export class DeviceService {
     // `device.config.mqtt.password` is stored base64-encoded (see updateDeviceConfig); the
     // env-sourced fallback below is already plaintext, so only decode the stored branch.
     const mqttBase = device.config?.mqtt
-      ? { ...device.config.mqtt, password: decodeBase64(device.config.mqtt.password) }
+      ? { ...device.config.mqtt, password: device.config.mqtt.password }
       : {
           broker: mqttFallback.url,
           port: 1883,
@@ -233,7 +233,7 @@ export class DeviceService {
     // Broker passwords are stored base64-encoded rather than plaintext — decoded back out
     // wherever they're actually needed (getBootConfig, for the device itself; DeviceDto, for the
     // admin dashboard's edit form).
-    const mqtt = dto.mqtt !== undefined && dto.mqtt !== null ? { ...dto.mqtt, password: encodeBase64(dto.mqtt.password) } : dto.mqtt;
+    const mqtt = dto.mqtt !== undefined && dto.mqtt !== null ? { ...dto.mqtt, password: dto.mqtt.password } : dto.mqtt;
     const kafka = dto.kafka !== undefined && dto.kafka !== null ? { ...dto.kafka, password: encodeBase64(dto.kafka.password) } : dto.kafka;
 
     device.config = {
