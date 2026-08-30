@@ -38,13 +38,13 @@ export class NotificationService {
     this.senderByChannel = new Map(senders.map((sender) => [sender.channel, sender]));
   }
 
-  async getUserConfigs(userId: Uuid): Promise<NotificationConfigDto[]> {
+  async getUserConfigs(userId: string): Promise<NotificationConfigDto[]> {
     const configs = await this.notificationConfigRepository.findBy({ userId });
 
     return configs.toDtos();
   }
 
-  async upsertConfig(userId: Uuid, channel: NotificationChannelType, dto: UpsertNotificationConfigDto): Promise<ResponseCore<NotificationConfigDto>> {
+  async upsertConfig(userId: string, channel: NotificationChannelType, dto: UpsertNotificationConfigDto): Promise<ResponseCore<NotificationConfigDto>> {
     let config = await this.notificationConfigRepository.findOneBy({ userId, channel });
 
     config ??= this.notificationConfigRepository.create({ userId, channel, config: null, isEnabled: true });
@@ -67,7 +67,7 @@ export class NotificationService {
    * pairing code: the user copies this short-lived signed code and sends it as a plain message
    * to the bot; `handleZaloWebhookUpdate` reads it back off the webhook event.
    */
-  async generateZaloLinkCode(userId: Uuid): Promise<ResponseCore<{ code: string; shareUrl: string | null }>> {
+  async generateZaloLinkCode(userId: string): Promise<ResponseCore<{ code: string; shareUrl: string | null }>> {
     const code = await this.jwtService.signAsync({ userId, purpose: 'zalo-link' } satisfies ZaloLinkCodePayload, {
       expiresIn: ZALO_LINK_CODE_TTL,
     });
@@ -125,7 +125,7 @@ export class NotificationService {
   }
 
   /** Registers a browser's FCM token against the user's web push config, creating it (enabled) on first use. */
-  async registerWebPushToken(userId: Uuid, token: string): Promise<ResponseCore<NotificationConfigDto>> {
+  async registerWebPushToken(userId: string, token: string): Promise<ResponseCore<NotificationConfigDto>> {
     let config = await this.notificationConfigRepository.findOneBy({ userId, channel: NotificationChannelType.WEB_PUSH });
 
     config ??= this.notificationConfigRepository.create({
@@ -145,7 +145,7 @@ export class NotificationService {
   }
 
   /** Removes a browser's FCM token; clears the config (unlinks the channel) once no tokens remain. */
-  async unregisterWebPushToken(userId: Uuid, token: string): Promise<ResponseCore<NotificationConfigDto | null>> {
+  async unregisterWebPushToken(userId: string, token: string): Promise<ResponseCore<NotificationConfigDto | null>> {
     const config = await this.notificationConfigRepository.findOneBy({ userId, channel: NotificationChannelType.WEB_PUSH });
 
     if (!config) {
@@ -196,7 +196,7 @@ export class NotificationService {
   }
 
   /** Sends a one-off sample message through a single channel so the user can verify their template/link before relying on it. */
-  async sendTestMessage(userId: Uuid, channel: NotificationChannelType): Promise<ResponseCore<null>> {
+  async sendTestMessage(userId: string, channel: NotificationChannelType): Promise<ResponseCore<null>> {
     const config = await this.notificationConfigRepository.findOneBy({ userId, channel });
 
     if (!config || !config.isEnabled || config.config === null) {

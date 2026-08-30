@@ -22,7 +22,7 @@ export class NotificationController {
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   async getConfigs(@AuthUser() user: UserEntity): Promise<ResponseCore<NotificationConfigDto[]>> {
-    const configs = await this.notificationService.getUserConfigs(user.id as Uuid);
+    const configs = await this.notificationService.getUserConfigs(user.id as string);
 
     return ResponseCore.ok(configs);
   }
@@ -35,7 +35,7 @@ export class NotificationController {
     @Param('channel', new ParseEnumPipe(NotificationChannelType)) channel: NotificationChannelType,
     @Body() dto: UpsertNotificationConfigDto,
   ): Promise<ResponseCore<NotificationConfigDto>> {
-    return this.notificationService.upsertConfig(user.id as Uuid, channel, dto);
+    return this.notificationService.upsertConfig(user.id as string, channel, dto);
   }
 
   /** Sends a one-off sample message through the given channel so the user can verify their template/link. */
@@ -46,7 +46,7 @@ export class NotificationController {
     @AuthUser() user: UserEntity,
     @Param('channel', new ParseEnumPipe(NotificationChannelType)) channel: NotificationChannelType,
   ): Promise<ResponseCore<null>> {
-    return this.notificationService.sendTestMessage(user.id as Uuid, channel);
+    return this.notificationService.sendTestMessage(user.id as string, channel);
   }
 
   /** Returns a short-lived code the user pastes as a plain message to the Zalo bot to link their account. */
@@ -54,7 +54,7 @@ export class NotificationController {
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   async getZaloLinkCode(@AuthUser() user: UserEntity): Promise<ResponseCore<ZaloLinkCodeDto>> {
-    const result = await this.notificationService.generateZaloLinkCode(user.id as Uuid);
+    const result = await this.notificationService.generateZaloLinkCode(user.id as string);
 
     return { ...result, data: result.data ? new ZaloLinkCodeDto(result.data) : null };
   }
@@ -64,7 +64,7 @@ export class NotificationController {
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   registerWebPushToken(@AuthUser() user: UserEntity, @Body() dto: RegisterWebPushTokenDto): Promise<ResponseCore<NotificationConfigDto>> {
-    return this.notificationService.registerWebPushToken(user.id as Uuid, dto.token);
+    return this.notificationService.registerWebPushToken(user.id as string, dto.token);
   }
 
   /** Unregisters a browser's FCM token, e.g. on logout or push permission revocation. */
@@ -72,6 +72,6 @@ export class NotificationController {
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   unregisterWebPushToken(@AuthUser() user: UserEntity, @Body() dto: RegisterWebPushTokenDto): Promise<ResponseCore<NotificationConfigDto | null>> {
-    return this.notificationService.unregisterWebPushToken(user.id as Uuid, dto.token);
+    return this.notificationService.unregisterWebPushToken(user.id as string, dto.token);
   }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Query, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, ValidationPipe } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
@@ -6,7 +6,7 @@ import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { ApiPageResponse } from '../../decorators/api-page-response.decorator.ts';
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
-import { Auth, UUIDParam } from '../../decorators/http.decorators.ts';
+import { Auth } from '../../decorators/http.decorators.ts';
 import { UseLanguageInterceptor } from '../../interceptors/language-interceptor.service.ts';
 import { TranslationService } from '../../shared/services/translation.service.ts';
 import { CreateUserDto } from './dtos/create-user.dto.ts';
@@ -58,7 +58,7 @@ export class UserController {
     description: 'Get users list',
     type: UserDto,
   })
-  getUser(@UUIDParam('id') userId: Uuid): Promise<ResponseCore<UserDto>> {
+  getUser(@Param('id') userId: string): Promise<ResponseCore<UserDto>> {
     return this.userService.getUser(userId);
   }
 
@@ -82,7 +82,7 @@ export class UserController {
     description: 'Update user',
     type: UserDto,
   })
-  updateUser(@UUIDParam('id') userId: Uuid, @Body() updateUserDto: UpdateUserDto): Promise<ResponseCore<UserDto>> {
+  updateUser(@Param('id') userId: string, @Body() updateUserDto: UpdateUserDto): Promise<ResponseCore<UserDto>> {
     return this.userService.updateUser(userId, updateUserDto);
   }
 }

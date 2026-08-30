@@ -28,7 +28,7 @@ export class DeviceSecretService {
     return ResponseCore.ok(secrets.toDtos());
   }
 
-  async create(userId: Uuid, dto: CreateDeviceSecretDto): Promise<ResponseCore<CreatedDeviceSecret>> {
+  async create(userId: string, dto: CreateDeviceSecretDto): Promise<ResponseCore<CreatedDeviceSecret>> {
     const plaintext = randomBytes(32).toString('hex');
 
     const entity = this.deviceSecretRepository.create({
@@ -43,7 +43,7 @@ export class DeviceSecretService {
     return ResponseCore.ok({ deviceSecret: entity.toDto(), plaintext });
   }
 
-  async revoke(id: Uuid): Promise<ResponseCore<DeviceSecretDto>> {
+  async revoke(id: string): Promise<ResponseCore<DeviceSecretDto>> {
     const secret = await this.deviceSecretRepository.findOneBy({ id });
 
     if (!secret) {

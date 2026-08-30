@@ -78,7 +78,7 @@ export class DeviceService {
   ) {}
 
   @Transactional()
-  async registerDevice(userId: Uuid, dto: RegisterDeviceDto): Promise<ResponseCore<RegisterDeviceResult>> {
+  async registerDevice(userId: string, dto: RegisterDeviceDto): Promise<ResponseCore<RegisterDeviceResult>> {
     const template = await this.deviceTemplateRepository.findOneBy({ id: dto.templateId });
 
     if (!template) {
@@ -212,7 +212,7 @@ export class DeviceService {
   }
 
   @Transactional()
-  async updateDeviceConfig(userId: Uuid, id: Uuid, dto: UpdateDeviceConfigDto): Promise<ResponseCore<DeviceDto>> {
+  async updateDeviceConfig(userId: string, id: string, dto: UpdateDeviceConfigDto): Promise<ResponseCore<DeviceDto>> {
     const device = await this.deviceRepository.findOneBy({ id, userId });
 
     if (!device) {
@@ -247,8 +247,8 @@ export class DeviceService {
   }
 
   async triggerDeviceAction(
-    userId: Uuid,
-    id: Uuid,
+    userId: string,
+    id: string,
     dto: TriggerDeviceActionDto,
   ): Promise<ResponseCore<{ key: string; value: string; topic: string; publishedAt: Date }>> {
     const device = await this.deviceRepository.findOne({ where: { id, userId }, relations: ['template'] });
@@ -290,7 +290,7 @@ export class DeviceService {
   }
 
   @Transactional()
-  async getUserDevices(userId: Uuid, pageOptionsDto: DevicesPageOptionsDto): Promise<PageDto<DeviceDto>> {
+  async getUserDevices(userId: string, pageOptionsDto: DevicesPageOptionsDto): Promise<PageDto<DeviceDto>> {
     const queryBuilder = this.deviceRepository
       .createQueryBuilder('device')
       .leftJoinAndSelect('device.template', 'template')
@@ -302,7 +302,7 @@ export class DeviceService {
     return items.toPageDto(pageMetaDto);
   }
 
-  async getDevice(userId: Uuid, id: Uuid): Promise<ResponseCore<DeviceDto>> {
+  async getDevice(userId: string, id: string): Promise<ResponseCore<DeviceDto>> {
     const entity = await this.deviceRepository.findOne({ where: { id, userId }, relations: ['template'] });
 
     if (!entity) {
@@ -313,7 +313,7 @@ export class DeviceService {
   }
 
   @Transactional()
-  async deleteDevice(userId: Uuid, id: Uuid): Promise<ResponseCore<null>> {
+  async deleteDevice(userId: string, id: string): Promise<ResponseCore<null>> {
     const entity = await this.deviceRepository.findOneBy({ id, userId });
 
     if (!entity) {
@@ -325,7 +325,7 @@ export class DeviceService {
     return ResponseCore.ok(null);
   }
 
-  async getDeviceTelemetryHistory(userId: Uuid, id: Uuid, limit: number): Promise<ResponseCore<DeviceTelemetryDto[]>> {
+  async getDeviceTelemetryHistory(userId: string, id: string, limit: number): Promise<ResponseCore<DeviceTelemetryDto[]>> {
     const device = await this.deviceRepository.findOneBy({ id, userId });
 
     if (!device) {
@@ -341,13 +341,13 @@ export class DeviceService {
     return ResponseCore.ok(entities.reverse().toDtos());
   }
 
-  async getUserDeviceIds(userId: Uuid): Promise<string[]> {
+  async getUserDeviceIds(userId: string): Promise<string[]> {
     const devices = await this.deviceRepository.find({ where: { userId }, select: ['deviceId'] });
 
     return devices.map((device) => device.deviceId);
   }
 
-  async isOwnedByUser(userId: Uuid, deviceId: string): Promise<boolean> {
+  async isOwnedByUser(userId: string, deviceId: string): Promise<boolean> {
     const count = await this.deviceRepository.countBy({ deviceId, userId });
 
     return count > 0;
@@ -358,7 +358,7 @@ export class DeviceService {
    * id (what MQTT topics + websocket rooms key on), scoped to devices the user owns. Used by the
    * websocket gateway's `subscribe:device` handler, which receives entity ids from the client.
    */
-  async resolveOwnedDeviceByEntityId(userId: Uuid, entityId: string): Promise<Pick<DeviceEntity, 'id' | 'deviceId'> | null> {
+  async resolveOwnedDeviceByEntityId(userId: string, entityId: string): Promise<Pick<DeviceEntity, 'id' | 'deviceId'> | null> {
     return this.deviceRepository.findOne({ where: { id: entityId, userId }, select: ['id', 'deviceId'] });
   }
 
@@ -368,7 +368,7 @@ export class DeviceService {
    * endpoints use), which this resolves to the physical device ids that `device.telemetry` /
    * `device.status` events key on, then maps back to entity ids in the emitted payload.
    */
-  streamDeviceEvents(userId: Uuid, deviceIds: string[]): Observable<MessageEvent> {
+  streamDeviceEvents(userId: string, deviceIds: string[]): Observable<MessageEvent> {
     return defer(() => from(this.resolveEntityIdByPhysicalDeviceId(userId, deviceIds))).pipe(
       switchMap((entityIdByPhysicalDeviceId) => {
         const telemetry$ = fromEvent<DeviceTelemetryEvent>(this.eventEmitter, 'device.telemetry').pipe(
@@ -411,7 +411,7 @@ export class DeviceService {
   }
 
   /** Devices the user owns, restricted to `entityIds` (when given), keyed by their physical device id. */
-  private async resolveEntityIdByPhysicalDeviceId(userId: Uuid, entityIds: string[]): Promise<Map<string, string>> {
+  private async resolveEntityIdByPhysicalDeviceId(userId: string, entityIds: string[]): Promise<Map<string, string>> {
     if (entityIds.length === 0) {
       return new Map();
     }

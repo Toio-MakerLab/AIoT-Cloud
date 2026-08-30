@@ -28,6 +28,11 @@ export class KafkaController {
 
   constructor(private readonly deviceService: DeviceService) {}
 
+  // Every handler below must never let an error escape: KafkaJS awaits this promise inside its
+  // own eachMessage loop, and an unhandled rejection there crashes the whole consumer (all
+  // topics, not just this one) with no auto-restart from NestJS's Kafka server — one bad
+  // message (malformed payload, a transient DB error, whatever) would silently kill the
+  // consumer for good instead of just failing that one message.
   @EventPattern(KAFKA_TELEMETRY_TOPIC)
   async handleTelemetry(@Payload() data: KafkaTelemetryPayload, @Ctx() context: KafkaContext): Promise<void> {
     this.logger.debug(`[${KAFKA_TELEMETRY_TOPIC}] ${JSON.stringify(data)}`);
@@ -38,15 +43,19 @@ export class KafkaController {
       data: data,
     });
 
-    const { deviceId, ...telemetry } = data ?? {};
+    try {
+      const { deviceId, ...telemetry } = data ?? {};
 
-    if (!deviceId) {
-      this.logger.warn(`Received Kafka telemetry message without deviceId: ${JSON.stringify(data)}`);
+      if (!deviceId) {
+        this.logger.warn(`Received Kafka telemetry message without deviceId: ${JSON.stringify(data)}`);
 
-      return;
+        return;
+      }
+
+      await this.deviceService.recordTelemetry(deviceId, telemetry);
+    } catch (error) {
+      this.logger.error(`Failed to handle [${KAFKA_TELEMETRY_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
     }
-
-    await this.deviceService.recordTelemetry(deviceId, telemetry);
   }
 
   @EventPattern(KAFKA_STATUS_TOPIC)
@@ -59,15 +68,19 @@ export class KafkaController {
       data: data,
     });
 
-    const { deviceId, ...status } = data ?? {};
+    try {
+      const { deviceId, ...status } = data ?? {};
 
-    if (!deviceId) {
-      this.logger.warn(`Received Kafka status message without deviceId: ${JSON.stringify(data)}`);
+      if (!deviceId) {
+        this.logger.warn(`Received Kafka status message without deviceId: ${JSON.stringify(data)}`);
 
-      return;
+        return;
+      }
+
+      await this.deviceService.handleDeviceStatusMessage(deviceId, status);
+    } catch (error) {
+      this.logger.error(`Failed to handle [${KAFKA_STATUS_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
     }
-
-    await this.deviceService.handleDeviceStatusMessage(deviceId, status);
   }
 
   @EventPattern(KAFKA_DEVICE_EVENTS_TOPIC)
@@ -80,14 +93,18 @@ export class KafkaController {
       data: data,
     });
 
-    const { device_id: deviceId, topic, message } = data ?? {};
+    try {
+      const { device_id: deviceId, topic, message } = data ?? {};
 
-    if (!deviceId) {
-      this.logger.warn(`Received Kafka device event without device_id: ${JSON.stringify(data)}`);
+      if (!deviceId) {
+        this.logger.warn(`Received Kafka device event without device_id: ${JSON.stringify(data)}`);
 
-      return;
+        return;
+      }
+
+      await this.deviceService.handleDeviceChannelEvent(deviceId, topic ?? KAFKA_DEVICE_EVENTS_TOPIC, message);
+    } catch (error) {
+      this.logger.error(`Failed to handle [${KAFKA_DEVICE_EVENTS_TOPIC}] message: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
     }
-
-    await this.deviceService.handleDeviceChannelEvent(deviceId, topic ?? KAFKA_DEVICE_EVENTS_TOPIC, message);
   }
 }

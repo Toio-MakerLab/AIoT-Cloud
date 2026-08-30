@@ -31,7 +31,7 @@ export class DeviceTemplateController {
   @Get(':id')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  getDeviceTemplate(@Param('id') id: Uuid): Promise<ResponseCore<DeviceTemplateDto>> {
+  getDeviceTemplate(@Param('id') id: string): Promise<ResponseCore<DeviceTemplateDto>> {
     return this.deviceTemplateService.getDeviceTemplate(id);
   }
 
@@ -45,14 +45,14 @@ export class DeviceTemplateController {
   @Put(':id')
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  updateDeviceTemplate(@Param('id') id: Uuid, @Body() dto: UpdateDeviceTemplateDto): Promise<ResponseCore<DeviceTemplateDto>> {
+  updateDeviceTemplate(@Param('id') id: string, @Body() dto: UpdateDeviceTemplateDto): Promise<ResponseCore<DeviceTemplateDto>> {
     return this.deviceTemplateService.updateDeviceTemplate(id, dto);
   }
 
   @Delete(':id')
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  deleteDeviceTemplate(@Param('id') id: Uuid): Promise<ResponseCore<null>> {
+  deleteDeviceTemplate(@Param('id') id: string): Promise<ResponseCore<null>> {
     return this.deviceTemplateService.deleteDeviceTemplate(id);
   }
 }

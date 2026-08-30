@@ -132,7 +132,7 @@ export class UserService {
   }
 
   @Transactional()
-  async updateUser(userId: Uuid, dto: UpdateUserDto): Promise<ResponseCore<UserDto>> {
+  async updateUser(userId: string, dto: UpdateUserDto): Promise<ResponseCore<UserDto>> {
     const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['settings'] });
 
     if (!user) {
@@ -247,7 +247,7 @@ export class UserService {
     return items.toPageDto(pageMetaDto);
   }
 
-  async getUser(userId: Uuid): Promise<ResponseCore<UserDto>> {
+  async getUser(userId: string): Promise<ResponseCore<UserDto>> {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
 
     queryBuilder.where('user.id = :userId', { userId });

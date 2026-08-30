@@ -16,13 +16,13 @@ export class DashboardService {
     private dashboardRepository: Repository<DashboardEntity>,
   ) {}
 
-  async getUserDashboards(userId: Uuid): Promise<DashboardDto[]> {
+  async getUserDashboards(userId: string): Promise<DashboardDto[]> {
     const entities = await this.dashboardRepository.find({ where: { userId }, order: { createdAt: 'ASC' } });
 
     return entities.toDtos();
   }
 
-  async getDashboard(userId: Uuid, id: Uuid): Promise<ResponseCore<DashboardDto>> {
+  async getDashboard(userId: string, id: string): Promise<ResponseCore<DashboardDto>> {
     const entity = await this.dashboardRepository.findOneBy({ id, userId });
 
     if (!entity) {
@@ -33,7 +33,7 @@ export class DashboardService {
   }
 
   @Transactional()
-  async createDashboard(userId: Uuid, dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
+  async createDashboard(userId: string, dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
     const entity = this.dashboardRepository.create({
       userId,
       name: dto.name,
@@ -47,7 +47,7 @@ export class DashboardService {
   }
 
   @Transactional()
-  async updateDashboard(userId: Uuid, id: Uuid, dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
+  async updateDashboard(userId: string, id: string, dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
     const entity = await this.dashboardRepository.findOneBy({ id, userId });
 
     if (!entity) {
@@ -64,7 +64,7 @@ export class DashboardService {
   }
 
   @Transactional()
-  async deleteDashboard(userId: Uuid, id: Uuid): Promise<ResponseCore<null>> {
+  async deleteDashboard(userId: string, id: string): Promise<ResponseCore<null>> {
     const entity = await this.dashboardRepository.findOneBy({ id, userId });
 
     if (!entity) {

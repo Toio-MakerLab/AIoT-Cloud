@@ -35,14 +35,14 @@ export class DeviceController {
     @Query(new ValidationPipe({ transform: true }))
     pageOptionsDto: DevicesPageOptionsDto,
   ): Promise<PageDto<DeviceDto>> {
-    return this.deviceService.getUserDevices(user.id as Uuid, pageOptionsDto);
+    return this.deviceService.getUserDevices(user.id as string, pageOptionsDto);
   }
 
   @Post('register')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.CREATED)
   registerDevice(@AuthUser() user: UserEntity, @Body() dto: RegisterDeviceDto): Promise<ResponseCore<RegisterDeviceResult>> {
-    return this.deviceService.registerDevice(user.id as Uuid, dto);
+    return this.deviceService.registerDevice(user.id as string, dto);
   }
 
   @Get('unclaimed')
@@ -66,21 +66,21 @@ export class DeviceController {
         .map((id) => id.trim())
         .filter(Boolean) ?? [];
 
-    return this.deviceService.streamDeviceEvents(user.id as Uuid, deviceIds);
+    return this.deviceService.streamDeviceEvents(user.id as string, deviceIds);
   }
 
   @Get(':id')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  getDevice(@AuthUser() user: UserEntity, @Param('id') id: Uuid): Promise<ResponseCore<DeviceDto>> {
-    return this.deviceService.getDevice(user.id as Uuid, id);
+  getDevice(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<DeviceDto>> {
+    return this.deviceService.getDevice(user.id as string, id);
   }
 
   @Delete(':id')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  deleteDevice(@AuthUser() user: UserEntity, @Param('id') id: Uuid): Promise<ResponseCore<null>> {
-    return this.deviceService.deleteDevice(user.id as Uuid, id);
+  deleteDevice(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<null>> {
+    return this.deviceService.deleteDevice(user.id as string, id);
   }
 
   @Get(':id/telemetry')
@@ -88,17 +88,17 @@ export class DeviceController {
   @HttpCode(HttpStatus.OK)
   getDeviceTelemetry(
     @AuthUser() user: UserEntity,
-    @Param('id') id: Uuid,
+    @Param('id') id: string,
     @Query(new ValidationPipe({ transform: true })) query: DeviceTelemetryQueryDto,
   ): Promise<ResponseCore<DeviceTelemetryDto[]>> {
-    return this.deviceService.getDeviceTelemetryHistory(user.id as Uuid, id, query.limit);
+    return this.deviceService.getDeviceTelemetryHistory(user.id as string, id, query.limit);
   }
 
   @Patch(':id/config')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  updateDeviceConfig(@AuthUser() user: UserEntity, @Param('id') id: Uuid, @Body() dto: UpdateDeviceConfigDto): Promise<ResponseCore<DeviceDto>> {
-    return this.deviceService.updateDeviceConfig(user.id as Uuid, id, dto);
+  updateDeviceConfig(@AuthUser() user: UserEntity, @Param('id') id: string, @Body() dto: UpdateDeviceConfigDto): Promise<ResponseCore<DeviceDto>> {
+    return this.deviceService.updateDeviceConfig(user.id as string, id, dto);
   }
 
   @Post(':id/actions')
@@ -106,9 +106,9 @@ export class DeviceController {
   @HttpCode(HttpStatus.OK)
   triggerDeviceAction(
     @AuthUser() user: UserEntity,
-    @Param('id') id: Uuid,
+    @Param('id') id: string,
     @Body() dto: TriggerDeviceActionDto,
   ): Promise<ResponseCore<{ key: string; value: string; topic: string; publishedAt: Date }>> {
-    return this.deviceService.triggerDeviceAction(user.id as Uuid, id, dto);
+    return this.deviceService.triggerDeviceAction(user.id as string, id, dto);
   }
 }

@@ -28,13 +28,13 @@ export class DeviceSecretController {
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.CREATED)
   create(@AuthUser() user: UserEntity, @Body() dto: CreateDeviceSecretDto): Promise<ResponseCore<CreatedDeviceSecret>> {
-    return this.deviceSecretService.create(user.id as Uuid, dto);
+    return this.deviceSecretService.create(user.id as string, dto);
   }
 
   @Post(':id/revoke')
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  revoke(@Param('id') id: Uuid): Promise<ResponseCore<DeviceSecretDto>> {
+  revoke(@Param('id') id: string): Promise<ResponseCore<DeviceSecretDto>> {
     return this.deviceSecretService.revoke(id);
   }
 }

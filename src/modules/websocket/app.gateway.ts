@@ -66,7 +66,7 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /** `entityId` is the entity id the dashboard widgets key on (same id the REST endpoints use). */
   @SubscribeMessage('subscribe:device')
   async handleSubscribeDevice(client: Socket & { data: SocketData }, entityId: string): Promise<{ ok: boolean }> {
-    const device = await this.deviceService.resolveOwnedDeviceByEntityId(client.data.userId as Uuid, entityId);
+    const device = await this.deviceService.resolveOwnedDeviceByEntityId(client.data.userId as string, entityId);
 
     if (!device) {
       return { ok: false };

@@ -31,7 +31,7 @@ export class DeviceTemplateService {
     return items.toPageDto(pageMetaDto);
   }
 
-  async getDeviceTemplate(id: Uuid): Promise<ResponseCore<DeviceTemplateDto>> {
+  async getDeviceTemplate(id: string): Promise<ResponseCore<DeviceTemplateDto>> {
     const entity = await this.deviceTemplateRepository.findOneBy({ id });
 
     if (!entity) {
@@ -50,7 +50,7 @@ export class DeviceTemplateService {
   }
 
   @Transactional()
-  async updateDeviceTemplate(id: Uuid, dto: UpdateDeviceTemplateDto): Promise<ResponseCore<DeviceTemplateDto>> {
+  async updateDeviceTemplate(id: string, dto: UpdateDeviceTemplateDto): Promise<ResponseCore<DeviceTemplateDto>> {
     const entity = await this.deviceTemplateRepository.findOneBy({ id });
 
     if (!entity) {
@@ -64,7 +64,7 @@ export class DeviceTemplateService {
   }
 
   @Transactional()
-  async deleteDeviceTemplate(id: Uuid): Promise<ResponseCore<null>> {
+  async deleteDeviceTemplate(id: string): Promise<ResponseCore<null>> {
     const entity = await this.deviceTemplateRepository.findOneBy({ id });
 
     if (!entity) {

@@ -19,34 +19,34 @@ export class DashboardController {
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDashboards(@AuthUser() user: UserEntity): Promise<DashboardDto[]> {
-    return this.dashboardService.getUserDashboards(user.id as Uuid);
+    return this.dashboardService.getUserDashboards(user.id as string);
   }
 
   @Get(':id')
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  getDashboard(@AuthUser() user: UserEntity, @Param('id') id: Uuid): Promise<ResponseCore<DashboardDto>> {
-    return this.dashboardService.getDashboard(user.id as Uuid, id);
+  getDashboard(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<DashboardDto>> {
+    return this.dashboardService.getDashboard(user.id as string, id);
   }
 
   @Post()
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.CREATED)
   createDashboard(@AuthUser() user: UserEntity, @Body() dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
-    return this.dashboardService.createDashboard(user.id as Uuid, dto);
+    return this.dashboardService.createDashboard(user.id as string, dto);
   }
 
   @Put(':id')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  updateDashboard(@AuthUser() user: UserEntity, @Param('id') id: Uuid, @Body() dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
-    return this.dashboardService.updateDashboard(user.id as Uuid, id, dto);
+  updateDashboard(@AuthUser() user: UserEntity, @Param('id') id: string, @Body() dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
+    return this.dashboardService.updateDashboard(user.id as string, id, dto);
   }
 
   @Delete(':id')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  deleteDashboard(@AuthUser() user: UserEntity, @Param('id') id: Uuid): Promise<ResponseCore<null>> {
-    return this.dashboardService.deleteDashboard(user.id as Uuid, id);
+  deleteDashboard(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<null>> {
+    return this.dashboardService.deleteDashboard(user.id as string, id);
   }
 }
