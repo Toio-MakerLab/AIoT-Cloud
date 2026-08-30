@@ -28,7 +28,7 @@ import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: `${configService.kafkaConfig.clientId}-commands`,
+              clientId: `${configService.kafkaConfig.clientId}`,
               brokers: configService.kafkaConfig.brokers.split(','),
               ssl: configService.kafkaConfig.ssl,
               sasl: configService.kafkaConfig.sasl as SASLOptions | undefined,
