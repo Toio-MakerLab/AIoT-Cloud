@@ -162,7 +162,7 @@ export default function Dashboard() {
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Select value={draft.id ?? NEW_DASHBOARD_VALUE} onValueChange={handleSelectDashboard}>
-            <SelectTrigger className="w-56">
+            <SelectTrigger className="w-full sm:w-56">
               <SelectValue placeholder="Select a dashboard" />
             </SelectTrigger>
             <SelectContent>
@@ -176,7 +176,7 @@ export default function Dashboard() {
           </Select>
 
           <Input
-            className="w-56"
+            className="w-full sm:w-56"
             value={draft.name}
             onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
             placeholder="Dashboard name"
@@ -193,12 +193,12 @@ export default function Dashboard() {
             </label>
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" onClick={() => setAddPanelOpen(true)}>
+          <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
+            <Button variant="outline" className="flex-1 sm:flex-initial" onClick={() => setAddPanelOpen(true)}>
               <IconPlus className="h-4 w-4" />
               Add Panel
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button className="flex-1 sm:flex-initial" onClick={handleSave} disabled={isSaving}>
               <IconDeviceFloppy className="h-4 w-4" />
               {isSaving ? 'Saving...' : 'Save'}
             </Button>

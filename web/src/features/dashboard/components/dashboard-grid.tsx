@@ -1,5 +1,6 @@
 import { GridLayout, type Layout, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { IDashboardWidget, IDevice } from '../api/types';
 import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
 import { DevicePanel } from './device-panel';
@@ -22,6 +23,13 @@ interface Props {
 const ROW_HEIGHT = 80;
 const COLS = 12;
 
+// Below the mobile breakpoint, dragging/resizing a 12-col grid sized for desktop is unusable
+// (each column ends up a sliver of the screen) — instead force everything into a single,
+// full-width, non-interactive stacked column. Taller rows than desktop's since one row now needs
+// to hold a whole panel's content, not a fraction of one sized in desktop grid units.
+const MOBILE_COLS = 1;
+const MOBILE_ROW_HEIGHT = 260;
+
 /**
  * Wraps react-grid-layout v2's `GridLayout` component. v2 dropped the `WidthProvider` HOC in
  * favor of the `useContainerWidth` hook (see react-grid-layout README "Providing Grid Width" /
@@ -31,16 +39,22 @@ const COLS = 12;
  */
 export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRemoveWidget }: Props) {
   const { width, containerRef, mounted } = useContainerWidth();
+  const isMobile = useIsMobile();
 
-  const layout: Layout = widgets.map((widget) => ({
-    i: widget.id,
-    x: widget.x,
-    y: widget.y,
-    w: widget.w,
-    h: widget.h,
-    minW: 2,
-    minH: 2,
-  }));
+  // Mobile layout is synthesized (stacked, in widget order) rather than read from the widgets'
+  // stored x/y/w/h, which describe positions on the desktop 12-col grid and don't translate to a
+  // single mobile column.
+  const layout: Layout = isMobile
+    ? widgets.map((widget, index) => ({ i: widget.id, x: 0, y: index, w: MOBILE_COLS, h: 1, minW: MOBILE_COLS, minH: 1 }))
+    : widgets.map((widget) => ({
+        i: widget.id,
+        x: widget.x,
+        y: widget.y,
+        w: widget.w,
+        h: widget.h,
+        minW: 2,
+        minH: 2,
+      }));
 
   const handleLayoutChange = (newLayout: Layout) => {
     const updated = widgets.map((widget) => {
@@ -68,12 +82,14 @@ export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRe
           layout={layout}
           width={width}
           gridConfig={{
-            cols: COLS,
-            rowHeight: ROW_HEIGHT,
+            cols: isMobile ? MOBILE_COLS : COLS,
+            rowHeight: isMobile ? MOBILE_ROW_HEIGHT : ROW_HEIGHT,
             margin: [12, 12],
             containerPadding: [0, 0],
           }}
-          onLayoutChange={handleLayoutChange}
+          dragConfig={{ enabled: !isMobile }}
+          resizeConfig={{ enabled: !isMobile }}
+          onLayoutChange={isMobile ? undefined : handleLayoutChange}
         >
           {widgets.map((widget) => {
             const device = devices.find((d) => d.id === widget.deviceId);
