@@ -25,7 +25,9 @@ RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
 
 ARG VITE_APP_VERSION
-RUN sed -i "s|VITE_APP_VERSION_PLACEHOLDER|${VITE_APP_VERSION}|g" package.json
+RUN test -n "$VITE_APP_VERSION" \
+ && sed -i "s|VITE_APP_VERSION_PLACEHOLDER|${VITE_APP_VERSION}|g" package.json \
+ && grep -n "version" package.json
 
 RUN pnpm install --frozen-lockfile
 COPY web/ ./
