@@ -151,4 +151,10 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   return app;
 }
 
-export const viteNodeApp = bootstrap();
+// `bootstrap()` is invoked here for its side effect, not awaited by anything — an unhandled
+// rejection (e.g. the DB being unreachable) would otherwise crash the process with just Node's
+// generic "unhandled rejection" warning instead of a clear, attributable log.
+export const viteNodeApp = bootstrap().catch((error: unknown) => {
+  console.error('Failed to bootstrap application:', error);
+  process.exit(1);
+});
