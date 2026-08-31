@@ -67,7 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         {/* <NavUser user={sidebarData.user} /> */}
-        <div className="text-muted-foreground text-center text-xs">Version {__APP_VERSION__}</div>
+        <div className="text-muted-foreground text-center text-xs">Version {import.meta.env.VITE_APP_VERSION || __APP_VERSION__}</div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
