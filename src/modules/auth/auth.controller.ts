@@ -80,7 +80,7 @@ export class AuthController {
   @Version('1')
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  @Auth([RoleType.USER, RoleType.ADMIN])
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT, RoleType.GUEST])
   @ApiOkResponse({ type: UserDto, description: 'current user info' })
   getCurrentUser(@AuthUser() user: UserEntity): UserDto {
     return user.toDto();
