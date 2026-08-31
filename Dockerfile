@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG NODE_VERSION=22-alpine
+ARG VITE_APP_VERSION
 
 # ---- backend deps ----------------------------------------------------------
 FROM node:${NODE_VERSION} AS backend-deps
@@ -15,8 +16,6 @@ COPY tsconfig.json tsconfig.build.json nest-cli.json ormconfig.ts .swcrc ./
 COPY src ./src
 RUN pnpm build:prod
 
-ARG VITE_APP_VERSION
-ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 
 
 # ---- frontend build ----------------------------------------------------------
@@ -26,6 +25,7 @@ RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY web/ ./
+RUN sed -i '' "s/VITE_APP_VERSION_PLACEHOLDER/${VITE_APP_VERSION}/g" package.json
 # Frontend and backend share an origin in the final image, so the API is reachable
 # at a relative path. Overridable at runtime via dist-client/domain.json (see docker-entrypoint.sh).
 ENV VITE_API_URL=/api
