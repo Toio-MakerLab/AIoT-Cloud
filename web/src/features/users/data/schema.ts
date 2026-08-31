@@ -14,6 +14,7 @@ const userSchema = z.object({
   role: userRoleSchema.nullish(),
   isActive: z.boolean().nullish(),
   isEmailVerified: z.boolean().nullish(),
+  factoryId: z.string().nullish(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });

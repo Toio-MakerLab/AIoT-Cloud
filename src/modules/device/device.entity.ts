@@ -41,6 +41,12 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
   @JoinColumn({ name: 'user_id' })
   user?: UserEntity;
 
+  /** The factory this device belongs to (copied from the registering user's `factoryId`) — lets
+   * every account in the same factory read this device, not just its literal owner. */
+  @Index()
+  @Column({ nullable: true, type: 'varchar' })
+  factoryId!: string | null;
+
   @Column({ nullable: true, type: 'timestamp' })
   lastSeenAt!: Date | null;
 

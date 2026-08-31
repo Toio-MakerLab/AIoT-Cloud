@@ -18,6 +18,7 @@ import { AuthModule } from './modules/auth/auth.module.ts';
 import { DashboardModule } from './modules/dashboard/dashboard.module.ts';
 import { DeviceModule } from './modules/device/device.module.ts';
 import { DeviceTemplateModule } from './modules/device-template/device-template.module.ts';
+import { FactoryModule } from './modules/factory/factory.module.ts';
 import { HealthCheckerModule } from './modules/health-checker/health-checker.module.ts';
 import { KafkaModule } from './modules/kafka/kafka.module.ts';
 import { MqttModule } from './modules/mqtt/mqtt.module.ts';
@@ -64,6 +65,7 @@ function redactSensitiveFields(body: unknown): unknown {
     AuthModule,
     UserModule,
     DeviceTemplateModule,
+    FactoryModule,
     DeviceModule,
     DashboardModule,
     MqttModule,

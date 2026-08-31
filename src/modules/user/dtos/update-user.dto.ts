@@ -32,4 +32,7 @@ export class UpdateUserDto {
 
   @BooleanFieldOptional()
   isActive?: boolean;
+
+  @StringFieldOptional({ nullable: true })
+  factoryId?: string | null;
 }

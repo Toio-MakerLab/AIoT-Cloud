@@ -10,6 +10,7 @@ export interface IUser {
   role?: UserRole;
   isActive?: boolean;
   isEmailVerified?: boolean;
+  factoryId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +23,7 @@ export interface ICreateUser {
   email?: string;
   phone?: string;
   role?: UserRole;
+  factoryId?: string | null;
 }
 
 export type IUpdateUser = Partial<Omit<ICreateUser, 'username'>> & {

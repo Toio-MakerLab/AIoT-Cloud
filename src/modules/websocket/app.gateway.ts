@@ -5,6 +5,7 @@ import type { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websocket
 import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
 
+import type { AccessScope } from '../../common/access-scope.util.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { TokenType } from '../../constants/token-type.ts';
 import type { DeviceChannelStateEvent, DeviceStatusEvent, DeviceTelemetryEvent } from '../device/device.service.ts';
@@ -13,10 +14,24 @@ import { DeviceService } from '../device/device.service.ts';
 interface SocketData {
   userId: string;
   role: RoleType;
+  factoryId: string | null;
 }
 
 function deviceRoom(deviceId: string): string {
   return `device:${deviceId}`;
+}
+
+/** Mirrors `resolveAccessScope` — the gateway only has raw JWT claims, not a full `UserEntity`. */
+function resolveScopeFromSocketData(data: SocketData): AccessScope {
+  if (data.role === RoleType.GUEST) {
+    return null;
+  }
+
+  if (data.factoryId) {
+    return { factoryId: data.factoryId };
+  }
+
+  return { userId: data.userId };
 }
 
 @WebSocketGateway({ cors: true })
@@ -47,7 +62,7 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<{ userId: string; role: RoleType; type: TokenType }>(token);
+      const payload = await this.jwtService.verifyAsync<{ userId: string; role: RoleType; factoryId: string | null; type: TokenType }>(token);
 
       if (payload.type !== TokenType.ACCESS_TOKEN) {
         throw new Error('Not an access token');
@@ -55,6 +70,7 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       client.data.userId = payload.userId;
       client.data.role = payload.role;
+      client.data.factoryId = payload.factoryId;
       this.logger.log(`Client connected: ${client.id} (user ${payload.userId})`);
     } catch {
       this.logger.warn(`Client ${client.id} sent an invalid token, disconnecting`);
@@ -72,8 +88,8 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
    */
   @SubscribeMessage('subscribe:device')
   async handleSubscribeDevice(client: Socket & { data: SocketData }, entityId: string): Promise<{ ok: boolean }> {
-    const ownerId = client.data.role === RoleType.GUEST ? null : (client.data.userId as string);
-    const device = await this.deviceService.resolveOwnedDeviceByEntityId(ownerId, entityId);
+    const scope = resolveScopeFromSocketData(client.data);
+    const device = await this.deviceService.resolveOwnedDeviceByEntityId(scope, entityId);
 
     if (!device) {
       return { ok: false };

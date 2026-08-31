@@ -29,4 +29,7 @@ export class CreateUserDto {
 
   @EnumFieldOptional(() => RoleType)
   role?: RoleType;
+
+  @StringFieldOptional({ nullable: true })
+  factoryId?: string | null;
 }

@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
+import { resolveAccessScope } from '../../common/access-scope.util.ts';
 import type { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { AuthUser } from '../../decorators/auth-user.decorator.ts';
@@ -15,30 +16,25 @@ import type { SaveDashboardDto } from './dtos/save-dashboard.dto.ts';
 export class DashboardController {
   constructor(private dashboardService: DashboardService) {}
 
-  /** GUEST sees every dashboard system-wide, not just their own — `null` tells the service to skip the ownership filter. */
-  private resolveOwnerId(user: UserEntity): string | null {
-    return user.role === RoleType.GUEST ? null : (user.id as string);
-  }
-
   @Get()
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDashboards(@AuthUser() user: UserEntity): Promise<DashboardDto[]> {
-    return this.dashboardService.getUserDashboards(this.resolveOwnerId(user));
+    return this.dashboardService.getUserDashboards(resolveAccessScope(user));
   }
 
   @Get(':id')
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDashboard(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<DashboardDto>> {
-    return this.dashboardService.getDashboard(this.resolveOwnerId(user), id);
+    return this.dashboardService.getDashboard(resolveAccessScope(user), id);
   }
 
   @Post()
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.CREATED)
   createDashboard(@AuthUser() user: UserEntity, @Body() dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
-    return this.dashboardService.createDashboard(user.id as string, dto);
+    return this.dashboardService.createDashboard(user.id as string, user.factoryId, dto);
   }
 
   @Put(':id')

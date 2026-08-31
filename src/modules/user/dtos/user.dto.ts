@@ -37,6 +37,9 @@ export class UserDto extends AbstractDto {
   @BooleanFieldOptional()
   isEmailVerified?: boolean;
 
+  @StringFieldOptional({ nullable: true })
+  factoryId?: string | null;
+
   constructor(user: UserEntity) {
     super(user);
     this.firstName = user.firstName;
@@ -48,5 +51,6 @@ export class UserDto extends AbstractDto {
     this.phone = user.phone;
     this.isActive = user.settings?.isActive ?? true;
     this.isEmailVerified = user.settings?.isEmailVerified ?? false;
+    this.factoryId = user.factoryId;
   }
 }

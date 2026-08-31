@@ -12,10 +12,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { RoleType } from '@/constants/role-type';
+import { useFactoriesQuery } from '@/features/factories/api/queries';
 import { useCreateUserMutation, useUpdateUserMutation } from '../api/queries';
 import { userRoles } from '../data/data';
 import type { User } from '../data/schema';
 import { userRoleSchema } from '../data/schema';
+
+// No Radix SelectItem may have an empty string value, so "no factory" is
+// represented by this sentinel and mapped to `null` on submit.
+const NO_FACTORY_VALUE = 'none';
 
 const baseSchema = {
   firstName: z.string().optional(),
@@ -23,6 +28,7 @@ const baseSchema = {
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   role: userRoleSchema.optional(),
+  factoryId: z.string().optional(),
 };
 
 const userFormSchema = z.object({
@@ -45,6 +51,11 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
   const createUser = useCreateUserMutation();
   const updateUser = useUpdateUserMutation();
   const isSubmitting = createUser.isPending || updateUser.isPending;
+  const { data: factoriesPage, isPending: isFactoriesPending } = useFactoriesQuery({ take: 50, order: 'ASC' });
+  const factoryItems = [
+    { label: 'No factory', value: NO_FACTORY_VALUE },
+    ...(factoriesPage?.data.map((factory) => ({ label: factory.name, value: factory.id })) ?? []),
+  ];
 
   const form = useForm<UserForm>({
     resolver: zodResolver(userFormSchema),
@@ -58,6 +69,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           phone: currentRow.phone ?? '',
           role: currentRow.role ?? RoleType.USER,
           isActive: currentRow.isActive ?? true,
+          factoryId: currentRow.factoryId ?? NO_FACTORY_VALUE,
         }
       : {
           username: '',
@@ -67,6 +79,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           email: '',
           phone: '',
           role: RoleType.USER,
+          factoryId: NO_FACTORY_VALUE,
         },
   });
 
@@ -83,6 +96,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
         ...values,
         email: values.email || undefined,
         password: values.password || undefined,
+        factoryId: values.factoryId === NO_FACTORY_VALUE ? null : values.factoryId,
       };
 
       if (isEdit && currentRow) {
@@ -214,6 +228,23 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <SelectDropdown defaultValue={field.value} onValueChange={field.onChange} placeholder="Select a role" items={userRoles} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="factoryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Factory</FormLabel>
+                  <SelectDropdown
+                    defaultValue={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Select a factory"
+                    items={factoryItems}
+                    isPending={isFactoriesPending}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

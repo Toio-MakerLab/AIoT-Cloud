@@ -19,13 +19,16 @@ export class AuthService {
     private userService: UserService,
   ) {}
 
-  async createAccessToken(data: { role: RoleType; userId: string }): Promise<TokenPayloadDto> {
+  /** `factoryId` is carried in the token (not just looked up from the DB per-request, as REST does
+   * via `JwtStrategy`) because the websocket gateway decodes the JWT directly, with no DB lookup. */
+  async createAccessToken(data: { role: RoleType; userId: string; factoryId: string | null }): Promise<TokenPayloadDto> {
     return new TokenPayloadDto({
       expiresIn: this.configService.authConfig.jwtExpirationTime,
       accessToken: await this.jwtService.signAsync({
         userId: data.userId,
         type: TokenType.ACCESS_TOKEN,
         role: data.role,
+        factoryId: data.factoryId,
       }),
     });
   }

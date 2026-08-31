@@ -1,5 +1,6 @@
 import {
   IconBrowserCheck,
+  IconBuildingFactory2,
   IconCpu,
   IconHelp,
   IconKey,
@@ -13,7 +14,6 @@ import {
   IconUserCog,
   IconUsers,
 } from '@tabler/icons-react';
-import { Command, GalleryVerticalEnd } from 'lucide-react';
 import type { SidebarData } from '../types';
 
 export const sidebarData: SidebarData = {
@@ -22,25 +22,6 @@ export const sidebarData: SidebarData = {
     email: 'vkhangstack@gmail.com',
     avatar: '/avatars/shadcn.jpg',
   },
-  teams: [
-    {
-      name: 'KCN Song Than',
-      logo: Command,
-      plan: 'AIoT Platform',
-      disabled: false,
-    },
-    {
-      name: 'KCN Song Than 2',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-      disabled: true,
-    },
-    // {
-    //   name: 'Acme Corp.',
-    //   logo: AudioWaveform,
-    //   plan: 'Startup',
-    // },
-  ],
   navGroups: [
     // {
     //   title: 'General',
@@ -221,6 +202,11 @@ export const sidebarData: SidebarData = {
           title: 'Users',
           url: '/users',
           icon: IconUsers,
+        },
+        {
+          title: 'Factories',
+          url: '/factories',
+          icon: IconBuildingFactory2,
         },
       ],
     },

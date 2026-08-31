@@ -58,7 +58,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
           type: currentRow.type,
           manufacturer: currentRow.manufacturer ?? '',
           description: currentRow.description ?? '',
-          icon: currentRow.icon ?? '',
+          icon: currentRow.icon ?? undefined,
           isActive: currentRow.isActive,
           actionSchema: currentRow.actionSchema ?? [],
         }
@@ -121,7 +121,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               control={form.control}
               name="name"
               render={({ field }) => (
-                <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
                   <FormLabel className="col-span-2 text-right">Name</FormLabel>
                   <FormControl className="col-span-4">
                     <Input placeholder="Soil Moisture Sensor v2" {...field} />
@@ -134,7 +134,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               control={form.control}
               name="type"
               render={({ field }) => (
-                <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
                   <FormLabel className="col-span-2 text-right">Type</FormLabel>
                   <SelectDropdown
                     defaultValue={field.value}
@@ -154,7 +154,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               control={form.control}
               name="manufacturer"
               render={({ field }) => (
-                <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
                   <FormLabel className="col-span-2 text-right">Manufacturer</FormLabel>
                   <FormControl className="col-span-4">
                     <Input placeholder="Acme Sensors Inc." {...field} />
@@ -173,7 +173,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                 const FallbackIcon = getDeviceTemplateTypeMeta(form.watch('type'))?.icon ?? IconDeviceUnknown;
                 const isImageUrl = !!field.value && /^(https?:\/\/|\/)/.test(field.value);
                 return (
-                  <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                  <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
                     <FormLabel className="col-span-2 text-right">Icon</FormLabel>
                     <div className="col-span-4 flex items-center gap-2">
                       <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded">
@@ -197,7 +197,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
                   <FormLabel className="col-span-2 text-right">Description</FormLabel>
                   <FormControl className="col-span-4">
                     <Textarea placeholder="What this template represents..." className="resize-none" {...field} />
@@ -210,7 +210,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               control={form.control}
               name="isActive"
               render={({ field }) => (
-                <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
                   <FormLabel className="col-span-2 text-right">Active</FormLabel>
                   <FormControl className="col-span-4">
                     <Switch checked={field.value} onCheckedChange={field.onChange} />

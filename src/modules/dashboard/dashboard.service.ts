@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
+import type { AccessScope } from '../../common/access-scope.util.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import { DashboardEntity } from './dashboard.entity.ts';
@@ -16,16 +17,16 @@ export class DashboardService {
     private dashboardRepository: Repository<DashboardEntity>,
   ) {}
 
-  /** `userId: null` means unrestricted (GUEST) — every dashboard system-wide, not just the caller's own. */
-  async getUserDashboards(userId: string | null): Promise<DashboardDto[]> {
-    const entities = await this.dashboardRepository.find({ where: userId ? { userId } : {}, order: { createdAt: 'ASC' } });
+  /** `scope: null` means unrestricted (GUEST) — every dashboard system-wide, not just the caller's own. */
+  async getUserDashboards(scope: AccessScope): Promise<DashboardDto[]> {
+    const entities = await this.dashboardRepository.find({ where: scope ?? {}, order: { createdAt: 'ASC' } });
 
     return entities.toDtos();
   }
 
-  /** `userId: null` means unrestricted (GUEST) — can look up any dashboard, not just the caller's own. */
-  async getDashboard(userId: string | null, id: string): Promise<ResponseCore<DashboardDto>> {
-    const entity = await this.dashboardRepository.findOneBy(userId ? { id, userId } : { id });
+  /** `scope: null` means unrestricted (GUEST) — can look up any dashboard, not just the caller's own. */
+  async getDashboard(scope: AccessScope, id: string): Promise<ResponseCore<DashboardDto>> {
+    const entity = await this.dashboardRepository.findOneBy(scope ? { id, ...scope } : { id });
 
     if (!entity) {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.dashboardNotFound');
@@ -34,10 +35,13 @@ export class DashboardService {
     return ResponseCore.ok(entity.toDto());
   }
 
+  /** `factoryId` is copied from the creating user's own `UserEntity.factoryId`, so the dashboard
+   * follows its owner's factory and becomes readable by the whole factory, not just its owner. */
   @Transactional()
-  async createDashboard(userId: string, dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
+  async createDashboard(userId: string, factoryId: string | null, dto: SaveDashboardDto): Promise<ResponseCore<DashboardDto>> {
     const entity = this.dashboardRepository.create({
       userId,
+      factoryId,
       name: dto.name,
       isDefault: dto.isDefault ?? false,
       widgets: dto.widgets ?? [],

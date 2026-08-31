@@ -1,5 +1,5 @@
+import { FactorySwitcher } from '@/components/layout/factory-switcher';
 import { NavGroup } from '@/components/layout/nav-group';
-import { TeamSwitcher } from '@/components/layout/team-switcher';
 import type { NavGroup as NavGroupType, NavItem } from '@/components/layout/types';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 import { RoleType } from '@/constants/role-type';
@@ -11,9 +11,9 @@ import { sidebarData } from './data/sidebar-data';
 // static sidebar entry for everyone else instead of letting them click
 // into a 403.
 const ROOT_ONLY_URLS = new Set(['/settings/roles']);
-// Device Templates and Users management are admin/root-only (see each
-// route's own guard).
-const ADMIN_ONLY_URLS = new Set(['/device-templates', '/users']);
+// Device Templates, Users, and Factories management are admin/root-only (see
+// each route's own guard).
+const ADMIN_ONLY_URLS = new Set(['/device-templates', '/users', '/factories']);
 // Guests get read-only, system-wide (not just their own) access to the Dashboard and Devices
 // pages, plus their own account/notification settings (see the backend's
 // DashboardController/DeviceController/NotificationController @Auth guards) — every other page
@@ -58,7 +58,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" variant="floating" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={sidebarData.teams} />
+        <FactorySwitcher />
       </SidebarHeader>
       <SidebarContent>
         {navGroups.map((props) => (
