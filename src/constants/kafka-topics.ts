@@ -33,11 +33,14 @@ export const KAFKA_STATUS_TOPIC = 'devices.cloud.status';
 export const KAFKA_DEVICE_EVENTS_TOPIC = 'devices.cloud.events';
 
 /**
- * Shared Kafka topic for gateway/device -> backend alert uplink: an explicit alert the
- * device/gateway itself already decided to raise (e.g. a hardware fault, tamper trigger, or a
- * threshold check performed locally in firmware) — distinct from the threshold breaches the
- * backend derives itself from `devices.cloud.telemetry` (see `DeviceWarningListener`). Each
- * message carries `{ deviceId, message, channels? }`, keyed/partitioned by deviceId like the
- * other topics.
+ * Shared Kafka topic for gateway/device -> backend alert uplink: the device/gateway evaluated one
+ * of its own rules locally and it fired — distinct from the threshold breaches the backend
+ * derives itself from `devices.cloud.telemetry` (see `DeviceWarningListener.handleTelemetry`).
+ * Each message carries `{ deviceId, metric, reading, rule, channels? }`, keyed/partitioned by
+ * deviceId like the other topics. `rule` is a `"<metric>.<field><op><threshold>[:<key>=<value>]"`
+ * expression (e.g. `"sensor.apms>10:relay2=ON"`) — the condition that fired, and optionally the
+ * resulting action taken; `reading[field]` supplies the value that tripped it. A simple
+ * `{ deviceId, message, channels? }` shape (pre-rendered message, no rule) is also accepted, for
+ * publishers that don't want to encode a rule.
  */
 export const KAFKA_ALERT_TOPIC = 'devices.cloud.alerts';

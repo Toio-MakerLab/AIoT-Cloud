@@ -27,7 +27,12 @@ interface KafkaDeviceEventPayload {
 
 interface KafkaAlertPayload {
   deviceId?: string;
+  // Pre-rendered shape:
   message?: string;
+  // Rule-fired shape, e.g. { metric: "sensor", reading: { apms: 11.6 }, rule: "sensor.apms>10:relay2=ON" }:
+  metric?: string;
+  reading?: Record<string, unknown>;
+  rule?: string;
   channels?: string[];
   [key: string]: unknown;
 }

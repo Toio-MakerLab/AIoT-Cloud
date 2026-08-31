@@ -61,7 +61,7 @@ in order.
 | `devices.status` | gateway → cloud | `KAFKA_STATUS_TOPIC` |
 | `devices.commands` (default) | cloud → gateway | `KAFKA_COMMAND_TOPIC` |
 | `devices.events` | gateway → cloud | `KAFKA_DEVICE_EVENTS_TOPIC` |
-| `devices.cloud.alert` | gateway/device → cloud | `KAFKA_ALERT_TOPIC` |
+| `devices.cloud.alerts` | gateway/device → cloud | `KAFKA_ALERT_TOPIC` |
 
 Defined in `src/constants/kafka-topics.ts`.
 
@@ -165,21 +165,59 @@ listening on the shared bus).
   implies the gateway is actively bridging it.
 - Consumed by `KafkaController.handleDeviceEvent` → `DeviceService.handleDeviceChannelEvent`.
 
-### `devices.cloud.alert` (gateway/device → cloud)
+### `devices.cloud.alerts` (gateway/device → cloud)
+
+Rule-fired shape — the device/gateway evaluated one of its own rules locally and it fired:
 
 ```json
 {
-  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
-  "message": "Vibration exceeded safe limit",
-  "channels": ["ZALO", "WEB_PUSH"]
+  "deviceId": "G25admrd7c63",
+  "metric": "sensor",
+  "reading": {
+    "apms": 11.6,
+    "co2": 564.8,
+    "humidity": 61.2,
+    "pm25": 18.2,
+    "temperature": 28.5
+  },
+  "rule": "sensor.apms>10:relay2=ON"
 }
 ```
 
-- An explicit alert the device/gateway itself already decided to raise (hardware fault, tamper,
-  a threshold check done locally in firmware, etc.) — distinct from the threshold breaches the
-  backend derives itself from `devices.cloud.telemetry` (see `DeviceWarningListener.handleTelemetry`).
-- `message` (string, required) — forwarded as-is to the device owner's notification channels,
-  prefixed with `[Alert] {device name}: `.
+- Distinct from the threshold breaches the backend derives itself from `devices.cloud.telemetry`
+  (see `DeviceWarningListener.handleTelemetry`) — here the device/gateway already decided the rule
+  fired; the backend just renders and forwards it.
+- `metric` (string, optional) — a label for the reading group (e.g. `"sensor"`); falls back to the
+  metric segment of `rule` when omitted.
+- `reading` (object, optional) — the full sensor snapshot at the time the rule fired; the field the
+  rule references (`reading[field]`, e.g. `reading.apms`) is read out and included in the rendered
+  message. Extra fields are accepted but otherwise unused.
+- `rule` (string, required for this shape) — a
+  `"<metric>.<field><op><threshold>[:<key>=<value>]"` expression, e.g. `"sensor.apms>10:relay2=ON"`:
+  the condition that fired (`sensor.apms > 10`) and, after the optional `:`, the resulting action
+  taken (`relay2=ON`, parsed the same way as `devices.cloud.events`'s `key=value` message). The
+  action segment is informational only — the backend does not itself publish a command from it.
+  A `rule` that doesn't parse is logged and ignored.
+- Renders to e.g. `[Alert] {device name}: sensor.apms = 11.6 (rule: apms > 10) → relay2=ON`.
+
+Pre-rendered shape — for publishers that don't want to encode a rule:
+
+```json
+{
+  "deviceId": "G25admrd7c63",
+  "message": "Vibration exceeded safe limit"
+}
+```
+
+- `message` (string) — forwarded as-is, prefixed with `[Alert] {device name}: `. Takes precedence
+  over `rule`/`reading` when both are present.
+
+Either shape accepts an optional `channels` field:
+
+```json
+{ "channels": ["ZALO", "WEB_PUSH"] }
+```
+
 - `channels` (array of `NotificationChannelType` — `"ZALO"` \| `"WEB_PUSH"` — optional) — restricts
   delivery to these channels; unrecognized values are dropped, and an empty/omitted list falls
   back to every enabled, linked channel (same fallback `NotificationService.sendWarning` uses

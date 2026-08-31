@@ -726,17 +726,24 @@ export class DeviceService {
     return key && value ? { key, value } : null;
   }
 
-  /** Parses `devices.cloud.alert`'s `{ message, channels? }` payload. */
+  /**
+   * Parses `devices.cloud.alerts`'s payload into a renderable message. Two shapes are accepted:
+   * a pre-rendered `{ message }`, or the rule-fired shape `{ metric, reading, rule }` — e.g.
+   * `{ metric: "sensor", reading: { apms: 11.6, ... }, rule: "sensor.apms>10:relay2=ON" }` — which
+   * is rendered via `parseAlertRule`/`reading[field]`. `channels` is accepted either way.
+   */
   private parseAlertPayload(payload: unknown): { message: string; channels?: NotificationChannelType[] } | null {
     if (!payload || typeof payload !== 'object') {
       return null;
     }
 
-    const { message, channels } = payload as { message?: unknown; channels?: unknown };
-
-    if (typeof message !== 'string' || !message.trim()) {
-      return null;
-    }
+    const { message, metric, reading, rule, channels } = payload as {
+      message?: unknown;
+      metric?: unknown;
+      reading?: unknown;
+      rule?: unknown;
+      channels?: unknown;
+    };
 
     const validChannels = Array.isArray(channels)
       ? channels.filter(
@@ -744,7 +751,61 @@ export class DeviceService {
             typeof channel === 'string' && Object.values(NotificationChannelType).includes(channel as NotificationChannelType),
         )
       : undefined;
+    const resolvedChannels = validChannels && validChannels.length > 0 ? validChannels : undefined;
 
-    return { message: message.trim(), channels: validChannels && validChannels.length > 0 ? validChannels : undefined };
+    if (typeof message === 'string' && message.trim()) {
+      return { message: message.trim(), channels: resolvedChannels };
+    }
+
+    if (typeof rule !== 'string' || !rule.trim()) {
+      return null;
+    }
+
+    const parsedRule = this.parseAlertRule(rule.trim());
+
+    if (!parsedRule) {
+      return null;
+    }
+
+    const value = reading && typeof reading === 'object' ? (reading as Record<string, unknown>)[parsedRule.field] : undefined;
+    const metricLabel = typeof metric === 'string' && metric ? metric : parsedRule.metric;
+    const actionText = parsedRule.action ? ` → ${parsedRule.action.key}=${parsedRule.action.value}` : '';
+
+    return {
+      message: `${metricLabel}.${parsedRule.field} = ${value ?? '?'} (rule: ${parsedRule.field} ${parsedRule.operator} ${parsedRule.threshold})${actionText}`,
+      channels: resolvedChannels,
+    };
+  }
+
+  /**
+   * Parses a `"<metric>.<field><op><threshold>[:<key>=<value>]"` rule expression, e.g.
+   * `"sensor.apms>10:relay2=ON"` — the condition that fired (`sensor.apms > 10`) and, after the
+   * optional `:`, the resulting action taken (`relay2=ON`), reusing `parseChannelStateMessage`'s
+   * `key=value` parsing for that part.
+   */
+  private parseAlertRule(
+    rule: string,
+  ): { metric: string; field: string; operator: string; threshold: number; action?: { key: string; value: string } } | null {
+    const separatorIndex = rule.indexOf(':');
+    const condition = separatorIndex === -1 ? rule : rule.slice(0, separatorIndex);
+    const actionText = separatorIndex === -1 ? undefined : rule.slice(separatorIndex + 1);
+
+    const match = /^([^.]+)\.([^<>=!]+?)\s*(>=|<=|==|!=|>|<)\s*(-?\d+(?:\.\d+)?)$/.exec(condition.trim());
+
+    if (!match) {
+      return null;
+    }
+
+    // Non-null: none of this regex's capture groups are optional, so a match guarantees all four.
+    const metric = match[1] as string;
+    const field = match[2] as string;
+    const operator = match[3] as string;
+    const threshold = Number(match[4]);
+
+    if (Number.isNaN(threshold)) {
+      return null;
+    }
+
+    return { metric, field, operator, threshold, action: actionText ? (this.parseChannelStateMessage(actionText) ?? undefined) : undefined };
   }
 }
