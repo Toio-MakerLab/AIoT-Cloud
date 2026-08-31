@@ -35,6 +35,7 @@ import { NotificationConfigEntity } from '../../modules/notification/notificatio
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
+import { CreateFactoriesTable1789000000000 } from '../../database/migrations/1789000000000-CreateFactoriesTable.ts';
 
 @Injectable()
 export class ApiConfigService {
@@ -139,6 +140,7 @@ export class ApiConfigService {
         RemoveEnumUser1788066551348,
         AddDeviceOfflineAlert1788800000000,
         AddDeviceAlertRulesAndFailsafe1788900000000,
+        CreateFactoriesTable1789000000000
       ],
       dropSchema: this.isTest,
       type: 'postgres',
