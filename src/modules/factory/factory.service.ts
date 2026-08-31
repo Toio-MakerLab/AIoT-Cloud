@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
@@ -16,6 +16,8 @@ import { FactoryEntity } from './factory.entity.ts';
 
 @Injectable()
 export class FactoryService {
+  private readonly logger = new Logger(FactoryService.name);
+
   constructor(
     @InjectRepository(FactoryEntity)
     private factoryRepository: Repository<FactoryEntity>,
@@ -26,15 +28,20 @@ export class FactoryService {
   ) {}
 
   async getFactories(pageOptionsDto: FactoriesPageOptionsDto): Promise<PageDto<FactoryDto>> {
-    const queryBuilder = this.factoryRepository.createQueryBuilder('factory');
-    queryBuilder.orderBy('factory.createdAt', pageOptionsDto.order);
+    try {
+      const queryBuilder = this.factoryRepository.createQueryBuilder('factory');
+      queryBuilder.orderBy('factory.createdAt', pageOptionsDto.order);
 
-    const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
-    if (!items || items.length === 0) {
-      return [].toPageDto(pageMetaDto);
+      const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
+      if (!items || items.length === 0) {
+        return [].toPageDto(pageMetaDto);
+      }
+
+      return items.toPageDto(pageMetaDto);
+    } catch (error) {
+      this.logger.error('Error occurred while fetching factories', error);
+      throw error;
     }
-
-    return items.toPageDto(pageMetaDto);
   }
 
   async getFactory(id: string): Promise<ResponseCore<FactoryDto>> {

@@ -24,6 +24,7 @@ import { AddWebPushNotificationChannel1788600000000 } from '../../database/migra
 import { AddDeviceChannelStates1788700000000 } from '../../database/migrations/1788700000000-AddDeviceChannelStates.ts';
 import { AddDeviceOfflineAlert1788800000000 } from '../../database/migrations/1788800000000-AddDeviceOfflineAlert.ts';
 import { AddDeviceAlertRulesAndFailsafe1788900000000 } from '../../database/migrations/1788900000000-AddDeviceAlertRulesAndFailsafe.ts';
+import { CreateFactoriesTable1789000000000 } from '../../database/migrations/1789000000000-CreateFactoriesTable.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -35,7 +36,6 @@ import { NotificationConfigEntity } from '../../modules/notification/notificatio
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
-import { CreateFactoriesTable1789000000000 } from '../../database/migrations/1789000000000-CreateFactoriesTable.ts';
 
 @Injectable()
 export class ApiConfigService {
@@ -140,7 +140,7 @@ export class ApiConfigService {
         RemoveEnumUser1788066551348,
         AddDeviceOfflineAlert1788800000000,
         AddDeviceAlertRulesAndFailsafe1788900000000,
-        CreateFactoriesTable1789000000000
+        CreateFactoriesTable1789000000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',
