@@ -47,7 +47,7 @@ export class DeviceController {
   }
 
   @Get('unclaimed')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getUnclaimedDevices(): Promise<ResponseCore<UnclaimedDeviceDto[]>> {
     return this.deviceService.listUnclaimedDevices();
