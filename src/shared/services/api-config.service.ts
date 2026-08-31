@@ -32,6 +32,7 @@ import { DeviceSecretEntity } from '../../modules/device/device-secret.entity.ts
 import { DeviceTelemetryEntity } from '../../modules/device/device-telemetry.entity.ts';
 import { UnclaimedDeviceEntity } from '../../modules/device/unclaimed-device.entity.ts';
 import { DeviceTemplateEntity } from '../../modules/device-template/device-template.entity.ts';
+import { FactoryEntity } from '../../modules/factory/factory.entity.ts';
 import { NotificationConfigEntity } from '../../modules/notification/notification-config.entity.ts';
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
@@ -118,6 +119,7 @@ export class ApiConfigService {
         UnclaimedDeviceEntity,
         DashboardEntity,
         NotificationConfigEntity,
+        FactoryEntity,
       ],
       migrations: [
         InitSchema1787210034577,
