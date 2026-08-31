@@ -46,6 +46,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
           // Chỉ giữ nếu Cloudflare Analytics đang được nhúng trực tiếp.
           'script-src': ["'self'", 'https://static.cloudflareinsights.com'],
           'script-src-elem': ["'self'", 'https://static.cloudflareinsights.com'],
+          'img-src': ["'self'", "data:", "blob:", "*"]
         },
       },
     }),
