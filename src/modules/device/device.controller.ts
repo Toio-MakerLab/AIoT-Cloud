@@ -26,6 +26,11 @@ import type { UnclaimedDeviceDto } from './dtos/unclaimed-device.dto.ts';
 export class DeviceController {
   constructor(private deviceService: DeviceService) {}
 
+  /** GUEST sees every device system-wide, not just their own — `null` tells the service to skip the ownership filter. */
+  private resolveOwnerId(user: UserEntity): string | null {
+    return user.role === RoleType.GUEST ? null : (user.id as string);
+  }
+
   @Get()
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
@@ -35,7 +40,7 @@ export class DeviceController {
     @Query(new ValidationPipe({ transform: true }))
     pageOptionsDto: DevicesPageOptionsDto,
   ): Promise<PageDto<DeviceDto>> {
-    return this.deviceService.getUserDevices(user.id as string, pageOptionsDto);
+    return this.deviceService.getUserDevices(this.resolveOwnerId(user), pageOptionsDto);
   }
 
   @Post('register')
@@ -54,7 +59,8 @@ export class DeviceController {
 
   /**
    * Server-Sent Events feed for the dashboard: streams `telemetry` and `status` events (plus a
-   * periodic `ping` heartbeat) for the devices listed in `ids`, filtered to ones the user owns.
+   * periodic `ping` heartbeat) for the devices listed in `ids`, filtered to ones the user owns
+   * (or, for GUEST, unfiltered — every device system-wide).
    * `ids` is a comma-separated list of device ids (same ids `GET /devices/:id` uses).
    */
   @Sse('stream')
@@ -66,14 +72,14 @@ export class DeviceController {
         .map((id) => id.trim())
         .filter(Boolean) ?? [];
 
-    return this.deviceService.streamDeviceEvents(user.id as string, deviceIds);
+    return this.deviceService.streamDeviceEvents(this.resolveOwnerId(user), deviceIds);
   }
 
   @Get(':id')
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDevice(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<DeviceDto>> {
-    return this.deviceService.getDevice(user.id as string, id);
+    return this.deviceService.getDevice(this.resolveOwnerId(user), id);
   }
 
   @Delete(':id')
@@ -91,7 +97,7 @@ export class DeviceController {
     @Param('id') id: string,
     @Query(new ValidationPipe({ transform: true })) query: DeviceTelemetryQueryDto,
   ): Promise<ResponseCore<DeviceTelemetryDto[]>> {
-    return this.deviceService.getDeviceTelemetryHistory(user.id as string, id, query.limit);
+    return this.deviceService.getDeviceTelemetryHistory(this.resolveOwnerId(user), id, query.limit);
   }
 
   @Patch(':id/config')

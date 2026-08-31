@@ -15,18 +15,23 @@ import type { SaveDashboardDto } from './dtos/save-dashboard.dto.ts';
 export class DashboardController {
   constructor(private dashboardService: DashboardService) {}
 
+  /** GUEST sees every dashboard system-wide, not just their own — `null` tells the service to skip the ownership filter. */
+  private resolveOwnerId(user: UserEntity): string | null {
+    return user.role === RoleType.GUEST ? null : (user.id as string);
+  }
+
   @Get()
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDashboards(@AuthUser() user: UserEntity): Promise<DashboardDto[]> {
-    return this.dashboardService.getUserDashboards(user.id as string);
+    return this.dashboardService.getUserDashboards(this.resolveOwnerId(user));
   }
 
   @Get(':id')
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDashboard(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<DashboardDto>> {
-    return this.dashboardService.getDashboard(user.id as string, id);
+    return this.dashboardService.getDashboard(this.resolveOwnerId(user), id);
   }
 
   @Post()

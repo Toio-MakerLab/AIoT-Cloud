@@ -16,14 +16,16 @@ export class DashboardService {
     private dashboardRepository: Repository<DashboardEntity>,
   ) {}
 
-  async getUserDashboards(userId: string): Promise<DashboardDto[]> {
-    const entities = await this.dashboardRepository.find({ where: { userId }, order: { createdAt: 'ASC' } });
+  /** `userId: null` means unrestricted (GUEST) — every dashboard system-wide, not just the caller's own. */
+  async getUserDashboards(userId: string | null): Promise<DashboardDto[]> {
+    const entities = await this.dashboardRepository.find({ where: userId ? { userId } : {}, order: { createdAt: 'ASC' } });
 
     return entities.toDtos();
   }
 
-  async getDashboard(userId: string, id: string): Promise<ResponseCore<DashboardDto>> {
-    const entity = await this.dashboardRepository.findOneBy({ id, userId });
+  /** `userId: null` means unrestricted (GUEST) — can look up any dashboard, not just the caller's own. */
+  async getDashboard(userId: string | null, id: string): Promise<ResponseCore<DashboardDto>> {
+    const entity = await this.dashboardRepository.findOneBy(userId ? { id, userId } : { id });
 
     if (!entity) {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.dashboardNotFound');

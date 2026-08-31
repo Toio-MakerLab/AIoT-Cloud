@@ -5,12 +5,14 @@ import type { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websocket
 import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
 
+import { RoleType } from '../../constants/role-type.ts';
 import { TokenType } from '../../constants/token-type.ts';
 import type { DeviceChannelStateEvent, DeviceStatusEvent, DeviceTelemetryEvent } from '../device/device.service.ts';
 import { DeviceService } from '../device/device.service.ts';
 
 interface SocketData {
   userId: string;
+  role: RoleType;
 }
 
 function deviceRoom(deviceId: string): string {
@@ -45,13 +47,14 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync<{ userId: string; type: TokenType }>(token);
+      const payload = await this.jwtService.verifyAsync<{ userId: string; role: RoleType; type: TokenType }>(token);
 
       if (payload.type !== TokenType.ACCESS_TOKEN) {
         throw new Error('Not an access token');
       }
 
       client.data.userId = payload.userId;
+      client.data.role = payload.role;
       this.logger.log(`Client connected: ${client.id} (user ${payload.userId})`);
     } catch {
       this.logger.warn(`Client ${client.id} sent an invalid token, disconnecting`);
@@ -63,10 +66,14 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  /** `entityId` is the entity id the dashboard widgets key on (same id the REST endpoints use). */
+  /**
+   * `entityId` is the entity id the dashboard widgets key on (same id the REST endpoints use).
+   * GUEST clients subscribe unrestricted — they can see every device system-wide.
+   */
   @SubscribeMessage('subscribe:device')
   async handleSubscribeDevice(client: Socket & { data: SocketData }, entityId: string): Promise<{ ok: boolean }> {
-    const device = await this.deviceService.resolveOwnedDeviceByEntityId(client.data.userId as string, entityId);
+    const ownerId = client.data.role === RoleType.GUEST ? null : (client.data.userId as string);
+    const device = await this.deviceService.resolveOwnedDeviceByEntityId(ownerId, entityId);
 
     if (!device) {
       return { ok: false };

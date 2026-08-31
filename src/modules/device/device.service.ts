@@ -334,21 +334,26 @@ export class DeviceService {
     return ResponseCore.ok({ key: dto.key, value: dto.value, topic: kafkaTopic, publishedAt });
   }
 
+  /** `userId: null` means unrestricted (GUEST) — every device system-wide, not just the caller's own. */
   @Transactional()
-  async getUserDevices(userId: string, pageOptionsDto: DevicesPageOptionsDto): Promise<PageDto<DeviceDto>> {
+  async getUserDevices(userId: string | null, pageOptionsDto: DevicesPageOptionsDto): Promise<PageDto<DeviceDto>> {
     const queryBuilder = this.deviceRepository
       .createQueryBuilder('device')
       .leftJoinAndSelect('device.template', 'template')
-      .where('device.userId = :userId', { userId })
       .orderBy('device.createdAt', pageOptionsDto.order);
+
+    if (userId) {
+      queryBuilder.where('device.userId = :userId', { userId });
+    }
 
     const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
 
     return items.toPageDto(pageMetaDto);
   }
 
-  async getDevice(userId: string, id: string): Promise<ResponseCore<DeviceDto>> {
-    const entity = await this.deviceRepository.findOne({ where: { id, userId }, relations: ['template'] });
+  /** `userId: null` means unrestricted (GUEST) — can look up any device, not just the caller's own. */
+  async getDevice(userId: string | null, id: string): Promise<ResponseCore<DeviceDto>> {
+    const entity = await this.deviceRepository.findOne({ where: userId ? { id, userId } : { id }, relations: ['template'] });
 
     if (!entity) {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
@@ -370,8 +375,9 @@ export class DeviceService {
     return ResponseCore.ok(null);
   }
 
-  async getDeviceTelemetryHistory(userId: string, id: string, limit: number): Promise<ResponseCore<DeviceTelemetryDto[]>> {
-    const device = await this.deviceRepository.findOneBy({ id, userId });
+  /** `userId: null` means unrestricted (GUEST) — can read telemetry history for any device. */
+  async getDeviceTelemetryHistory(userId: string | null, id: string, limit: number): Promise<ResponseCore<DeviceTelemetryDto[]>> {
+    const device = await this.deviceRepository.findOneBy(userId ? { id, userId } : { id });
 
     if (!device) {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
@@ -400,20 +406,22 @@ export class DeviceService {
 
   /**
    * Resolves an entity id (what the frontend/dashboard widgets key on) to the device's physical
-   * id (what MQTT topics + websocket rooms key on), scoped to devices the user owns. Used by the
+   * id (what MQTT topics + websocket rooms key on), scoped to devices the user owns
+   * (`userId: null` means unrestricted — GUEST can subscribe to any device). Used by the
    * websocket gateway's `subscribe:device` handler, which receives entity ids from the client.
    */
-  async resolveOwnedDeviceByEntityId(userId: string, entityId: string): Promise<Pick<DeviceEntity, 'id' | 'deviceId'> | null> {
-    return this.deviceRepository.findOne({ where: { id: entityId, userId }, select: ['id', 'deviceId'] });
+  async resolveOwnedDeviceByEntityId(userId: string | null, entityId: string): Promise<Pick<DeviceEntity, 'id' | 'deviceId'> | null> {
+    return this.deviceRepository.findOne({ where: userId ? { id: entityId, userId } : { id: entityId }, select: ['id', 'deviceId'] });
   }
 
   /**
    * Live SSE feed for the dashboard: telemetry + status updates for the given device ids,
-   * scoped to devices the user owns. `deviceIds` are entity ids (the same ids the REST device
-   * endpoints use), which this resolves to the physical device ids that `device.telemetry` /
-   * `device.status` events key on, then maps back to entity ids in the emitted payload.
+   * scoped to devices the user owns (`userId: null` means unrestricted — GUEST sees every
+   * device). `deviceIds` are entity ids (the same ids the REST device endpoints use), which this
+   * resolves to the physical device ids that `device.telemetry` / `device.status` events key on,
+   * then maps back to entity ids in the emitted payload.
    */
-  streamDeviceEvents(userId: string, deviceIds: string[]): Observable<MessageEvent> {
+  streamDeviceEvents(userId: string | null, deviceIds: string[]): Observable<MessageEvent> {
     return defer(() => from(this.resolveEntityIdByPhysicalDeviceId(userId, deviceIds))).pipe(
       switchMap((entityIdByPhysicalDeviceId) => {
         const telemetry$ = fromEvent<DeviceTelemetryEvent>(this.eventEmitter, 'device.telemetry').pipe(
@@ -455,14 +463,17 @@ export class DeviceService {
     );
   }
 
-  /** Devices the user owns, restricted to `entityIds` (when given), keyed by their physical device id. */
-  private async resolveEntityIdByPhysicalDeviceId(userId: string, entityIds: string[]): Promise<Map<string, string>> {
+  /**
+   * Devices the user owns, restricted to `entityIds` (when given), keyed by their physical
+   * device id. `userId: null` means unrestricted (GUEST) — any device matching `entityIds`.
+   */
+  private async resolveEntityIdByPhysicalDeviceId(userId: string | null, entityIds: string[]): Promise<Map<string, string>> {
     if (entityIds.length === 0) {
       return new Map();
     }
 
     const devices = await this.deviceRepository.find({
-      where: { id: In(entityIds), userId },
+      where: userId ? { id: In(entityIds), userId } : { id: In(entityIds) },
       select: ['id', 'deviceId'],
     });
 
