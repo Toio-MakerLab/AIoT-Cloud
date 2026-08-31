@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 
 ARG NODE_VERSION=22-alpine
-ARG VITE_APP_VERSION
 
 # ---- backend deps ----------------------------------------------------------
 FROM node:${NODE_VERSION} AS backend-deps
@@ -21,9 +20,13 @@ RUN pnpm build:prod
 # ---- frontend build ----------------------------------------------------------
 FROM node:${NODE_VERSION} AS frontend-build
 WORKDIR /app/web
+
 RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
-RUN sed -i '' "s/VITE_APP_VERSION_PLACEHOLDER/${VITE_APP_VERSION}/g" web/package.json
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
+
+ARG VITE_APP_VERSION
+RUN sed -i "s|VITE_APP_VERSION_PLACEHOLDER|${VITE_APP_VERSION}|g" package.json
+
 RUN pnpm install --frozen-lockfile
 COPY web/ ./
 # Frontend and backend share an origin in the final image, so the API is reachable

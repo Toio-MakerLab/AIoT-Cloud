@@ -43,7 +43,7 @@ for platform in "${PLATFORMS[@]}"; do
   docker buildx build \
     --builder "${BUILDER_NAME}" \
     --platform "${platform}" \
-    --build-arg "VITE_APP_VERSION=${VERSION}" \
+    --build-arg VITE_APP_VERSION=${VERSION} \
     -t "${IMAGE}:${arch_tag}" \
     --push \
     .
