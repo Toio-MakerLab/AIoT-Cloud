@@ -25,10 +25,16 @@ const COLS = 12;
 
 // Below the mobile breakpoint, dragging/resizing a 12-col grid sized for desktop is unusable
 // (each column ends up a sliver of the screen) — instead force everything into a single,
-// full-width, non-interactive stacked column. Taller rows than desktop's since one row now needs
-// to hold a whole panel's content, not a fraction of one sized in desktop grid units.
+// full-width, non-interactive stacked column. Row height is much smaller than desktop's since
+// each row is now just a slice of one panel's height, not a fraction of the whole grid.
 const MOBILE_COLS = 1;
-const MOBILE_ROW_HEIGHT = 260;
+const MOBILE_ROW_HEIGHT = 90;
+
+// Rows (in MOBILE_ROW_HEIGHT units) each widget type gets when stacked on mobile. CHART panels
+// need real vertical room to be readable; ACTION/VALUE panels are just a switch/button row or a
+// single number, so giving them the same height as a chart would mean a lot of extra scrolling
+// to get through a dashboard that's mostly simple panels.
+const MOBILE_WIDGET_ROWS: Record<IDashboardWidget['widgetType'], number> = { CHART: 3, ACTION: 2, VALUE: 2 };
 
 /**
  * Wraps react-grid-layout v2's `GridLayout` component. v2 dropped the `WidthProvider` HOC in
@@ -41,11 +47,17 @@ export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRe
   const { width, containerRef, mounted } = useContainerWidth();
   const isMobile = useIsMobile();
 
-  // Mobile layout is synthesized (stacked, in widget order) rather than read from the widgets'
-  // stored x/y/w/h, which describe positions on the desktop 12-col grid and don't translate to a
-  // single mobile column.
+  // Mobile layout is synthesized (stacked, in widget order, each sized per its widget type)
+  // rather than read from the widgets' stored x/y/w/h, which describe positions on the desktop
+  // 12-col grid and don't translate to a single mobile column.
+  let mobileCursorY = 0;
   const layout: Layout = isMobile
-    ? widgets.map((widget, index) => ({ i: widget.id, x: 0, y: index, w: MOBILE_COLS, h: 1, minW: MOBILE_COLS, minH: 1 }))
+    ? widgets.map((widget) => {
+        const h = MOBILE_WIDGET_ROWS[widget.widgetType];
+        const item = { i: widget.id, x: 0, y: mobileCursorY, w: MOBILE_COLS, h, minW: MOBILE_COLS, minH: h };
+        mobileCursorY += h;
+        return item;
+      })
     : widgets.map((widget) => ({
         i: widget.id,
         x: widget.x,
