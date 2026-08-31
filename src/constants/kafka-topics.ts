@@ -31,3 +31,13 @@ export const KAFKA_STATUS_TOPIC = 'devices.cloud.status';
  * Keyed/partitioned by `device_id` like the other topics.
  */
 export const KAFKA_DEVICE_EVENTS_TOPIC = 'devices.cloud.events';
+
+/**
+ * Shared Kafka topic for gateway/device -> backend alert uplink: an explicit alert the
+ * device/gateway itself already decided to raise (e.g. a hardware fault, tamper trigger, or a
+ * threshold check performed locally in firmware) — distinct from the threshold breaches the
+ * backend derives itself from `devices.cloud.telemetry` (see `DeviceWarningListener`). Each
+ * message carries `{ deviceId, message, channels? }`, keyed/partitioned by deviceId like the
+ * other topics.
+ */
+export const KAFKA_ALERT_TOPIC = 'devices.cloud.alert';

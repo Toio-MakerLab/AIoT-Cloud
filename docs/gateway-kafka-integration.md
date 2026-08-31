@@ -48,7 +48,7 @@ doesn't need its own separate copy of these secrets configured out of band.
 
 ## Topics
 
-Four shared topics, **not** per-device. Devices are distinguished by the
+Five shared topics, **not** per-device. Devices are distinguished by the
 `deviceId` (or `device_id` — see `devices.events` below) field inside the
 payload, and every message must be produced with the device id as the
 **Kafka message key** (`kafkajs`: `{ key: deviceId, value: JSON.stringify(payload) }`)
@@ -61,6 +61,7 @@ in order.
 | `devices.status` | gateway → cloud | `KAFKA_STATUS_TOPIC` |
 | `devices.commands` (default) | cloud → gateway | `KAFKA_COMMAND_TOPIC` |
 | `devices.events` | gateway → cloud | `KAFKA_DEVICE_EVENTS_TOPIC` |
+| `devices.cloud.alert` | gateway/device → cloud | `KAFKA_ALERT_TOPIC` |
 
 Defined in `src/constants/kafka-topics.ts`.
 
@@ -163,6 +164,30 @@ listening on the shared bus).
 - Also marks the device `ONLINE` (same as telemetry) since receiving one
   implies the gateway is actively bridging it.
 - Consumed by `KafkaController.handleDeviceEvent` → `DeviceService.handleDeviceChannelEvent`.
+
+### `devices.cloud.alert` (gateway/device → cloud)
+
+```json
+{
+  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "message": "Vibration exceeded safe limit",
+  "channels": ["ZALO", "WEB_PUSH"]
+}
+```
+
+- An explicit alert the device/gateway itself already decided to raise (hardware fault, tamper,
+  a threshold check done locally in firmware, etc.) — distinct from the threshold breaches the
+  backend derives itself from `devices.cloud.telemetry` (see `DeviceWarningListener.handleTelemetry`).
+- `message` (string, required) — forwarded as-is to the device owner's notification channels,
+  prefixed with `[Alert] {device name}: `.
+- `channels` (array of `NotificationChannelType` — `"ZALO"` \| `"WEB_PUSH"` — optional) — restricts
+  delivery to these channels; unrecognized values are dropped, and an empty/omitted list falls
+  back to every enabled, linked channel (same fallback `NotificationService.sendWarning` uses
+  elsewhere).
+- Consumed by `KafkaConsumerService.handleAlert` → `DeviceService.handleDeviceAlert`, which emits
+  a `device.alert` domain event picked up by `DeviceWarningListener.handleAlert` →
+  `NotificationService.sendWarning`. An unregistered `deviceId` is recorded as an unclaimed device
+  like the other topics, rather than dropped.
 
 ## Fetching device config (REST)
 

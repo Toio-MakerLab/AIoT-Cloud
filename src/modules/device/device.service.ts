@@ -20,6 +20,7 @@ import { DeviceTemplateType } from '../../constants/device-template-type.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import { KAFKA_COMMAND_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
 import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from '../../constants/mqtt-topics.ts';
+import { NotificationChannelType } from '../../constants/notification-channel-type.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
 import { KafkaProducerService } from '../kafka/kafka-producer.service.ts';
@@ -51,6 +52,13 @@ export interface DeviceChannelStateEvent {
   deviceId: string;
   channelStates: Record<string, string>;
   changedAt: Date;
+}
+
+export interface DeviceAlertEvent {
+  deviceId: string;
+  message: string;
+  channels?: NotificationChannelType[];
+  occurredAt: Date;
 }
 
 export interface RegisterDeviceResult {
@@ -601,6 +609,39 @@ export class DeviceService {
     }
   }
 
+  /**
+   * Handles `devices.cloud.alert`: an alert the device/gateway itself already decided to raise
+   * (hardware fault, tamper, a threshold check done in firmware, etc.), as opposed to the
+   * threshold breaches `DeviceWarningListener` derives itself from `device.telemetry`. Doesn't
+   * touch device state — just forwards the message to the owner's notification channels via the
+   * `device.alert` domain event.
+   */
+  async handleDeviceAlert(deviceId: string, payload: unknown): Promise<void> {
+    const device = await this.deviceRepository.findOneBy({ deviceId });
+
+    if (!device) {
+      this.logger.warn(`Ignoring alert for unclaimed device ${deviceId}`);
+      await this.recordUnclaimedDevice(deviceId, 'alert', payload);
+
+      return;
+    }
+
+    const parsed = this.parseAlertPayload(payload);
+
+    if (!parsed) {
+      this.logger.warn(`Ignoring unrecognized alert payload from device ${deviceId}: ${JSON.stringify(payload)}`);
+
+      return;
+    }
+
+    this.eventEmitter.emit('device.alert', {
+      deviceId,
+      message: `[Alert] ${device.name}: ${parsed.message}`,
+      channels: parsed.channels,
+      occurredAt: new Date(),
+    } satisfies DeviceAlertEvent);
+  }
+
   /** Marks devices OFFLINE once they haven't been heard from (telemetry or status) for `DEVICE_OFFLINE_THRESHOLD_MS`. */
   async sweepOfflineDevices(): Promise<void> {
     const cutoff = new Date(Date.now() - DEVICE_OFFLINE_THRESHOLD_MS);
@@ -683,5 +724,27 @@ export class DeviceService {
     const value = message.slice(separatorIndex + 1).trim();
 
     return key && value ? { key, value } : null;
+  }
+
+  /** Parses `devices.cloud.alert`'s `{ message, channels? }` payload. */
+  private parseAlertPayload(payload: unknown): { message: string; channels?: NotificationChannelType[] } | null {
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+
+    const { message, channels } = payload as { message?: unknown; channels?: unknown };
+
+    if (typeof message !== 'string' || !message.trim()) {
+      return null;
+    }
+
+    const validChannels = Array.isArray(channels)
+      ? channels.filter(
+          (channel): channel is NotificationChannelType =>
+            typeof channel === 'string' && Object.values(NotificationChannelType).includes(channel as NotificationChannelType),
+        )
+      : undefined;
+
+    return { message: message.trim(), channels: validChannels && validChannels.length > 0 ? validChannels : undefined };
   }
 }

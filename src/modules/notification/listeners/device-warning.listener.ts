@@ -3,7 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { DeviceStatus } from '../../../constants/device-status.ts';
 import type { NotificationChannelType } from '../../../constants/notification-channel-type.ts';
-import type { DeviceStatusEvent, DeviceTelemetryEvent } from '../../device/device.service.ts';
+import type { DeviceAlertEvent, DeviceStatusEvent, DeviceTelemetryEvent } from '../../device/device.service.ts';
 import { DeviceService } from '../../device/device.service.ts';
 import type { DeviceWarningThreshold } from '../../device/interfaces/device-network-config.interface.ts';
 import type { TelemetryFieldDefinition } from '../../device-template/device-template.entity.ts';
@@ -35,6 +35,20 @@ export class DeviceWarningListener {
     const message = `[Warning] ${device.name} went offline`;
 
     await this.notificationService.sendWarning(device.userId, message, device.offlineAlert.channels ?? undefined);
+  }
+
+  // The device/gateway itself already decided this is alert-worthy (`devices.cloud.alert` —
+  // DeviceService.handleDeviceAlert), so unlike handleTelemetry below, there's no threshold to
+  // check here — just forward the (already-rendered) message to the owner's channels.
+  @OnEvent('device.alert')
+  async handleAlert(event: DeviceAlertEvent): Promise<void> {
+    const device = await this.deviceService.findByDeviceIdWithTemplate(event.deviceId);
+
+    if (!device) {
+      return;
+    }
+
+    await this.notificationService.sendWarning(device.userId, event.message, event.channels);
   }
 
   @OnEvent('device.telemetry')

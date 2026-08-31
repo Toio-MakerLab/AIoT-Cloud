@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Consumer, EachMessagePayload, SASLOptions } from 'kafkajs';
 import { Kafka } from 'kafkajs';
 
-import { KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
+import { KAFKA_ALERT_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceService } from '../device/device.service.ts';
 
@@ -25,8 +25,15 @@ interface KafkaDeviceEventPayload {
   [key: string]: unknown;
 }
 
+interface KafkaAlertPayload {
+  deviceId?: string;
+  message?: string;
+  channels?: string[];
+  [key: string]: unknown;
+}
+
 /**
- * Raw kafkajs consumer for the three inbound gateway->cloud topics, replacing
+ * Raw kafkajs consumer for the four inbound gateway->cloud topics, replacing
  * @nestjs/microservices' ServerKafka + @EventPattern controller. Connects/subscribes once on app
  * startup (onModuleInit — part of Nest's normal bootstrap, never a standalone script) and runs
  * for the process lifetime.
@@ -111,7 +118,7 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.consumer.connect();
       await this.consumer.subscribe({
-        topics: [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC],
+        topics: [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_ALERT_TOPIC],
         fromBeginning: false,
       });
       await this.consumer.run({ eachMessage: (payload) => this.handleMessage(payload) });
@@ -161,6 +168,10 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
           await this.handleDeviceEvent(data);
           break;
         }
+        case KAFKA_ALERT_TOPIC: {
+          await this.handleAlert(data);
+          break;
+        }
         default: {
           this.logger.warn(`Received Kafka message on unhandled topic: ${topic}`);
         }
@@ -207,5 +218,17 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
     }
 
     await this.deviceService.handleDeviceChannelEvent(deviceId, topic ?? KAFKA_DEVICE_EVENTS_TOPIC, message);
+  }
+
+  private async handleAlert(data: KafkaAlertPayload): Promise<void> {
+    const { deviceId, ...alert } = data ?? {};
+
+    if (!deviceId) {
+      this.logger.warn(`Received Kafka alert message without deviceId: ${JSON.stringify(data)}`);
+
+      return;
+    }
+
+    await this.deviceService.handleDeviceAlert(deviceId, alert);
   }
 }
