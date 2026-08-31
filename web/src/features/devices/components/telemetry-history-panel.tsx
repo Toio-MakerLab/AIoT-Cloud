@@ -100,13 +100,17 @@ export function TelemetryHistoryPanel({ deviceId, telemetrySchema }: Props) {
               <Tooltip />
               {/* connectNulls: a point whose payload doesn't carry this field maps to `value: null` above —
                   without this, recharts breaks the area at every such gap instead of drawing straight
-                  through to the next real point, making it look chopped into disconnected segments. */}
+                  through to the next real point, making it look chopped into disconnected segments.
+                  dot: an area/line needs 2+ points to draw anything at all — a device with only one
+                  recorded point (e.g. just registered) would otherwise render a totally blank chart
+                  with no visual sign the request even succeeded, so show a marker dot whenever there
+                  isn't enough history yet to draw a real line. */}
               <Area
                 type="monotone"
                 dataKey="value"
                 stroke={chartColor}
                 fill={`url(#${deviceId}-fill)`}
-                dot={false}
+                dot={chartData.length <= 1 ? { r: 3, fill: chartColor, stroke: chartColor } : false}
                 isAnimationActive={false}
                 connectNulls
               />
