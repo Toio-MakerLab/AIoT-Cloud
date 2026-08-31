@@ -18,7 +18,7 @@ export class DeviceTemplateController {
   constructor(private deviceTemplateService: DeviceTemplateService) {}
 
   @Get()
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   @ApiPageResponse({ description: 'Get device templates list', type: PageDto })
   getDeviceTemplates(
@@ -29,7 +29,7 @@ export class DeviceTemplateController {
   }
 
   @Get(':id')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDeviceTemplate(@Param('id') id: string): Promise<ResponseCore<DeviceTemplateDto>> {
     return this.deviceTemplateService.getDeviceTemplate(id);
