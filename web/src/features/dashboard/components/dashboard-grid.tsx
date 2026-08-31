@@ -1,7 +1,6 @@
 import { GridLayout, type Layout, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { useIsGuest } from '@/hooks/use-is-guest';
-import { useIsMobile } from '@/hooks/use-mobile';
 import type { IDashboardWidget, IDevice } from '../api/types';
 import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
 import { DevicePanel } from './device-panel';
@@ -24,10 +23,20 @@ interface Props {
 const ROW_HEIGHT = 80;
 const COLS = 12;
 
-// Below the mobile breakpoint, dragging/resizing a 12-col grid sized for desktop is unusable
-// (each column ends up a sliver of the screen) — instead force everything into a single,
-// full-width, non-interactive stacked column. Row height is much smaller than desktop's since
-// each row is now just a slice of one panel's height, not a fraction of the whole grid.
+// Widgets only ever persist one set of x/y/w/h, positioned on the desktop 12-col grid — narrower
+// containers derive their own layout from that instead of storing a separate one per size. These
+// thresholds are checked against the grid's own measured `width` (from useContainerWidth), not
+// window.innerWidth: what actually determines how cramped a column gets is the grid container
+// itself, which can be narrower than the viewport (sidebar, split panes, etc.) or vice versa.
+//
+// - Tablet: the 12-col grid is squeezed into a scaled-down TABLET_COLS grid — each widget's column
+//   position/width scales down proportionally, so relative sizing/order is preserved without
+//   needing a hand-authored layout.
+// - Mobile: even a handful of columns leaves cells too narrow to be usable, so instead of scaling
+//   further, everything stacks into a single full-width column, sized per widget type.
+const TABLET_MAX_WIDTH = 900;
+const TABLET_COLS = 6;
+const MOBILE_MAX_WIDTH = 480;
 const MOBILE_COLS = 1;
 const MOBILE_ROW_HEIGHT = 90;
 
@@ -36,6 +45,22 @@ const MOBILE_ROW_HEIGHT = 90;
 // single number, so giving them the same height as a chart would mean a lot of extra scrolling
 // to get through a dashboard that's mostly simple panels.
 const MOBILE_WIDGET_ROWS: Record<IDashboardWidget['widgetType'], number> = { CHART: 3, ACTION: 2, VALUE: 2 };
+
+type GridTier = 'mobile' | 'tablet' | 'desktop';
+
+function getTier(width: number): GridTier {
+  if (width < MOBILE_MAX_WIDTH) return 'mobile';
+  if (width < TABLET_MAX_WIDTH) return 'tablet';
+  return 'desktop';
+}
+
+/** Scales a desktop column position/width down to a narrower grid's column count, keeping it in bounds. */
+function scaleToTablet(widget: IDashboardWidget): Layout[number] {
+  const scale = TABLET_COLS / COLS;
+  const w = Math.max(1, Math.min(TABLET_COLS, Math.round(widget.w * scale)));
+  const x = Math.max(0, Math.min(TABLET_COLS - w, Math.round(widget.x * scale)));
+  return { i: widget.id, x, y: widget.y, w, h: widget.h, minW: 1, minH: 2 };
+}
 
 /**
  * Wraps react-grid-layout v2's `GridLayout` component. v2 dropped the `WidthProvider` HOC in
@@ -46,32 +71,40 @@ const MOBILE_WIDGET_ROWS: Record<IDashboardWidget['widgetType'], number> = { CHA
  */
 export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRemoveWidget }: Props) {
   const { width, containerRef, mounted } = useContainerWidth();
-  const isMobile = useIsMobile();
   const isGuest = useIsGuest();
-  // GUEST accounts can view the grid but must not rearrange/resize panels, same as mobile's
-  // forced-non-interactive layout.
-  const interactive = !isMobile && !isGuest;
+  const tier = getTier(width);
+  // Dragging/resizing a scaled-down or single-column grid is unusable on a cramped container
+  // (targets are tiny, gestures fight with page scroll) — only the full desktop grid stays
+  // interactive. GUEST accounts are read-only regardless of size.
+  const interactive = tier === 'desktop' && !isGuest;
+
+  const cols = tier === 'mobile' ? MOBILE_COLS : tier === 'tablet' ? TABLET_COLS : COLS;
+  const rowHeight = tier === 'mobile' ? MOBILE_ROW_HEIGHT : ROW_HEIGHT;
 
   // Mobile layout is synthesized (stacked, in widget order, each sized per its widget type)
   // rather than read from the widgets' stored x/y/w/h, which describe positions on the desktop
-  // 12-col grid and don't translate to a single mobile column.
+  // 12-col grid and don't translate to a single mobile column. Tablet keeps the desktop
+  // positions/order but scales them down to the narrower grid (see scaleToTablet).
   let mobileCursorY = 0;
-  const layout: Layout = isMobile
-    ? widgets.map((widget) => {
-        const h = MOBILE_WIDGET_ROWS[widget.widgetType];
-        const item = { i: widget.id, x: 0, y: mobileCursorY, w: MOBILE_COLS, h, minW: MOBILE_COLS, minH: h };
-        mobileCursorY += h;
-        return item;
-      })
-    : widgets.map((widget) => ({
-        i: widget.id,
-        x: widget.x,
-        y: widget.y,
-        w: widget.w,
-        h: widget.h,
-        minW: 2,
-        minH: 2,
-      }));
+  const layout: Layout =
+    tier === 'mobile'
+      ? widgets.map((widget) => {
+          const h = MOBILE_WIDGET_ROWS[widget.widgetType];
+          const item = { i: widget.id, x: 0, y: mobileCursorY, w: MOBILE_COLS, h, minW: MOBILE_COLS, minH: h };
+          mobileCursorY += h;
+          return item;
+        })
+      : tier === 'tablet'
+        ? widgets.map(scaleToTablet)
+        : widgets.map((widget) => ({
+            i: widget.id,
+            x: widget.x,
+            y: widget.y,
+            w: widget.w,
+            h: widget.h,
+            minW: 2,
+            minH: 2,
+          }));
 
   const handleLayoutChange = (newLayout: Layout) => {
     const updated = widgets.map((widget) => {
@@ -99,8 +132,8 @@ export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRe
           layout={layout}
           width={width}
           gridConfig={{
-            cols: isMobile ? MOBILE_COLS : COLS,
-            rowHeight: isMobile ? MOBILE_ROW_HEIGHT : ROW_HEIGHT,
+            cols,
+            rowHeight,
             margin: [12, 12],
             containerPadding: [0, 0],
           }}
