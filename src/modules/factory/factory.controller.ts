@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Logger, Param, Post, Put, Query, ValidationPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { PageDto } from '../../common/dto/page.dto.ts';
@@ -17,6 +17,8 @@ import { FactoryService } from './factory.service.ts';
 @Controller('factories')
 @ApiTags('factories')
 export class FactoryController {
+  private readonly logger = new Logger(FactoryController.name);
+
   constructor(private factoryService: FactoryService) {}
 
   // Factory management is admin/root-only end to end — regular USER/GUEST accounts never see the
@@ -25,11 +27,16 @@ export class FactoryController {
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   @ApiPageResponse({ description: 'Get factories list', type: PageDto })
-  getFactories(
+  async getFactories(
     @Query(new ValidationPipe({ transform: true }))
     pageOptionsDto: FactoriesPageOptionsDto,
   ): Promise<PageDto<FactoryDto>> {
-    return this.factoryService.getFactories(pageOptionsDto);
+    try {
+      return await this.factoryService.getFactories(pageOptionsDto);
+    } catch (error) {
+      this.logger.error(`Error occurred while fetching factories: ${error instanceof Error ? error.message : String(error)}`, error);
+      throw error;
+    }
   }
 
   // Unlike the rest of this controller, any authenticated (non-GUEST) account can read its own
@@ -38,39 +45,67 @@ export class FactoryController {
   @Get('mine')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  getMyFactory(@AuthUser() user: UserEntity): Promise<ResponseCore<FactoryDto | null>> {
+  async getMyFactory(@AuthUser() user: UserEntity): Promise<ResponseCore<FactoryDto | null>> {
     if (!user.factoryId) {
-      return Promise.resolve(ResponseCore.ok(null));
+      return ResponseCore.ok(null);
     }
 
-    return this.factoryService.getFactory(user.factoryId);
+    try {
+      return await this.factoryService.getFactory(user.factoryId);
+    } catch (error) {
+      this.logger.error(
+        `Error occurred while fetching factory ${user.factoryId} for user ${user.id}: ${error instanceof Error ? error.message : String(error)}`,
+        error,
+      );
+      throw error;
+    }
   }
 
   @Get(':id')
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  getFactory(@Param('id') id: string): Promise<ResponseCore<FactoryDto>> {
-    return this.factoryService.getFactory(id);
+  async getFactory(@Param('id') id: string): Promise<ResponseCore<FactoryDto>> {
+    try {
+      return await this.factoryService.getFactory(id);
+    } catch (error) {
+      this.logger.error(`Error occurred while fetching factory ${id}: ${error instanceof Error ? error.message : String(error)}`, error);
+      throw error;
+    }
   }
 
   @Post()
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.CREATED)
-  createFactory(@Body() dto: CreateFactoryDto): Promise<ResponseCore<FactoryDto>> {
-    return this.factoryService.createFactory(dto);
+  async createFactory(@Body() dto: CreateFactoryDto): Promise<ResponseCore<FactoryDto>> {
+    try {
+      return await this.factoryService.createFactory(dto);
+    } catch (error) {
+      this.logger.error(`Error occurred while creating factory: ${error instanceof Error ? error.message : String(error)}`, error);
+      throw error;
+    }
   }
 
   @Put(':id')
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  updateFactory(@Param('id') id: string, @Body() dto: UpdateFactoryDto): Promise<ResponseCore<FactoryDto>> {
-    return this.factoryService.updateFactory(id, dto);
+  async updateFactory(@Param('id') id: string, @Body() dto: UpdateFactoryDto): Promise<ResponseCore<FactoryDto>> {
+    try {
+      return await this.factoryService.updateFactory(id, dto);
+    } catch (error) {
+      this.logger.error(`Error occurred while updating factory ${id}: ${error instanceof Error ? error.message : String(error)}`, error);
+      throw error;
+    }
   }
 
   @Delete(':id')
   @Auth([RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  deleteFactory(@Param('id') id: string): Promise<ResponseCore<null>> {
-    return this.factoryService.deleteFactory(id);
+  async deleteFactory(@Param('id') id: string): Promise<ResponseCore<null>> {
+    try {
+      return await this.factoryService.deleteFactory(id);
+    } catch (error) {
+      this.logger.error(`Error occurred while deleting factory ${id}: ${error instanceof Error ? error.message : String(error)}`, error);
+      throw error;
+    }
   }
 }

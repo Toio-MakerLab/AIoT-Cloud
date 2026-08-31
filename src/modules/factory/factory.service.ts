@@ -32,10 +32,10 @@ export class FactoryService {
       const queryBuilder = this.factoryRepository.createQueryBuilder('factory');
       queryBuilder.orderBy('factory.createdAt', pageOptionsDto.order);
 
+      // toPageDto (Array.prototype, boilerplate.polyfill.ts) maps over `items` with
+      // lodash's map/compact, so an empty result already comes back as a valid
+      // `{ data: [], meta }` — no separate empty-result branch needed here.
       const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
-      if (!items || items.length === 0) {
-        return [].toPageDto(pageMetaDto);
-      }
 
       return items.toPageDto(pageMetaDto);
     } catch (error) {

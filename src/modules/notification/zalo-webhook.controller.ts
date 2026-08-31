@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Headers, HttpCode, HttpStatus, Logger, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import type { ZaloWebhookPayload } from './interfaces/zalo-webhook-payload.interface.ts';
@@ -12,6 +12,8 @@ import { NotificationService } from './notification.service.ts';
 @Controller('notifications/zalo')
 @ApiTags('notifications')
 export class ZaloWebhookController {
+  private readonly logger = new Logger(ZaloWebhookController.name);
+
   constructor(private readonly notificationService: NotificationService) {}
 
   @Post('webhook')
@@ -23,12 +25,21 @@ export class ZaloWebhookController {
     if (!this.notificationService.isValidWebhookSecret(secretToken)) {
       throw new ForbiddenException('Unauthorized');
     }
+
     try {
       await this.notificationService.handleZaloWebhookUpdate(payload);
 
       return { ok: true };
-    } catch {
-      return { ok: false };
+    } catch (error) {
+      // Previously swallowed silently and answered 200 `{ ok: false }` — Zalo (and anyone
+      // watching logs) had no way to tell a failed update from a successful one. Log it and
+      // rethrow so the global AllExceptionsFilter answers a real 500 instead.
+      this.logger.error(
+        `Failed to handle Zalo webhook update: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      throw error;
     }
   }
 }
