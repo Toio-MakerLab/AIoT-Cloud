@@ -1,19 +1,19 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconDeviceUnknown, IconPlus, IconTrash } from '@tabler/icons-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { SelectDropdown } from '@/components/select-dropdown';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateDeviceTemplateMutation, useUpdateDeviceTemplateMutation } from '../api/queries';
-import { deviceTemplateTypes } from '../data/data';
+import { deviceTemplateTypes, getDeviceTemplateTypeMeta } from '../data/data';
 import type { DeviceTemplate } from '../data/schema';
 import { actionFieldSchema, deviceTemplateTypeSchema } from '../data/schema';
 
@@ -166,15 +166,32 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
             <FormField
               control={form.control}
               name="icon"
-              render={({ field }) => (
-                <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                  <FormLabel className="col-span-2 text-right">Icon</FormLabel>
-                  <FormControl className="col-span-4">
-                    <Input placeholder="icon key or URL" {...field} />
-                  </FormControl>
-                  <FormMessage className="col-span-4 col-start-3" />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                // No icon set (or not an image URL) -> preview the same type-based fallback
+                // DeviceImage (dashboard/components/device-panel.tsx) falls back to at display time,
+                // so what's shown here is exactly what devices using this template will get.
+                const FallbackIcon = getDeviceTemplateTypeMeta(form.watch('type'))?.icon ?? IconDeviceUnknown;
+                const isImageUrl = !!field.value && /^(https?:\/\/|\/)/.test(field.value);
+                return (
+                  <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                    <FormLabel className="col-span-2 text-right">Icon</FormLabel>
+                    <div className="col-span-4 flex items-center gap-2">
+                      <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded">
+                        {isImageUrl ? (
+                          <img src={field.value} alt="" className="h-8 w-8 rounded object-cover" />
+                        ) : (
+                          <FallbackIcon className="text-muted-foreground h-4 w-4" />
+                        )}
+                      </div>
+                      <FormControl>
+                        <Input placeholder="Optional image URL" {...field} />
+                      </FormControl>
+                    </div>
+                    <FormDescription className="col-span-4 col-start-3">Leave blank to use the default icon for this device type.</FormDescription>
+                    <FormMessage className="col-span-4 col-start-3" />
+                  </FormItem>
+                );
+              }}
             />
             <FormField
               control={form.control}
