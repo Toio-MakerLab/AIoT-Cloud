@@ -12,6 +12,7 @@ import { useDeviceQuery } from './api/queries';
 import { DeviceActionsPanel } from './components/device-actions-panel';
 import { GatewayAutomationPanel } from './components/gateway-automation-panel';
 import { OfflineAlertPanel } from './components/offline-alert-panel';
+import { TelemetryHistoryPanel } from './components/telemetry-history-panel';
 import { WarningGatesPanel } from './components/warning-gates-panel';
 import { deviceStatusColors, getDevicePushChannelLabel } from './data/data';
 import type { DeviceStatus } from './data/schema';
@@ -74,6 +75,8 @@ export default function DeviceDetail() {
               actionSchema={device.template?.actionSchema}
               channelSupported={device.pushChannel === 'MQTT' || device.pushChannel === 'KAFKA'}
             />
+
+            <TelemetryHistoryPanel deviceId={device.id} telemetrySchema={device.template?.telemetrySchema} />
 
             <WarningGatesPanel deviceId={device.id} telemetrySchema={device.template?.telemetrySchema} warningOverrides={device.warningOverrides} />
 

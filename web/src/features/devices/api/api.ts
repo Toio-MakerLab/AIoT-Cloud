@@ -46,7 +46,7 @@ export const devicesApi = {
     const response = await apiClient.post<IResponseCore<ITriggerDeviceActionResult>>(`/devices/${id}/actions`, data);
     return response.data;
   },
-  /** Wired up for reuse by the dashboard feature; not consumed on the list page. */
+  /** Powers TelemetryHistoryPanel on the device detail page — not consumed on the list page. */
   getDeviceTelemetry: async (id: string, limit = 100) => {
     const response = await apiClient.get<IResponseCore<IDeviceTelemetry[]>>(`/devices/${id}/telemetry`, { params: { limit } });
     return response.data;

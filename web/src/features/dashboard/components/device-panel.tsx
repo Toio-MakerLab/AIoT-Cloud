@@ -1,11 +1,12 @@
 import { IconBolt, IconCpu, IconDeviceUnknown, IconRouter, IconServer2, IconX } from '@tabler/icons-react';
 import { useEffect } from 'react';
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useIsGuest } from '@/hooks/use-is-guest';
+import { getChartColor } from '@/lib/chart-colors';
 import { cn } from '@/lib/utils';
 import { useDeviceTelemetryHistoryQuery, useTriggerDeviceActionMutation } from '../api/queries';
 import type { IDashboardWidget, IDevice, IDeviceTemplate } from '../api/types';
@@ -111,13 +112,18 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
     value: typeof point.payload[field] === 'number' ? (point.payload[field] as number) : null,
   }));
 
+  // Same name -> same color every render/reload, so panels stay visually distinct from each other
+  // without color reshuffling on you between page loads.
+  const panelName = widget.title || device?.name || 'Panel';
+  const chartColor = getChartColor(panelName);
+
   return (
     <Card className="flex h-full w-full flex-col overflow-hidden py-3 gap-2">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 px-4">
         <div className="flex min-w-0 items-center gap-2">
           <DeviceImage template={device?.template} />
           <div className="min-w-0">
-            <CardTitle className="truncate text-sm font-medium">{widget.title || device?.name || 'Panel'}</CardTitle>
+            <CardTitle className="truncate text-sm font-medium">{panelName}</CardTitle>
             <p className="text-muted-foreground truncate text-xs">
               {device?.name ?? widget.deviceId} · {(widget.widgetType === 'ACTION' ? actionDef?.label : field) || 'no field'}
             </p>
@@ -176,13 +182,30 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id={`${widget.id}-fill`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={chartColor} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={chartColor} stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="recordedAt" tick={{ fontSize: 10 }} minTickGap={20} />
               <YAxis tick={{ fontSize: 10 }} width={36} />
               <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="var(--primary)" dot={false} isAnimationActive={false} />
-            </LineChart>
+              {/* connectNulls: a point whose payload doesn't carry this field maps to `value: null` above —
+                  without this, recharts breaks the area at every such gap instead of drawing straight
+                  through to the next real point, making it look chopped into disconnected segments. */}
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={chartColor}
+                fill={`url(#${widget.id}-fill)`}
+                dot={false}
+                isAnimationActive={false}
+                connectNulls
+              />
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </CardContent>
