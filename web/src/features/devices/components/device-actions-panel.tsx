@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useIsGuest } from '@/hooks/use-is-guest';
 import { useTriggerDeviceActionMutation } from '../api/queries';
 import type { IDeviceActionFieldDefinition } from '../api/types';
 
@@ -15,6 +16,7 @@ interface Props {
 
 function ToggleAction({ action, deviceId }: { action: IDeviceActionFieldDefinition; deviceId: string }) {
   const trigger = useTriggerDeviceActionMutation(deviceId);
+  const isGuest = useIsGuest();
   const onValue = action.onValue ?? 'ON';
   const offValue = action.offValue ?? 'OFF';
 
@@ -34,10 +36,10 @@ function ToggleAction({ action, deviceId }: { action: IDeviceActionFieldDefiniti
         <span className="font-medium">{action.label}</span>
       </div>
       <div className="flex gap-2">
-        <Button size="sm" variant="outline" disabled={trigger.isPending} onClick={() => void send(onValue)}>
+        <Button size="sm" variant="outline" disabled={isGuest || trigger.isPending} onClick={() => void send(onValue)}>
           On
         </Button>
-        <Button size="sm" variant="outline" disabled={trigger.isPending} onClick={() => void send(offValue)}>
+        <Button size="sm" variant="outline" disabled={isGuest || trigger.isPending} onClick={() => void send(offValue)}>
           Off
         </Button>
       </div>
@@ -47,6 +49,7 @@ function ToggleAction({ action, deviceId }: { action: IDeviceActionFieldDefiniti
 
 function ButtonAction({ action, deviceId }: { action: IDeviceActionFieldDefinition; deviceId: string }) {
   const trigger = useTriggerDeviceActionMutation(deviceId);
+  const isGuest = useIsGuest();
 
   const send = async () => {
     try {
@@ -60,7 +63,7 @@ function ButtonAction({ action, deviceId }: { action: IDeviceActionFieldDefiniti
   return (
     <div className="flex items-center justify-between rounded-md border p-3">
       <span className="font-medium">{action.label}</span>
-      <Button size="sm" disabled={trigger.isPending} onClick={() => void send()}>
+      <Button size="sm" disabled={isGuest || trigger.isPending} onClick={() => void send()}>
         Trigger
       </Button>
     </div>

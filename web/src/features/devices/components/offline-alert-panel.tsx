@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { useIsGuest } from '@/hooks/use-is-guest';
 import { getResponseMessage } from '@/lib/response-codes';
 import { cn } from '@/lib/utils';
 import { useUpdateDeviceConfigMutation } from '../api/queries';
@@ -25,6 +26,7 @@ interface Props {
  */
 export function OfflineAlertPanel({ deviceId, templateType, offlineAlert }: Props) {
   const updateConfig = useUpdateDeviceConfigMutation();
+  const isGuest = useIsGuest();
   const [enabled, setEnabled] = useState(offlineAlert?.enabled ?? false);
   const [channels, setChannels] = useState<NotificationChannel[]>(offlineAlert?.channels ?? []);
 
@@ -60,7 +62,7 @@ export function OfflineAlertPanel({ deviceId, templateType, offlineAlert }: Prop
             <span className="font-medium">Offline alert</span>
             <p className="text-muted-foreground text-sm">Send a notification the moment this device is marked OFFLINE.</p>
           </div>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
+          <Switch checked={enabled} disabled={isGuest} onCheckedChange={setEnabled} />
         </div>
 
         <div className="space-y-1.5">
@@ -69,7 +71,7 @@ export function OfflineAlertPanel({ deviceId, templateType, offlineAlert }: Prop
             {NOTIFICATION_CHANNEL_OPTIONS.map((channel) => {
               const selected = channels.includes(channel.value);
               return (
-                <button key={channel.value} type="button" onClick={() => toggleChannel(channel.value)}>
+                <button key={channel.value} type="button" disabled={isGuest} onClick={() => toggleChannel(channel.value)}>
                   <Badge variant={selected ? 'default' : 'outline'} className={cn('cursor-pointer', selected && 'hover:bg-primary/90')}>
                     {channel.label}
                   </Badge>
@@ -80,10 +82,12 @@ export function OfflineAlertPanel({ deviceId, templateType, offlineAlert }: Prop
           <p className="text-muted-foreground text-xs">No channels selected: alerts go to all your enabled channels.</p>
         </div>
 
-        <Button size="sm" onClick={() => void handleSave()} disabled={updateConfig.isPending}>
-          {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-          Save
-        </Button>
+        {!isGuest && (
+          <Button size="sm" onClick={() => void handleSave()} disabled={updateConfig.isPending}>
+            {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
+            Save
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

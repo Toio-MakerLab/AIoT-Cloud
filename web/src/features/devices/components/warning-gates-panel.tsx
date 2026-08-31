@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { useIsGuest } from '@/hooks/use-is-guest';
 import { getResponseMessage } from '@/lib/response-codes';
 import { cn } from '@/lib/utils';
 import { useUpdateDeviceConfigMutation } from '../api/queries';
@@ -50,6 +51,7 @@ function GateRow({
   warningOverrides: Record<string, IDeviceWarningThreshold> | null | undefined;
 }) {
   const updateConfig = useUpdateDeviceConfigMutation();
+  const isGuest = useIsGuest();
   const [draft, setDraft] = useState<FieldDraft>(() => draftFromOverride(field, override));
 
   const toggleChannel = (channel: NotificationChannel) => {
@@ -94,7 +96,12 @@ function GateRow({
           <Label htmlFor={`enabled-${field.key}`} className="text-muted-foreground text-sm">
             Enabled
           </Label>
-          <Switch id={`enabled-${field.key}`} checked={draft.enabled} onCheckedChange={(enabled) => setDraft((prev) => ({ ...prev, enabled }))} />
+          <Switch
+            id={`enabled-${field.key}`}
+            checked={draft.enabled}
+            disabled={isGuest}
+            onCheckedChange={(enabled) => setDraft((prev) => ({ ...prev, enabled }))}
+          />
         </div>
       </div>
 
@@ -107,6 +114,7 @@ function GateRow({
             id={`min-${field.key}`}
             type="number"
             value={draft.min}
+            disabled={isGuest}
             placeholder={field.warningMin !== undefined ? String(field.warningMin) : undefined}
             onChange={(e) => setDraft((prev) => ({ ...prev, min: e.target.value }))}
           />
@@ -119,6 +127,7 @@ function GateRow({
             id={`max-${field.key}`}
             type="number"
             value={draft.max}
+            disabled={isGuest}
             placeholder={field.warningMax !== undefined ? String(field.warningMax) : undefined}
             onChange={(e) => setDraft((prev) => ({ ...prev, max: e.target.value }))}
           />
@@ -131,7 +140,7 @@ function GateRow({
           {NOTIFICATION_CHANNEL_OPTIONS.map((channel) => {
             const selected = draft.channels.includes(channel.value);
             return (
-              <button key={channel.value} type="button" onClick={() => toggleChannel(channel.value)}>
+              <button key={channel.value} type="button" disabled={isGuest} onClick={() => toggleChannel(channel.value)}>
                 <Badge variant={selected ? 'default' : 'outline'} className={cn('cursor-pointer', selected && 'hover:bg-primary/90')}>
                   {channel.label}
                 </Badge>
@@ -142,10 +151,12 @@ function GateRow({
         <p className="text-muted-foreground text-xs">No channels selected: warnings for this field go to all your enabled channels.</p>
       </div>
 
-      <Button size="sm" onClick={() => void handleSave()} disabled={updateConfig.isPending}>
-        {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-        Save
-      </Button>
+      {!isGuest && (
+        <Button size="sm" onClick={() => void handleSave()} disabled={updateConfig.isPending}>
+          {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
+          Save
+        </Button>
+      )}
     </div>
   );
 }

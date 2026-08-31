@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { useIsGuest } from '@/hooks/use-is-guest';
 import { getResponseMessage } from '@/lib/response-codes';
 import { useUpdateDeviceConfigMutation } from '../api/queries';
 import type { DeviceTemplateType, IDeviceAlertRule, IDeviceFailsafeConfig } from '../api/types';
@@ -33,6 +34,7 @@ function parseRuleLines(text: string): string[] {
  */
 export function GatewayAutomationPanel({ deviceId, templateType, alertRules, failsafe }: Props) {
   const updateConfig = useUpdateDeviceConfigMutation();
+  const isGuest = useIsGuest();
   const [rulesText, setRulesText] = useState((alertRules ?? []).join('\n'));
   const [failsafeEnabled, setFailsafeEnabled] = useState(failsafe?.enabled ?? false);
   const [failsafeRulesText, setFailsafeRulesText] = useState((failsafe?.rules ?? []).join('\n'));
@@ -79,14 +81,17 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
             id="alert-rules"
             rows={4}
             value={rulesText}
+            disabled={isGuest}
             placeholder="amps.value>10:relay_2=OFF"
             onChange={(e) => setRulesText(e.target.value)}
             className="font-mono text-sm"
           />
-          <Button size="sm" onClick={() => void handleSaveRules()} disabled={updateConfig.isPending}>
-            {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-            Save rules
-          </Button>
+          {!isGuest && (
+            <Button size="sm" onClick={() => void handleSaveRules()} disabled={updateConfig.isPending}>
+              {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
+              Save rules
+            </Button>
+          )}
         </div>
 
         <div className="space-y-3 rounded-md border p-3">
@@ -95,7 +100,7 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
               <span className="font-medium">Failsafe</span>
               <p className="text-muted-foreground text-sm">Safe state the gateway applies on its own when it can't reach the cloud.</p>
             </div>
-            <Switch checked={failsafeEnabled} onCheckedChange={setFailsafeEnabled} />
+            <Switch checked={failsafeEnabled} disabled={isGuest} onCheckedChange={setFailsafeEnabled} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="failsafe-rules" className="text-muted-foreground text-xs">
@@ -105,15 +110,18 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
               id="failsafe-rules"
               rows={3}
               value={failsafeRulesText}
+              disabled={isGuest}
               placeholder="relay_2=OFF"
               onChange={(e) => setFailsafeRulesText(e.target.value)}
               className="font-mono text-sm"
             />
           </div>
-          <Button size="sm" onClick={() => void handleSaveFailsafe()} disabled={updateConfig.isPending}>
-            {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-            Save failsafe
-          </Button>
+          {!isGuest && (
+            <Button size="sm" onClick={() => void handleSaveFailsafe()} disabled={updateConfig.isPending}>
+              {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
+              Save failsafe
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

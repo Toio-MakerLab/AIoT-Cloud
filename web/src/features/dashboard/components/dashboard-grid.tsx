@@ -1,5 +1,6 @@
 import { GridLayout, type Layout, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
+import { useIsGuest } from '@/hooks/use-is-guest';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { IDashboardWidget, IDevice } from '../api/types';
 import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
@@ -46,6 +47,10 @@ const MOBILE_WIDGET_ROWS: Record<IDashboardWidget['widgetType'], number> = { CHA
 export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRemoveWidget }: Props) {
   const { width, containerRef, mounted } = useContainerWidth();
   const isMobile = useIsMobile();
+  const isGuest = useIsGuest();
+  // GUEST accounts can view the grid but must not rearrange/resize panels, same as mobile's
+  // forced-non-interactive layout.
+  const interactive = !isMobile && !isGuest;
 
   // Mobile layout is synthesized (stacked, in widget order, each sized per its widget type)
   // rather than read from the widgets' stored x/y/w/h, which describe positions on the desktop
@@ -99,9 +104,9 @@ export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRe
             margin: [12, 12],
             containerPadding: [0, 0],
           }}
-          dragConfig={{ enabled: !isMobile }}
-          resizeConfig={{ enabled: !isMobile }}
-          onLayoutChange={isMobile ? undefined : handleLayoutChange}
+          dragConfig={{ enabled: interactive }}
+          resizeConfig={{ enabled: interactive }}
+          onLayoutChange={interactive ? handleLayoutChange : undefined}
         >
           {widgets.map((widget) => {
             const device = devices.find((d) => d.id === widget.deviceId);

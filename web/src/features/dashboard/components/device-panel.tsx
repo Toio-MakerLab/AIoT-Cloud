@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { useIsGuest } from '@/hooks/use-is-guest';
 import { cn } from '@/lib/utils';
 import { useDeviceTelemetryHistoryQuery, useTriggerDeviceActionMutation } from '../api/queries';
 import type { IDashboardWidget, IDevice, IDeviceTemplate } from '../api/types';
@@ -61,6 +62,7 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
   // Seed the rolling history buffer once fetched — combined with any live telemetry already
   // appended by the WebSocket live-data source, this gives charts both history and a live tail.
   const { data: fetchedHistory } = useDeviceTelemetryHistoryQuery(widget.deviceId);
+  const isGuest = useIsGuest();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: seedHistory is an unstable reference from the parent's live-data hook; adding it would re-run the effect on every render.
   useEffect(() => {
@@ -126,9 +128,11 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
             className={cn('h-2 w-2 rounded-full', isOnline ? 'bg-green-500' : 'bg-muted-foreground/40')}
             title={isOnline ? 'Online' : 'Offline'}
           />
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove} aria-label="Remove panel">
-            <IconX className="h-4 w-4" />
-          </Button>
+          {!isGuest && (
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove} aria-label="Remove panel">
+              <IconX className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 px-4">
@@ -137,17 +141,21 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, onRe
             {actionDef ? (
               isToggleAction ? (
                 <div className="flex flex-col items-center gap-1">
-                  <Switch checked={isToggleOn} disabled={!isOnline || triggerAction.isPending} onCheckedChange={handleToggle} />
+                  <Switch checked={isToggleOn} disabled={isGuest || !isOnline || triggerAction.isPending} onCheckedChange={handleToggle} />
                   <span className="text-muted-foreground text-xs">{isToggleOn ? (actionDef.onValue ?? 'ON') : (actionDef.offValue ?? 'OFF')}</span>
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <Button variant="default" disabled={!isOnline || triggerAction.isPending} onClick={() => handleTrigger(actionDef.onValue ?? 'ON')}>
+                  <Button
+                    variant="default"
+                    disabled={isGuest || !isOnline || triggerAction.isPending}
+                    onClick={() => handleTrigger(actionDef.onValue ?? 'ON')}
+                  >
                     On
                   </Button>
                   <Button
                     variant="outline"
-                    disabled={!isOnline || triggerAction.isPending}
+                    disabled={isGuest || !isOnline || triggerAction.isPending}
                     onClick={() => handleTrigger(actionDef.offValue ?? 'OFF')}
                   >
                     Off

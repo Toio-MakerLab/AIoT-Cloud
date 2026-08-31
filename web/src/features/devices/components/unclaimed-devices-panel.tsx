@@ -4,15 +4,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useIsGuest } from '@/hooks/use-is-guest';
 import { useUnclaimedDevicesQuery } from '../api/queries';
 import { useDevices } from '../context/devices-context';
 
 export function UnclaimedDevicesPanel() {
   const { data } = useUnclaimedDevicesQuery();
   const { setOpen, setPrefillDeviceId } = useDevices();
+  const isGuest = useIsGuest();
   const unclaimedDevices = data?.data ?? [];
 
-  if (unclaimedDevices.length === 0) {
+  // This panel exists solely to register unclaimed devices — a write action GUEST can't perform.
+  if (isGuest || unclaimedDevices.length === 0) {
     return null;
   }
 

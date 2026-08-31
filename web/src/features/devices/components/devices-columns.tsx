@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useIsGuest } from '@/hooks/use-is-guest';
 import { cn } from '@/lib/utils';
 import { useDevices } from '../context/devices-context';
 import { deviceStatusColors, getDeviceTemplateTypeLabel } from '../data/data';
@@ -13,6 +14,7 @@ import { DataTableColumnHeader } from './data-table-column-header';
 
 function DeviceRowActions({ row }: { row: { original: Device } }) {
   const { setOpen, setCurrentRow } = useDevices();
+  const isGuest = useIsGuest();
 
   return (
     <DropdownMenu>
@@ -32,25 +34,30 @@ function DeviceRowActions({ row }: { row: { original: Device } }) {
           View Config
           <IconEye className="ml-auto h-4 w-4" />
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            setCurrentRow(row.original);
-            setOpen('config');
-          }}
-        >
-          Edit Config
-          <IconSettings className="ml-auto h-4 w-4" />
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onClick={() => {
-            setCurrentRow(row.original);
-            setOpen('delete');
-          }}
-        >
-          Delete
-          <IconTrash className="ml-auto h-4 w-4" />
-        </DropdownMenuItem>
+        {/* Edit/Delete are write actions — hidden for the read-only GUEST role. */}
+        {!isGuest && (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                setCurrentRow(row.original);
+                setOpen('config');
+              }}
+            >
+              Edit Config
+              <IconSettings className="ml-auto h-4 w-4" />
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => {
+                setCurrentRow(row.original);
+                setOpen('delete');
+              }}
+            >
+              Delete
+              <IconTrash className="ml-auto h-4 w-4" />
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

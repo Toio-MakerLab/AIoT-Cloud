@@ -27,7 +27,7 @@ export class DeviceController {
   constructor(private deviceService: DeviceService) {}
 
   @Get()
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   @ApiPageResponse({ description: 'Get my devices list', type: PageDto })
   getDevices(
@@ -58,7 +58,7 @@ export class DeviceController {
    * `ids` is a comma-separated list of device ids (same ids `GET /devices/:id` uses).
    */
   @Sse('stream')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   streamDeviceEvents(@AuthUser() user: UserEntity, @Query('ids') ids?: string): Observable<MessageEvent> {
     const deviceIds =
       ids
@@ -70,7 +70,7 @@ export class DeviceController {
   }
 
   @Get(':id')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDevice(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<DeviceDto>> {
     return this.deviceService.getDevice(user.id as string, id);
@@ -84,7 +84,7 @@ export class DeviceController {
   }
 
   @Get(':id/telemetry')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getDeviceTelemetry(
     @AuthUser() user: UserEntity,
