@@ -30,6 +30,9 @@ export class FactoryService {
     queryBuilder.orderBy('factory.createdAt', pageOptionsDto.order);
 
     const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
+    if (!items || items.length === 0) {
+      return [].toPageDto(pageMetaDto);
+    }
 
     return items.toPageDto(pageMetaDto);
   }
