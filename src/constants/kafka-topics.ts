@@ -40,4 +40,4 @@ export const KAFKA_DEVICE_EVENTS_TOPIC = 'devices.cloud.events';
  * message carries `{ deviceId, message, channels? }`, keyed/partitioned by deviceId like the
  * other topics.
  */
-export const KAFKA_ALERT_TOPIC = 'devices.cloud.alert';
+export const KAFKA_ALERT_TOPIC = 'devices.cloud.alerts';
