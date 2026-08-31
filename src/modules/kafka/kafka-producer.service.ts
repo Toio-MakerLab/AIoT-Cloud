@@ -1,9 +1,16 @@
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Producer, RecordMetadata, SASLOptions } from 'kafkajs';
-import { Kafka, KafkaJSProtocolError } from 'kafkajs';
+import kafkajs, { Kafka } from 'kafkajs';
 
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
+
+// kafkajs re-exports its error classes via `...errors` (a spread, not a static property) in its
+// CJS `module.exports` — cjs-module-lexer can't see through that, so under Node's ESM loader
+// `import { KafkaJSProtocolError } from 'kafkajs'` fails at runtime ("Named export ... not found")
+// even though `Kafka` itself (a real static property) imports fine. The default import is always
+// bound to the live `module.exports` object though, so destructure off that instead.
+const { KafkaJSProtocolError } = kafkajs;
 
 /**
  * Thin wrapper around a single shared kafkajs `Producer`, replacing @nestjs/microservices'
