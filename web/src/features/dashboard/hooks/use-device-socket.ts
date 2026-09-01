@@ -72,9 +72,18 @@ export function useDeviceSocket(deviceIds: string[]) {
     const handleTelemetry = (event: TelemetryEventPayload) => {
       setLatestByDevice((prev) => {
         const next = new Map(prev);
+        // Backend records/forwards each MQTT telemetry message's payload as-is (device.service.ts
+        // recordTelemetry) — a device that reports fields piecemeal across messages (e.g. a
+        // gateway sending one relay channel's state per publish) can push a payload that only
+        // covers a subset of fields. Merging onto the previous snapshot instead of replacing it
+        // keeps every field's last known value; VALUE/ACTION panels read straight off this map, so
+        // overwriting wholesale made an untouched field flash to "--" the instant any other field
+        // on the same device updated. `historyByDevice` below stays per-message/unmerged on
+        // purpose — each history point should reflect exactly what was reported at that instant.
+        const previousPayload = prev.get(event.deviceId)?.payload;
         next.set(event.deviceId, {
           deviceId: event.deviceId,
-          payload: event.payload,
+          payload: previousPayload ? { ...previousPayload, ...event.payload } : event.payload,
           recordedAt: event.recordedAt,
         });
         return next;
