@@ -1,6 +1,8 @@
 import { DevicePushChannel } from '../../../constants/device-push-channel.ts';
 import type { DeviceTemplateType } from '../../../constants/device-template-type.ts';
+import { NotificationChannelType } from '../../../constants/notification-channel-type.ts';
 import {
+  BooleanField,
   BooleanFieldOptional,
   ClassField,
   ClassFieldOptional,
@@ -11,6 +13,7 @@ import {
   URLField,
   URLFieldOptional,
 } from '../../../decorators/field.decorators.ts';
+import { IsNullable, IsUndefinable } from '../../../decorators/validator.decorators.ts';
 import type {
   DeviceAlertRule,
   DeviceFailsafeConfig,
@@ -101,6 +104,24 @@ export class KafkaConfigDto implements DeviceKafkaConfig {
   password?: string | null;
 }
 
+export class OfflineAlertConfigDto implements DeviceOfflineAlertConfig {
+  @BooleanField()
+  enabled!: boolean;
+
+  /** Unset/empty means "all of the user's enabled channels". */
+  @EnumFieldOptional(() => NotificationChannelType, { nullable: true, each: true })
+  channels?: NotificationChannelType[] | null;
+}
+
+export class FailsafeConfigDto implements DeviceFailsafeConfig {
+  @BooleanField()
+  enabled!: boolean;
+
+  /** "<actionKey>=<actionValue>" shorthand, applied unconditionally once the gateway fails safe. */
+  @StringFieldOptional({ nullable: true, each: true })
+  rules?: string[] | null;
+}
+
 export class UpdateDeviceConfigDto {
   @URLFieldOptional({ nullable: true })
   apiEndpoint?: string | null;
@@ -120,21 +141,30 @@ export class UpdateDeviceConfigDto {
   @BooleanFieldOptional()
   isActive?: boolean;
 
-  /** Per-field overrides of the template's default warning band; keyed by telemetry field key. */
+  /**
+   * Per-field overrides of the template's default warning band; keyed by telemetry field key.
+   * Dynamically keyed by whatever telemetry fields the device's template declares, so it can't be
+   * validated as a fixed-shape nested DTO like the others below — just kept whitelist-safe.
+   */
+  @IsUndefinable()
+  @IsNullable()
   warningOverrides?: DeviceWarningOverrides | null;
 
   /** Notify-on-offline rule — mainly for GATEWAY devices, which have no telemetrySchema of their own. */
-  offlineAlert?: DeviceOfflineAlertConfig | null;
+  @ClassFieldOptional(() => OfflineAlertConfigDto, { nullable: true })
+  offlineAlert?: OfflineAlertConfigDto | null;
 
   /**
    * Local automation rules a gateway caches and evaluates itself — each entry is
    * "<field><operator><threshold>:<actionKey>=<actionValue>", e.g. "amps.value>10:relay_2=OFF".
    * See DeviceAlertRule.
    */
+  @StringFieldOptional({ nullable: true, each: true })
   alertRules?: DeviceAlertRule[] | null;
 
   /** Safe state a gateway falls back to on its own when it loses the cloud. */
-  failsafe?: DeviceFailsafeConfig | null;
+  @ClassFieldOptional(() => FailsafeConfigDto, { nullable: true })
+  failsafe?: FailsafeConfigDto | null;
 }
 
 /** Response for the ESP32 boot-config endpoint — never includes the device secret. */
