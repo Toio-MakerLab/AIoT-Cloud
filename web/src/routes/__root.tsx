@@ -6,6 +6,7 @@ import { NavigationProgress } from '@/components/navigation-progress';
 import { Toaster } from '@/components/ui/sonner';
 import GeneralError from '@/features/errors/general-error';
 import NotFoundError from '@/features/errors/not-found-error';
+import { NotificationsListener } from '@/features/notifications/components/notifications-listener';
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -14,6 +15,7 @@ export const Route = createRootRouteWithContext<{
     return (
       <>
         <NavigationProgress />
+        <NotificationsListener />
         <Outlet />
         <Toaster duration={5000} />
         {import.meta.env.MODE === 'development' && (

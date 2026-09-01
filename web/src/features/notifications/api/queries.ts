@@ -1,14 +1,21 @@
+import type { QueryClient } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { notificationsApi } from './notifications-api';
 import type { INotificationMessagesQuery } from './types';
 
-const NOTIFICATION_MESSAGES_QUERY_KEY = 'notification-messages';
+export const NOTIFICATION_MESSAGES_QUERY_KEY = 'notification-messages';
 const UNREAD_NOTIFICATION_COUNT_QUERY_KEY = [NOTIFICATION_MESSAGES_QUERY_KEY, 'unread-count'];
 
 // The header bell polls for new alerts on a short cadence; the popover's own message list is
 // fetched lazily (only while open, see `enabled` below) so idle tabs stay cheap.
 const UNREAD_COUNT_POLL_INTERVAL_MS = 30_000;
+
+/** Shared by the mutations below and by the live-alert socket listener (notifications-listener.tsx). */
+export function invalidateNotificationQueries(queryClient: QueryClient): void {
+  queryClient.invalidateQueries({ queryKey: [NOTIFICATION_MESSAGES_QUERY_KEY] });
+  queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATION_COUNT_QUERY_KEY });
+}
 
 export function useUnreadNotificationCountQuery() {
   const accessToken = useAuthStore((state) => state.auth.accessToken);
@@ -36,10 +43,7 @@ export function useMarkNotificationAsReadMutation() {
 
   return useMutation({
     mutationFn: (id: string) => notificationsApi.markAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [NOTIFICATION_MESSAGES_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATION_COUNT_QUERY_KEY });
-    },
+    onSuccess: () => invalidateNotificationQueries(queryClient),
   });
 }
 
@@ -48,10 +52,7 @@ export function useMarkAllNotificationsAsReadMutation() {
 
   return useMutation({
     mutationFn: () => notificationsApi.markAllAsRead(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [NOTIFICATION_MESSAGES_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATION_COUNT_QUERY_KEY });
-    },
+    onSuccess: () => invalidateNotificationQueries(queryClient),
   });
 }
 
@@ -60,9 +61,6 @@ export function useDeleteNotificationMutation() {
 
   return useMutation({
     mutationFn: (id: string) => notificationsApi.deleteMessage(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [NOTIFICATION_MESSAGES_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATION_COUNT_QUERY_KEY });
-    },
+    onSuccess: () => invalidateNotificationQueries(queryClient),
   });
 }

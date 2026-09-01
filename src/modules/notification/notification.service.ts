@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
@@ -27,6 +28,19 @@ interface ZaloLinkCodePayload {
 
 const ZALO_LINK_CODE_TTL = '15m';
 
+/**
+ * Emitted once per `sendWarning` call (not once per channel) so the frontend can pop a toast the
+ * instant an alert fires — this is effectively a zero-config "in-app" channel, delivered
+ * regardless of which (if any) ZALO/WEB_PUSH channels the user has linked. Consumed by
+ * `AppGateway`, which forwards it over the socket to that user's room.
+ */
+export interface NotificationCreatedEvent {
+  userId: string;
+  message: string;
+  deviceId: string | null;
+  occurredAt: Date;
+}
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -40,6 +54,7 @@ export class NotificationService {
     private readonly notificationMessageRepository: Repository<NotificationMessageEntity>,
     private readonly jwtService: JwtService,
     private readonly apiConfigService: ApiConfigService,
+    private readonly eventEmitter: EventEmitter2,
     @Inject(NOTIFICATION_SENDERS) senders: NotificationSender[],
   ) {
     this.senderByChannel = new Map(senders.map((sender) => [sender.channel, sender]));
@@ -181,6 +196,15 @@ export class NotificationService {
    * persisted as a `NotificationMessageEntity` row, which is what backs the notification inbox.
    */
   async sendWarning(userId: string, message: string, channels?: NotificationChannelType[], deviceId?: string): Promise<void> {
+    // Fired unconditionally (before the ZALO/WEB_PUSH fan-out below, and even if the user has no
+    // channel linked) so the frontend can toast it live — see NotificationCreatedEvent.
+    this.eventEmitter.emit('notification.created', {
+      userId,
+      message,
+      deviceId: deviceId ?? null,
+      occurredAt: new Date(),
+    } satisfies NotificationCreatedEvent);
+
     const configs = await this.notificationConfigRepository.findBy({ userId, isEnabled: true });
     const targetConfigs = channels && channels.length > 0 ? configs.filter((config) => channels.includes(config.channel)) : configs;
 

@@ -10,6 +10,7 @@ import { RoleType } from '../../constants/role-type.ts';
 import { TokenType } from '../../constants/token-type.ts';
 import type { DeviceChannelStateEvent, DeviceStatusEvent, DeviceTelemetryEvent } from '../device/device.service.ts';
 import { DeviceService } from '../device/device.service.ts';
+import type { NotificationCreatedEvent } from '../notification/notification.service.ts';
 
 interface SocketData {
   userId: string;
@@ -19,6 +20,13 @@ interface SocketData {
 
 function deviceRoom(deviceId: string): string {
   return `device:${deviceId}`;
+}
+
+// Every authenticated socket joins its own user room on connect (below), independent of which
+// device rooms it subscribes to — this is what lets `notification.created` reach a user on any
+// page, not just while a specific device/dashboard is open.
+function userRoom(userId: string): string {
+  return `user:${userId}`;
 }
 
 /** Mirrors `resolveAccessScope` — the gateway only has raw JWT claims, not a full `UserEntity`. */
@@ -71,6 +79,7 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.data.userId = payload.userId;
       client.data.role = payload.role;
       client.data.factoryId = payload.factoryId;
+      await client.join(userRoom(payload.userId));
       this.logger.log(`Client connected: ${client.id} (user ${payload.userId})`);
     } catch {
       this.logger.warn(`Client ${client.id} sent an invalid token, disconnecting`);
@@ -122,5 +131,11 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDeviceChannelState(event: DeviceChannelStateEvent): void {
     const deviceId = this.physicalToEntityId.get(event.deviceId) ?? event.deviceId;
     this.server.to(deviceRoom(event.deviceId)).emit('channelState', { ...event, deviceId });
+  }
+
+  /** Forwards every alert (see `NotificationService.sendWarning`) to the owner's user room, so the frontend can toast it on any page. */
+  @OnEvent('notification.created')
+  handleNotificationCreated(event: NotificationCreatedEvent): void {
+    this.server.to(userRoom(event.userId)).emit('notification', event);
   }
 }
