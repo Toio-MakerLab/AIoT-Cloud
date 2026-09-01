@@ -3,17 +3,22 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 
+import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import { NotificationChannelType } from '../../constants/notification-channel-type.ts';
+import { NotificationMessageStatus } from '../../constants/notification-message-status.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import type { NotificationConfigDto } from './dtos/notification-config.dto.ts';
+import type { NotificationMessageDto } from './dtos/notification-message.dto.ts';
+import type { NotificationMessagesPageOptionsDto } from './dtos/notification-messages-page-options.dto.ts';
 import type { UpsertNotificationConfigDto } from './dtos/upsert-notification-config.dto.ts';
 import type { WebPushChannelConfig } from './interfaces/notification-channel-config.interface.ts';
 import type { NotificationSender } from './interfaces/notification-sender.interface.ts';
 import { NOTIFICATION_SENDERS } from './interfaces/notification-sender.interface.ts';
 import type { ZaloWebhookPayload } from './interfaces/zalo-webhook-payload.interface.ts';
 import { NotificationConfigEntity } from './notification-config.entity.ts';
+import { NotificationMessageEntity } from './notification-message.entity.ts';
 
 interface ZaloLinkCodePayload {
   userId: string;
@@ -31,6 +36,8 @@ export class NotificationService {
   constructor(
     @InjectRepository(NotificationConfigEntity)
     private readonly notificationConfigRepository: Repository<NotificationConfigEntity>,
+    @InjectRepository(NotificationMessageEntity)
+    private readonly notificationMessageRepository: Repository<NotificationMessageEntity>,
     private readonly jwtService: JwtService,
     private readonly apiConfigService: ApiConfigService,
     @Inject(NOTIFICATION_SENDERS) senders: NotificationSender[],
@@ -170,9 +177,10 @@ export class NotificationService {
    * Fans a rendered warning message out to the user's enabled, linked channels. When `channels` is
    * provided and non-empty, only those channels receive the message (per-gate channel selection);
    * otherwise (undefined/empty) it falls back to every enabled, linked channel — preserving behavior
-   * for devices/gates that haven't picked channels yet.
+   * for devices/gates that haven't picked channels yet. Every send attempt (success or failure) is
+   * persisted as a `NotificationMessageEntity` row, which is what backs the notification inbox.
    */
-  async sendWarning(userId: string, message: string, channels?: NotificationChannelType[]): Promise<void> {
+  async sendWarning(userId: string, message: string, channels?: NotificationChannelType[], deviceId?: string): Promise<void> {
     const configs = await this.notificationConfigRepository.findBy({ userId, isEnabled: true });
     const targetConfigs = channels && channels.length > 0 ? configs.filter((config) => channels.includes(config.channel)) : configs;
 
@@ -188,15 +196,98 @@ export class NotificationService {
             return;
           }
 
+          const renderedMessage = config.messageTemplate ? this.renderTemplate(config.messageTemplate, message) : message;
+
           try {
-            await sender.send(config, config.messageTemplate ? this.renderTemplate(config.messageTemplate, message) : message);
+            await sender.send(config, renderedMessage);
+            await this.recordMessage(userId, config.channel, renderedMessage, deviceId, NotificationMessageStatus.SENT, null);
           } catch (error) {
-            this.logger.error(
-              `Failed to send ${config.channel} notification to user ${userId}: ${error instanceof Error ? error.message : String(error)}`,
-            );
+            const errorMessage = error instanceof Error ? error.message : String(error);
+
+            this.logger.error(`Failed to send ${config.channel} notification to user ${userId}: ${errorMessage}`);
+            await this.recordMessage(userId, config.channel, renderedMessage, deviceId, NotificationMessageStatus.FAILED, errorMessage);
           }
         }),
     );
+  }
+
+  /** Persists one send attempt. Swallows its own failures — a history-write hiccup must never break the actual send/fan-out flow. */
+  private async recordMessage(
+    userId: string,
+    channel: NotificationChannelType,
+    message: string,
+    deviceId: string | undefined,
+    status: NotificationMessageStatus,
+    error: string | null,
+  ): Promise<void> {
+    try {
+      await this.notificationMessageRepository.save(
+        this.notificationMessageRepository.create({ userId, channel, message, deviceId: deviceId ?? null, status, error }),
+      );
+    } catch (recordError) {
+      this.logger.error(
+        `Failed to record notification history for user ${userId}: ${recordError instanceof Error ? recordError.message : String(recordError)}`,
+      );
+    }
+  }
+
+  /** Paginated notification inbox for a user, newest first, optionally filtered by channel/read-state. */
+  async getMessages(userId: string, pageOptionsDto: NotificationMessagesPageOptionsDto): Promise<PageDto<NotificationMessageDto>> {
+    const queryBuilder = this.notificationMessageRepository.createQueryBuilder('message').where('message.userId = :userId', { userId });
+
+    if (pageOptionsDto.channel) {
+      queryBuilder.andWhere('message.channel = :channel', { channel: pageOptionsDto.channel });
+    }
+
+    if (pageOptionsDto.isRead !== undefined) {
+      queryBuilder.andWhere('message.isRead = :isRead', { isRead: pageOptionsDto.isRead });
+    }
+
+    queryBuilder.orderBy('message.createdAt', pageOptionsDto.order);
+
+    const [items, pageMetaDto] = await queryBuilder.paginate(pageOptionsDto);
+
+    return items.toPageDto(pageMetaDto);
+  }
+
+  async getUnreadCount(userId: string): Promise<ResponseCore<{ count: number }>> {
+    const count = await this.notificationMessageRepository.countBy({ userId, isRead: false });
+
+    return ResponseCore.ok({ count });
+  }
+
+  async markMessageAsRead(userId: string, id: string): Promise<ResponseCore<NotificationMessageDto>> {
+    const message = await this.notificationMessageRepository.findOneBy({ id, userId });
+
+    if (!message) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.notificationMessageNotFound');
+    }
+
+    if (!message.isRead) {
+      message.isRead = true;
+      message.readAt = new Date();
+      await this.notificationMessageRepository.save(message);
+    }
+
+    return ResponseCore.ok(message.toDto());
+  }
+
+  async markAllMessagesAsRead(userId: string): Promise<ResponseCore<null>> {
+    await this.notificationMessageRepository.update({ userId, isRead: false }, { isRead: true, readAt: new Date() });
+
+    return ResponseCore.ok(null);
+  }
+
+  async deleteMessage(userId: string, id: string): Promise<ResponseCore<null>> {
+    const message = await this.notificationMessageRepository.findOneBy({ id, userId });
+
+    if (!message) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.notificationMessageNotFound');
+    }
+
+    await this.notificationMessageRepository.remove(message);
+
+    return ResponseCore.ok(null);
   }
 
   /** Sends a one-off sample message through a single channel so the user can verify their template/link before relying on it. */

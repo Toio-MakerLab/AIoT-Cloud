@@ -2,6 +2,7 @@ import { IconArrowLeft } from '@tabler/icons-react';
 import { Link, useParams } from '@tanstack/react-router';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
+import { NotificationsNav } from '@/components/notifications-nav';
 import { ProfileDropdown } from '@/components/profile-dropdown';
 import { Search } from '@/components/search';
 import { ThemeSwitch } from '@/components/theme-switch';
@@ -28,6 +29,7 @@ export default function DeviceDetail() {
         <Search />
         <div className="ml-auto flex items-center space-x-4">
           <ThemeSwitch />
+          <NotificationsNav />
           <ProfileDropdown />
         </div>
       </Header>

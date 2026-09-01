@@ -34,7 +34,7 @@ export class DeviceWarningListener {
 
     const message = `[Warning] ${device.name} went offline`;
 
-    await this.notificationService.sendWarning(device.userId, message, device.offlineAlert.channels ?? undefined);
+    await this.notificationService.sendWarning(device.userId, message, device.offlineAlert.channels ?? undefined, device.id);
   }
 
   // The device/gateway itself already decided this is alert-worthy (`devices.cloud.alert` —
@@ -48,7 +48,7 @@ export class DeviceWarningListener {
       return;
     }
 
-    await this.notificationService.sendWarning(device.userId, event.message, event.channels);
+    await this.notificationService.sendWarning(device.userId, event.message, event.channels, device.id);
   }
 
   @OnEvent('device.telemetry')
@@ -75,7 +75,7 @@ export class DeviceWarningListener {
       const message = this.buildMessage(device.name, field, value, breach);
 
       // eslint-disable-next-line no-await-in-loop
-      await this.notificationService.sendWarning(device.userId, message, breach.channels);
+      await this.notificationService.sendWarning(device.userId, message, breach.channels, device.id);
     }
   }
 
