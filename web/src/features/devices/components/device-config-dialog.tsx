@@ -43,7 +43,6 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
         data: deviceConfigFormToPayload(values, currentRow.template?.type),
       });
       toast.success('Device config updated');
-      onOpenChange(false);
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
     }
