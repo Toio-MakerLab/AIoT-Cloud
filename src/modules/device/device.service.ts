@@ -18,7 +18,13 @@ import { DevicePushChannel } from '../../constants/device-push-channel.ts';
 import { DEVICE_OFFLINE_THRESHOLD_MS, DeviceStatus } from '../../constants/device-status.ts';
 import { DeviceTemplateType } from '../../constants/device-template-type.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
-import { KAFKA_COMMAND_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
+import {
+  KAFKA_COMMAND_TOPIC,
+  KAFKA_DEVICE_EVENTS_TOPIC,
+  KAFKA_GATEWAY_COMMANDS_TOPIC,
+  KAFKA_STATUS_TOPIC,
+  KAFKA_TELEMETRY_TOPIC,
+} from '../../constants/kafka-topics.ts';
 import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from '../../constants/mqtt-topics.ts';
 import { NotificationChannelType } from '../../constants/notification-channel-type.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
@@ -344,6 +350,49 @@ export class DeviceService {
     }
 
     return ResponseCore.ok({ key: dto.key, value: dto.value, topic: kafkaTopic, publishedAt });
+  }
+
+  /**
+   * Pushes a "your config changed, re-fetch now" nudge to a device instead of waiting for its own
+   * boot/poll cycle to notice — mainly for GATEWAY devices, whose alert rules/failsafe (see
+   * GatewayAutomationPanel) only take effect once the gateway re-pulls `GET .../boot-config`.
+   * Deliberately a signal, not the config itself: the device still re-fetches boot-config as the
+   * single source of truth, so this can never drift out of sync with it.
+   *
+   * Published on the dedicated `KAFKA_GATEWAY_COMMANDS_TOPIC` (not the per-device/shared-bus
+   * `KAFKA_COMMAND_TOPIC` `triggerDeviceAction` uses) — unlike an actuator command, which a
+   * gateway can relay onward to an MQTT node it bridges, this only ever means something to a
+   * device that's itself a Kafka consumer, i.e. a gateway. Hence KAFKA-push-channel only below;
+   * a plain MQTT-push node has no Kafka connection of its own to receive this on.
+   */
+  async pushConfigSync(userId: string, id: string): Promise<ResponseCore<{ topic: string; configVersion: number; publishedAt: Date }>> {
+    const device = await this.deviceRepository.findOneBy({ id, userId });
+
+    if (!device) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
+    }
+
+    if (device.pushChannel !== DevicePushChannel.KAFKA) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceActionChannelUnsupported');
+    }
+
+    const publishedAt = new Date();
+
+    try {
+      await this.kafkaProducerService.send(
+        KAFKA_GATEWAY_COMMANDS_TOPIC,
+        { deviceId: device.deviceId, type: 'config_sync', configVersion: device.configVersion },
+        device.deviceId,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to publish config sync to ${KAFKA_GATEWAY_COMMANDS_TOPIC}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+
+      return ResponseCore.fail(ErrorCode.INTERNAL_SERVER_ERROR, 'error.deviceActionPublishFailed');
+    }
+
+    return ResponseCore.ok({ topic: KAFKA_GATEWAY_COMMANDS_TOPIC, configVersion: device.configVersion, publishedAt });
   }
 
   /** `scope: null` means unrestricted (GUEST) — every device system-wide, not just the caller's own. */

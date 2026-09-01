@@ -84,3 +84,5 @@ export const useTriggerDeviceActionMutation = (id: string) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [DEVICES_QUERY_KEY, id] }),
   });
 };
+
+export const usePushConfigSyncMutation = (id: string) => useMutation({ mutationFn: () => devicesApi.pushConfigSync(id) });

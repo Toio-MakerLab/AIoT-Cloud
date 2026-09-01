@@ -7,13 +7,21 @@ import {
   KAFKA_ALERT_TOPIC,
   KAFKA_COMMAND_TOPIC,
   KAFKA_DEVICE_EVENTS_TOPIC,
+  KAFKA_GATEWAY_COMMANDS_TOPIC,
   KAFKA_STATUS_TOPIC,
   KAFKA_TELEMETRY_TOPIC,
 } from '../../constants/kafka-topics.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 
 /** Every shared topic this backend produces/consumes — see `docs/gateway-kafka-integration.md`. */
-const MANAGED_TOPICS = [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_COMMAND_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_ALERT_TOPIC];
+const MANAGED_TOPICS = [
+  KAFKA_TELEMETRY_TOPIC,
+  KAFKA_STATUS_TOPIC,
+  KAFKA_COMMAND_TOPIC,
+  KAFKA_GATEWAY_COMMANDS_TOPIC,
+  KAFKA_DEVICE_EVENTS_TOPIC,
+  KAFKA_ALERT_TOPIC,
+];
 
 /**
  * Creates the shared gateway<->cloud topics on boot if they don't already exist. Most managed

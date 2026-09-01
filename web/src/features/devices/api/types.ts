@@ -230,6 +230,13 @@ export interface ITriggerDeviceActionResult {
   publishedAt: string;
 }
 
+/** Result of nudging a device (typically a GATEWAY) to re-fetch its boot-config now. */
+export interface IPushConfigSyncResult {
+  topic: string;
+  configVersion: number;
+  publishedAt: string;
+}
+
 export interface IDevicesQuery {
   page?: number;
   take?: number;

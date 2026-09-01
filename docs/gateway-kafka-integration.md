@@ -48,7 +48,7 @@ doesn't need its own separate copy of these secrets configured out of band.
 
 ## Topics
 
-Five shared topics, **not** per-device. Devices are distinguished by the
+Six shared topics, **not** per-device. Devices are distinguished by the
 `deviceId` (or `device_id` — see `devices.events` below) field inside the
 payload, and every message must be produced with the device id as the
 **Kafka message key** (`kafkajs`: `{ key: deviceId, value: JSON.stringify(payload) }`)
@@ -60,6 +60,7 @@ in order.
 | `devices.telemetry` | gateway → cloud | `KAFKA_TELEMETRY_TOPIC` |
 | `devices.status` | gateway → cloud | `KAFKA_STATUS_TOPIC` |
 | `devices.commands` (default) | cloud → gateway | `KAFKA_COMMAND_TOPIC` |
+| `devices.gateway.commands` | cloud → gateway | `KAFKA_GATEWAY_COMMANDS_TOPIC` |
 | `devices.events` | gateway → cloud | `KAFKA_DEVICE_EVENTS_TOPIC` |
 | `devices.cloud.alerts` | gateway/device → cloud | `KAFKA_ALERT_TOPIC` |
 
@@ -134,6 +135,44 @@ listening on the shared bus).
   bridges, and relays `{ key, value }` to that device over its own local
   MQTT — publishing on `topic` directly rather than re-deriving it from a
   separately-cached boot-config.
+
+### `devices.gateway.commands` (cloud → gateway)
+
+A dedicated topic, separate from `devices.commands` above — this is a
+"re-fetch your boot-config now" nudge, not an actuator command, and only
+ever means something to a device that's itself a Kafka consumer (a gateway),
+never a plain MQTT node bridged by one. Every gateway (any device registered
+with `pushChannel: "KAFKA"`) should subscribe to this fixed topic name — it
+is **not** overridden by `config.kafka.commandTopic` the way `devices.commands`
+can be.
+
+```json
+{
+  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "type": "config_sync",
+  "configVersion": 4
+}
+```
+
+- Published by the backend (`DeviceService.pushConfigSync`) when a user
+  clicks "Push to device" on the Device Config dialog, or whenever else the
+  cloud wants a gateway to pick up a config change immediately instead of
+  waiting for its own poll/reboot cycle.
+- `type` (string) — always `"config_sync"` for now; treat an unrecognized
+  `type` as a no-op rather than an error, in case new push types are added
+  later.
+- `configVersion` (number) — the config version the backend had at publish
+  time, informational only (e.g. for logging "was asked to sync to v4"). The
+  gateway should still re-fetch `GET /devices/{deviceId}/boot-config` as the
+  actual source of truth rather than trust this number alone — it's a nudge
+  to check, not the new config itself.
+- On receipt, re-fetch this gateway's own boot-config (`GET
+  /devices/{deviceId}/boot-config` using its own `deviceId`) and apply
+  whatever changed (alert rules, failsafe, MQTT/Kafka settings, etc.).
+- Only published for devices on the KAFKA push channel — a plain MQTT-push
+  node returns `400` from `POST /devices/:id/config/push` since there's no
+  Kafka connection of its own to receive this on; a bridged MQTT node's
+  owning gateway would need to be synced instead.
 
 ### `devices.events` (gateway → cloud)
 
@@ -298,9 +337,13 @@ x-device-secret: <shared secret>
 - `topics.channels[].key` matches the `key` field the gateway will receive
   on `devices.commands` — use it to look up which local topic to relay a
   given command to (`topics.channels[].topic`).
-- Poll this per device when first seen, and again if `configVersion`
-  changes (bump on every `PATCH /devices/:id/config`) — no push
-  notification for config changes exists yet.
+- Fetch this per device when first seen, and again whenever
+  `devices.gateway.commands` (above) delivers a `config_sync` nudge for a
+  gateway's own `deviceId` — that's the real-time path. A gateway that also
+  wants to self-heal from a missed/dropped push should still poll
+  periodically and compare against its last-applied `configVersion` (bumped
+  on every `PATCH /devices/:id/config`), since `config_sync` delivery isn't
+  guaranteed (e.g. the gateway was offline when it was published).
 
 ## Unregistered devices
 
@@ -318,4 +361,4 @@ paths like MQTT. Creating a topic per device doesn't scale operationally
 type, and devices are distinguished by `deviceId` in the key/payload. This
 also means the backend's Kafka consumer never needs to know about a device's
 existence ahead of time or dynamically subscribe to new topics as devices
-are added — `aiot-gate` only ever needs these three fixed topic names.
+are added — `aiot-gate` only ever needs these fixed topic names.

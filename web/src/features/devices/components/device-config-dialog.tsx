@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { IconLoader2, IconSend2 } from '@tabler/icons-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
-import { useUpdateDeviceConfigMutation } from '../api/queries';
+import { usePushConfigSyncMutation, useUpdateDeviceConfigMutation } from '../api/queries';
 import { type DeviceConfigFormValues, deviceConfigFormDefaults, deviceConfigFormSchema, deviceConfigFormToPayload } from '../data/device-config-form';
 import type { Device } from '../data/schema';
 import { DeviceConfigFields } from './device-config-fields';
@@ -17,6 +18,7 @@ interface Props {
 
 export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
   const updateDeviceConfig = useUpdateDeviceConfigMutation();
+  const pushConfigSync = usePushConfigSyncMutation(currentRow.id);
 
   const form = useForm<DeviceConfigFormValues>({
     resolver: zodResolver(deviceConfigFormSchema),
@@ -47,6 +49,20 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
     }
   };
 
+  // The sync nudge is published on the dedicated devices.gateway.commands topic, which only a
+  // Kafka-connected device (a gateway) consumes — an MQTT- or HTTP-push device has no Kafka
+  // connection of its own to receive it on (backend rejects those the same way).
+  const canPushConfig = pushChannel === 'KAFKA';
+
+  const handlePushConfig = async () => {
+    try {
+      const result = await pushConfigSync.mutateAsync();
+      toast.success(`Push sent — device will re-fetch config v${result.data?.configVersion ?? '?'}`);
+    } catch {
+      // Error toast is already shown by the global mutation error handler (see main.tsx).
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -71,6 +87,16 @@ export function DeviceConfigDialog({ currentRow, open, onOpenChange }: Props) {
           </form>
         </Form>
         <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            title={canPushConfig ? undefined : 'Only KAFKA-push devices (gateways) can receive a config-sync push.'}
+            disabled={!canPushConfig || pushConfigSync.isPending}
+            onClick={() => void handlePushConfig()}
+          >
+            {pushConfigSync.isPending ? <IconLoader2 className="h-4 w-4 animate-spin" /> : <IconSend2 className="h-4 w-4" />}
+            Push to device
+          </Button>
           <Button type="submit" form="device-config-form" disabled={updateDeviceConfig.isPending}>
             Save changes
           </Button>

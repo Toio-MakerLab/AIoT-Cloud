@@ -103,6 +103,17 @@ export class DeviceController {
     return this.deviceService.updateDeviceConfig(user.id as string, id, dto);
   }
 
+  /** Nudges the device (typically a GATEWAY) to re-fetch its boot-config now instead of waiting for its own poll/reboot cycle. */
+  @Post(':id/config/push')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  pushConfigSync(
+    @AuthUser() user: UserEntity,
+    @Param('id') id: string,
+  ): Promise<ResponseCore<{ topic: string; configVersion: number; publishedAt: Date }>> {
+    return this.deviceService.pushConfigSync(user.id as string, id);
+  }
+
   @Post(':id/actions')
   @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)

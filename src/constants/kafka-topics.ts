@@ -16,6 +16,16 @@ export const KAFKA_TELEMETRY_TOPIC = 'devices.cloud.telemetry';
 export const KAFKA_COMMAND_TOPIC = 'devices.cloud.commands';
 
 /**
+ * Dedicated Kafka topic for backend -> gateway config-sync pushes (see
+ * `DeviceService.pushConfigSync`) — kept separate from `KAFKA_COMMAND_TOPIC` above since this is a
+ * "re-fetch your boot-config now" nudge, not an actuator command, and only ever reaches a device
+ * that's itself a Kafka consumer (a gateway), never a plain MQTT node bridged by one. Each message
+ * carries `{ deviceId, type: 'config_sync', configVersion }`, keyed/partitioned by deviceId like
+ * the other topics.
+ */
+export const KAFKA_GATEWAY_COMMANDS_TOPIC = 'devices.gateway.commands';
+
+/**
  * Shared Kafka topic for gateway -> backend device status (online/offline) uplink.
  * Each message carries `{ deviceId, status }`, keyed/partitioned by deviceId like the
  * telemetry topic.

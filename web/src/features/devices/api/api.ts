@@ -5,6 +5,7 @@ import type {
   IDeviceTelemetry,
   IDeviceTemplateSummary,
   IPageResponse,
+  IPushConfigSyncResult,
   IRegisterDevice,
   IRegisterDeviceResult,
   IResponseCore,
@@ -40,6 +41,11 @@ export const devicesApi = {
   },
   updateDeviceConfig: async (id: string, data: IUpdateDeviceConfig) => {
     const response = await apiClient.patch<IResponseCore<IDevice>>(`/devices/${id}/config`, data);
+    return response.data;
+  },
+  /** Nudges the device to re-fetch its boot-config now, e.g. right after saving new gateway automation rules. */
+  pushConfigSync: async (id: string) => {
+    const response = await apiClient.post<IResponseCore<IPushConfigSyncResult>>(`/devices/${id}/config/push`);
     return response.data;
   },
   triggerDeviceAction: async (id: string, data: ITriggerDeviceAction) => {
