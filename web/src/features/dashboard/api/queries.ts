@@ -49,10 +49,12 @@ export const useDashboardDevicesQuery = () =>
     queryFn: () => deviceApi.getDevices(),
   });
 
-export const useDeviceTelemetryHistoryQuery = (deviceId: string | undefined) =>
+export const useDeviceTelemetryHistoryQuery = (deviceId: string | undefined, range: { from?: Date; to?: Date } = {}) =>
   useQuery({
-    queryKey: [DEVICE_TELEMETRY_QUERY_KEY, deviceId],
-    queryFn: () => deviceApi.getDeviceTelemetry(deviceId as string, 100),
+    // ISO strings (not the Date objects themselves) in the key so equal instants compare equal
+    // instead of busting the cache every render.
+    queryKey: [DEVICE_TELEMETRY_QUERY_KEY, deviceId, range.from?.toISOString(), range.to?.toISOString()],
+    queryFn: () => deviceApi.getDeviceTelemetry(deviceId as string, { from: range.from, to: range.to }),
     enabled: !!deviceId,
   });
 

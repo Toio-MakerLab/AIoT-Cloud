@@ -93,7 +93,7 @@ export class DeviceController {
     @Param('id') id: string,
     @Query(new ValidationPipe({ transform: true })) query: DeviceTelemetryQueryDto,
   ): Promise<ResponseCore<DeviceTelemetryDto[]>> {
-    return this.deviceService.getDeviceTelemetryHistory(resolveAccessScope(user), id, query.limit);
+    return this.deviceService.getDeviceTelemetryHistory(resolveAccessScope(user), id, query.limit, { from: query.from, to: query.to });
   }
 
   @Patch(':id/config')

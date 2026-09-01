@@ -6,7 +6,7 @@ import type { Observable } from 'rxjs';
 import { defer, from, fromEvent, interval, merge } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
 import type { Repository } from 'typeorm';
-import { In, LessThan } from 'typeorm';
+import { Between, In, LessThan, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
 import type { AccessScope } from '../../common/access-scope.util.ts';
@@ -389,16 +389,37 @@ export class DeviceService {
     return ResponseCore.ok(null);
   }
 
-  /** `scope: null` means unrestricted (GUEST) — can read telemetry history for any device. */
-  async getDeviceTelemetryHistory(scope: AccessScope, id: string, limit: number): Promise<ResponseCore<DeviceTelemetryDto[]>> {
+  /**
+   * `scope: null` means unrestricted (GUEST) — can read telemetry history for any device.
+   * `range` powers the dashboard's time-range filter: with both bounds it's an inclusive window,
+   * with just one it's an open-ended bound, and with neither it falls back to the previous
+   * behavior of "the most recent `limit` points". `limit` still applies as a hard cap even within
+   * a range, ordered newest-first before the cap so a wide range returns its most recent points
+   * rather than erroring or streaming everything.
+   */
+  async getDeviceTelemetryHistory(
+    scope: AccessScope,
+    id: string,
+    limit: number,
+    range?: { from?: Date; to?: Date },
+  ): Promise<ResponseCore<DeviceTelemetryDto[]>> {
     const device = await this.deviceRepository.findOneBy(scope ? { id, ...scope } : { id });
 
     if (!device) {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
     }
 
+    const recordedAt =
+      range?.from && range.to
+        ? Between(range.from, range.to)
+        : range?.from
+          ? MoreThanOrEqual(range.from)
+          : range?.to
+            ? LessThanOrEqual(range.to)
+            : undefined;
+
     const entities = await this.deviceTelemetryRepository.find({
-      where: { deviceId: device.id },
+      where: { deviceId: device.id, ...(recordedAt && { recordedAt }) },
       order: { recordedAt: 'DESC' },
       take: limit,
     });

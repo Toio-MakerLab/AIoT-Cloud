@@ -37,8 +37,11 @@ export const deviceApi = {
     return res.data.data;
   },
 
-  getDeviceTelemetry: async (deviceId: string, limit = 100): Promise<IDeviceTelemetry[]> => {
-    const res = await apiClient.get<Response<IDeviceTelemetry[]>>(`/devices/${deviceId}/telemetry`, { params: { limit } });
+  getDeviceTelemetry: async (deviceId: string, options: { limit?: number; from?: Date; to?: Date } = {}): Promise<IDeviceTelemetry[]> => {
+    const { limit = 500, from, to } = options;
+    const res = await apiClient.get<Response<IDeviceTelemetry[]>>(`/devices/${deviceId}/telemetry`, {
+      params: { limit, from: from?.toISOString(), to: to?.toISOString() },
+    });
     return res.data.data;
   },
 

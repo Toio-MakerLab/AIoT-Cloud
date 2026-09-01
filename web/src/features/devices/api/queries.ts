@@ -26,10 +26,12 @@ export const useDeviceQuery = (id: string) =>
     refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
   });
 
-export const useDeviceTelemetryQuery = (id: string, limit = 100) =>
+export const useDeviceTelemetryQuery = (id: string, range: { limit?: number; from?: Date; to?: Date } = {}) =>
   useQuery({
-    queryKey: [DEVICE_TELEMETRY_QUERY_KEY, id, limit],
-    queryFn: () => devicesApi.getDeviceTelemetry(id, limit),
+    // ISO strings (not the Date objects themselves) in the key so equal instants compare equal
+    // instead of busting the cache every render.
+    queryKey: [DEVICE_TELEMETRY_QUERY_KEY, id, range.limit, range.from?.toISOString(), range.to?.toISOString()],
+    queryFn: () => devicesApi.getDeviceTelemetry(id, range),
     enabled: !!id,
   });
 

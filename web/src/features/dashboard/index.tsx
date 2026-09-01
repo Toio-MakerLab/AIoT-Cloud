@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useIsGuest } from '@/hooks/use-is-guest';
+import { resolveTimeRange, TIME_RANGE_OPTIONS, type TimeRangePreset } from '@/lib/time-range';
 import { useCreateDashboardMutation, useDashboardDevicesQuery, useDashboardsQuery, useUpdateDashboardMutation } from './api/queries';
 import type { IDashboard, IDashboardWidget } from './api/types';
 import { AddPanelDialog } from './components/add-panel-dialog';
@@ -43,10 +44,13 @@ export default function Dashboard() {
   const [draft, setDraft] = useState<DraftDashboard>(blankDraft());
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [hasSelectedInitial, setHasSelectedInitial] = useState(false);
+  const [timeRangePreset, setTimeRangePreset] = useState<TimeRangePreset>('24h');
   const isGuest = useIsGuest();
 
   const dashboards = useMemo(() => dashboardsQuery.data ?? [], [dashboardsQuery.data]);
   const devices = useMemo(() => devicesQuery.data ?? [], [devicesQuery.data]);
+  // Fixed at selection time rather than sliding with "now" every render — see @/lib/time-range.
+  const timeRange = useMemo(() => resolveTimeRange(timeRangePreset), [timeRangePreset]);
 
   // Once the saved dashboards load, default to the first one (if any) instead of a blank draft.
   useEffect(() => {
@@ -199,6 +203,21 @@ export default function Dashboard() {
             </label>
           </div>
 
+          {/* Bounds the REST-fetched history CHART/VALUE panels seed from; live telemetry keeps
+              streaming on top regardless of what's picked here — see @/lib/time-range. */}
+          <Select value={timeRangePreset} onValueChange={(value) => setTimeRangePreset(value as TimeRangePreset)}>
+            <SelectTrigger className="w-full sm:w-44">
+              <SelectValue placeholder="Time range" />
+            </SelectTrigger>
+            <SelectContent>
+              {TIME_RANGE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {!isGuest && (
             <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
               <Button variant="outline" className="flex-1 sm:flex-initial" onClick={() => setAddPanelOpen(true)}>
@@ -217,6 +236,7 @@ export default function Dashboard() {
           widgets={draft.widgets}
           devices={devices}
           liveData={socket}
+          timeRange={timeRange}
           onLayoutChange={handleLayoutChange}
           onRemoveWidget={handleRemoveWidget}
         />

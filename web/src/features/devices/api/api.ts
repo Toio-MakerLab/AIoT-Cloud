@@ -47,8 +47,11 @@ export const devicesApi = {
     return response.data;
   },
   /** Powers TelemetryHistoryPanel on the device detail page — not consumed on the list page. */
-  getDeviceTelemetry: async (id: string, limit = 100) => {
-    const response = await apiClient.get<IResponseCore<IDeviceTelemetry[]>>(`/devices/${id}/telemetry`, { params: { limit } });
+  getDeviceTelemetry: async (id: string, options: { limit?: number; from?: Date; to?: Date } = {}) => {
+    const { limit = 100, from, to } = options;
+    const response = await apiClient.get<IResponseCore<IDeviceTelemetry[]>>(`/devices/${id}/telemetry`, {
+      params: { limit, from: from?.toISOString(), to: to?.toISOString() },
+    });
     return response.data;
   },
   /**

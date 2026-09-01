@@ -1,6 +1,7 @@
 import { GridLayout, type Layout, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { useIsGuest } from '@/hooks/use-is-guest';
+import type { ResolvedTimeRange } from '@/lib/time-range';
 import type { IDashboardWidget, IDevice } from '../api/types';
 import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
 import { DevicePanel } from './device-panel';
@@ -8,7 +9,7 @@ import { DevicePanel } from './device-panel';
 export interface DeviceLiveData {
   latestByDevice: Map<string, ILatestTelemetry>;
   historyByDevice: Map<string, ITelemetryPoint[]>;
-  seedHistory: (deviceId: string, points: ITelemetryPoint[]) => void;
+  seedHistory: (deviceId: string, points: ITelemetryPoint[], key: string) => void;
 }
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
   devices: IDevice[];
   // All widget types (CHART, ACTION, VALUE) read live data from the same WebSocket source.
   liveData: DeviceLiveData;
+  // Bounds the REST-fetched history CHART/VALUE panels seed from — see @/lib/time-range.
+  timeRange: ResolvedTimeRange;
   onLayoutChange: (widgets: IDashboardWidget[]) => void;
   onRemoveWidget: (widgetId: string) => void;
 }
@@ -69,7 +72,7 @@ function scaleToTablet(widget: IDashboardWidget): Layout[number] {
  * children). Grid sizing (cols/rowHeight/margin/containerPadding) is grouped under the
  * `gridConfig` prop in v2 instead of flat props.
  */
-export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRemoveWidget }: Props) {
+export function DashboardGrid({ widgets, devices, liveData, timeRange, onLayoutChange, onRemoveWidget }: Props) {
   const { width, containerRef, mounted } = useContainerWidth();
   const isGuest = useIsGuest();
   const tier = getTier(width);
@@ -151,6 +154,7 @@ export function DashboardGrid({ widgets, devices, liveData, onLayoutChange, onRe
                   latest={liveData.latestByDevice.get(widget.deviceId)}
                   history={liveData.historyByDevice.get(widget.deviceId) ?? []}
                   seedHistory={liveData.seedHistory}
+                  timeRange={timeRange}
                   onRemove={() => onRemoveWidget(widget.id)}
                 />
               </div>

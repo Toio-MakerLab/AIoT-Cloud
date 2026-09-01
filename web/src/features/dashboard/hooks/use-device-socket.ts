@@ -26,13 +26,15 @@ interface TelemetryEventPayload {
  * - `historyByDevice`: Map<deviceId, ITelemetryPoint[]> — rolling in-memory buffer (last N
  *   points) per device, seeded from any history passed via `seedHistory` and appended to as
  *   live telemetry arrives.
- * - `seedHistory(deviceId, points)`: merge fetched history (e.g. from
- *   GET /api/devices/:id/telemetry) into the rolling buffer for a device.
+ * - `seedHistory(deviceId, points, key)`: install fetched history (e.g. from
+ *   GET /api/devices/:id/telemetry) as a device's buffer — see its own doc comment for what `key` is for.
  * - `connected`: whether the socket is currently connected.
  */
 export function useDeviceSocket(deviceIds: string[]) {
   const socketRef = useRef<Socket | null>(null);
   const subscribedRef = useRef<Set<string>>(new Set());
+  // Tracks which `seedHistory` key was last applied per device — see seedHistory's doc comment.
+  const seedKeyByDeviceRef = useRef<Map<string, string>>(new Map());
   const [connected, setConnected] = useState(false);
   const [latestByDevice, setLatestByDevice] = useState<Map<string, ILatestTelemetry>>(new Map());
   const [historyByDevice, setHistoryByDevice] = useState<Map<string, ITelemetryPoint[]>>(new Map());
@@ -133,13 +135,24 @@ export function useDeviceSocket(deviceIds: string[]) {
     }
   }, [deviceIds, connected]);
 
-  const seedHistory = (deviceId: string, points: ITelemetryPoint[]) => {
+  /**
+   * Installs freshly fetched REST history for a device, replacing whatever's currently buffered —
+   * but only the first time a given `key` is seen for that device. `key` should identify the query
+   * that produced `points` (the dashboard passes its resolved time-range's key): a background
+   * refetch of the *same* range (react-query staleTime/refetchOnWindowFocus) must not clobber
+   * points appended live since that fetch, but selecting a *different* range must fully replace
+   * the buffer rather than merge with it — hence keying on it instead of a one-shot "seeded at all"
+   * flag. Not truncated to TELEMETRY_HISTORY_LIMIT here; the fetch's own `limit`/range already
+   * bounds `points`, and live appends (handleTelemetry above) apply that cap on top as they arrive.
+   */
+  const seedHistory = (deviceId: string, points: ITelemetryPoint[], key: string) => {
+    if (seedKeyByDeviceRef.current.get(deviceId) === key) {
+      return;
+    }
+    seedKeyByDeviceRef.current.set(deviceId, key);
     setHistoryByDevice((prev) => {
-      if (prev.has(deviceId)) {
-        return prev;
-      }
       const next = new Map(prev);
-      next.set(deviceId, points.length > TELEMETRY_HISTORY_LIMIT ? points.slice(points.length - TELEMETRY_HISTORY_LIMIT) : points);
+      next.set(deviceId, points);
       return next;
     });
   };

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useIsGuest } from '@/hooks/use-is-guest';
 import { getChartColor } from '@/lib/chart-colors';
+import type { ResolvedTimeRange } from '@/lib/time-range';
 import { cn } from '@/lib/utils';
 import { useDeviceTelemetryHistoryQuery, useTriggerDeviceActionMutation } from '../api/queries';
 import type { IDashboardWidget, IDevice, IDeviceTemplate } from '../api/types';
@@ -17,7 +18,8 @@ interface Props {
   device: IDevice | undefined;
   latest: ILatestTelemetry | undefined;
   history: ITelemetryPoint[];
-  seedHistory: (deviceId: string, points: ITelemetryPoint[]) => void;
+  seedHistory: (deviceId: string, points: ITelemetryPoint[], key: string) => void;
+  timeRange: ResolvedTimeRange;
   onRemove: () => void;
 }
 
@@ -59,24 +61,30 @@ function formatValue(value: unknown): string {
   return String(value);
 }
 
-export function DevicePanel({ widget, device, latest, history, seedHistory, onRemove }: Props) {
+export function DevicePanel({ widget, device, latest, history, seedHistory, timeRange, onRemove }: Props) {
   // Seed the rolling history buffer once fetched — combined with any live telemetry already
   // appended by the WebSocket live-data source, this gives charts both history and a live tail.
-  const { data: fetchedHistory } = useDeviceTelemetryHistoryQuery(widget.deviceId);
+  // Bounded by the dashboard's time-range filter (see @/lib/time-range); `timeRange.key` is what lets
+  // seedHistory tell "the same range refetched" apart from "the user picked a different range".
+  const { data: fetchedHistory } = useDeviceTelemetryHistoryQuery(widget.deviceId, { from: timeRange.from, to: timeRange.to });
   const isGuest = useIsGuest();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: seedHistory is an unstable reference from the parent's live-data hook; adding it would re-run the effect on every render.
   useEffect(() => {
-    if (fetchedHistory && fetchedHistory.length > 0) {
+    // `fetchedHistory` is `undefined` only while still loading — an empty array is a resolved "no
+    // telemetry in this range" and must still seed (as empty), otherwise switching to an empty
+    // range would leave the previous range's points on screen.
+    if (fetchedHistory) {
       seedHistory(
         widget.deviceId,
         fetchedHistory.map((t) => ({
           payload: t.payload,
           recordedAt: t.recordedAt,
         })),
+        timeRange.key,
       );
     }
-  }, [fetchedHistory, widget.deviceId]);
+  }, [fetchedHistory, widget.deviceId, timeRange.key]);
 
   const field = widget.field ?? '';
   const lastPoint = history[history.length - 1];
