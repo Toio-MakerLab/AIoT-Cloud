@@ -22,6 +22,7 @@ import type { UserDto } from './dtos/user.dto.ts';
 import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
 import { UserSettingsEntity } from './user-settings.entity.ts';
+import type { ApiConfigService } from '../../shared/services/api-config.service.ts';
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -34,6 +35,7 @@ export class UserService {
     private userSettingsRepository: Repository<UserSettingsEntity>,
     private commandBus: CommandBus,
     private mailService: MailService,
+    private apiConfigService: ApiConfigService,
   ) {}
 
   /**
@@ -182,7 +184,7 @@ export class UserService {
       firstName: 'Root',
       lastName: 'User',
       email: 'root@example.com',
-      password: '12345678',
+      password: this.apiConfigService.rootPassword,
       role: RoleType.ROOT,
     });
 

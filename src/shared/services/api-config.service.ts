@@ -319,12 +319,25 @@ export class ApiConfigService {
       fileLevel: (levels.file ?? fallback) as Level,
     };
   }
+  get rootPassword(): string {
+    return this.getFallback('ROOT_PASSWORD', 'root-password-please-change');
+  }
 
   private get(key: string): string {
     const value = this.configService.get<string>(key);
 
     if (value == null) {
       throw new Error(`${key} environment variable does not set`); // probably we should call process.exit() too to avoid locking the service
+    }
+
+    return value;
+  } 
+
+  private getFallback(key: string, fallback: string): string {
+    const value = this.configService.get<string>(key);
+
+    if (value == null) {
+      return fallback;
     }
 
     return value;
