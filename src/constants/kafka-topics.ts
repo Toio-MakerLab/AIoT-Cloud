@@ -32,6 +32,18 @@ export const KAFKA_COMMAND_TOPIC = 'devices.cloud.commands';
 export const KAFKA_GATEWAY_COMMANDS_TOPIC = 'devices.gateway.commands';
 
 /**
+ * Dedicated Kafka topic for backend -> gateway relay-action notifications — published by
+ * `DeviceService.triggerDeviceAction` right alongside the real command it sends on
+ * `KAFKA_COMMAND_TOPIC` (or the device's own `config.kafka.commandTopic`). Unlike that topic, a
+ * gateway is not expected to relay from here — this is audit/observability-only, so the gateway
+ * knows a dashboard-initiated action was dispatched for one of its bridged devices without having
+ * to infer it from a duplicate `KAFKA_COMMAND_TOPIC` message. Each message carries
+ * `{ deviceId, key, value, topic?, requestedAt }`, keyed/partitioned by deviceId like the other
+ * topics.
+ */
+export const KAFKA_GATEWAY_EVENTS_TOPIC = 'devices.gateway.events';
+
+/**
  * Shared Kafka topic for gateway -> backend device status (online/offline) uplink.
  * Each message carries `{ deviceId, status }`, keyed/partitioned by deviceId like the
  * telemetry topic.

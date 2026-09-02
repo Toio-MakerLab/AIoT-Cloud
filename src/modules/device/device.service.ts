@@ -22,6 +22,7 @@ import {
   KAFKA_COMMAND_TOPIC,
   KAFKA_DEVICE_EVENTS_TOPIC,
   KAFKA_GATEWAY_COMMANDS_TOPIC,
+  KAFKA_GATEWAY_EVENTS_TOPIC,
   KAFKA_STATUS_TOPIC,
   KAFKA_TELEMETRY_TOPIC,
 } from '../../constants/kafka-topics.ts';
@@ -356,9 +357,11 @@ export class DeviceService {
     // directly on the KAFKA push channel) gets its own dedicated commandTopic — accept whatever
     // is configured on the device instead of always hardcoding the shared bus, so a gateway can
     // be pointed at its own topic (e.g. "device.gateway.command"). Falls back to the shared bus
-    // topic for devices with no Kafka config of their own (e.g. MQTT-only relay nodes, which are
-    // bridged by a separate gateway device that IS listening on the shared bus).
-    const kafkaTopic = device.config?.kafka?.commandTopic ?? KAFKA_GATEWAY_COMMANDS_TOPIC;
+    // topic (`KAFKA_COMMAND_TOPIC`, NOT `KAFKA_GATEWAY_COMMANDS_TOPIC` — that one is config-sync
+    // only, see its doc comment) for devices with no Kafka config of their own (e.g. MQTT-only
+    // relay nodes, which are bridged by a separate gateway device that IS listening on the
+    // shared bus).
+    const kafkaTopic = device.config?.kafka?.commandTopic ?? KAFKA_COMMAND_TOPIC;
     const publishedAt = new Date();
 
     try {
@@ -373,6 +376,37 @@ export class DeviceService {
       );
 
       return ResponseCore.fail(ErrorCode.INTERNAL_SERVER_ERROR, 'error.deviceActionPublishFailed');
+    }
+
+    // Best-effort, non-fatal: the real command above already went out, so a failure here shouldn't
+    // fail the request — just log it.
+    try {
+      // Audit/observability companion to the command above, on its own dedicated topic (never
+      // consumed by this backend — see `KAFKA_GATEWAY_EVENTS_TOPIC`'s doc comment) so the gateway
+      // can tell "dashboard dispatched this" apart from its own relay bookkeeping without parsing
+      // a second copy of the command out of `kafkaTopic`.
+      await this.kafkaProducerService.send(
+        KAFKA_GATEWAY_EVENTS_TOPIC,
+        { deviceId: device.deviceId, key: dto.key, value: dto.value, topic: deviceMqttTopic, requestedAt: publishedAt },
+        device.deviceId,
+      );
+
+      // Self-published onto the same topic `KafkaConsumerService` already listens to for real
+      // gateway confirmations (`devices.cloud.events`), so it round-trips through the exact same
+      // `handleDeviceChannelEvent` path instead of a second, hand-rolled optimistic-update path —
+      // applies `channelStates` and dispatches `device.channelState`/`device.actionResult`
+      // immediately, so the dashboard doesn't wait out the real gateway round-trip. A genuine
+      // confirmation (or `status: "error"`) from the gateway follows shortly after and is the
+      // authoritative one — this is just applied first.
+      await this.kafkaProducerService.send(
+        KAFKA_DEVICE_EVENTS_TOPIC,
+        { deviceId: device.deviceId, key: dto.key, value: dto.value, status: 'ok' },
+        device.deviceId,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to publish optimistic action-dispatch notification for ${dto.key}=${dto.value}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     return ResponseCore.ok({ key: dto.key, value: dto.value, topic: kafkaTopic, publishedAt });

@@ -48,7 +48,7 @@ doesn't need its own separate copy of these secrets configured out of band.
 
 ## Topics
 
-Six shared topics, **not** per-device. Devices are distinguished by the
+Seven shared topics, **not** per-device. Devices are distinguished by the
 `deviceId` field inside the payload, and every message must be produced with the device id as the
 **Kafka message key** (`kafkajs`: `{ key: deviceId, value: JSON.stringify(payload) }`)
 so all messages for one device land in the same partition and are processed
@@ -60,6 +60,7 @@ in order.
 | `devices.status` | gateway → cloud | `KAFKA_STATUS_TOPIC` |
 | `devices.commands` (default) | cloud → gateway | `KAFKA_COMMAND_TOPIC` |
 | `devices.gateway.commands` | cloud → gateway | `KAFKA_GATEWAY_COMMANDS_TOPIC` |
+| `devices.gateway.events` | cloud → gateway | `KAFKA_GATEWAY_EVENTS_TOPIC` |
 | `devices.events` | gateway → cloud | `KAFKA_DEVICE_EVENTS_TOPIC` |
 | `devices.cloud.alerts` | gateway/device → cloud | `KAFKA_ALERT_TOPIC` |
 
@@ -142,6 +143,11 @@ listening on the shared bus).
   doesn't parse gateway-originated messages on this topic at all — see
   `KafkaConsumerService`, which only subscribes to the four gateway→cloud
   topics below. Report the applied result on `devices.events` instead.
+- Alongside this, `triggerDeviceAction` also publishes to `devices.gateway.events` (below, for
+  gateway-side observability) and self-publishes an optimistic `{ deviceId, key, value, status: "ok" }`
+  onto `devices.events` itself, so the dashboard sees the change immediately via the same path a
+  real gateway confirmation takes, without waiting on the round trip to the physical device. The
+  gateway's own (authoritative) confirmation on `devices.events` follows shortly after.
 
 ### `devices.gateway.commands` (cloud → gateway)
 
@@ -181,10 +187,44 @@ can be.
   Kafka connection of its own to receive this on; a bridged MQTT node's
   owning gateway would need to be synced instead.
 
+### `devices.gateway.events` (cloud → gateway)
+
+A companion to `devices.commands` above, published right alongside it whenever a user triggers a
+device action via `POST /devices/:id/actions` — same trigger, same payload shape, different topic.
+
+```json
+{
+  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "key": "relay_1",
+  "value": "ON",
+  "topic": "devices/01a04142-ba64-79c2-b29c-6c8ae29af427/channel/1/command",
+  "requestedAt": "2026-09-02T10:15:00.000Z"
+}
+```
+
+- **Not consumed by this backend at all** — produce-only, mirroring `devices.gateway.commands`.
+  Every gateway should subscribe to this fixed topic name (not overridden by
+  `config.kafka.commandTopic`) the same way it does for `devices.gateway.commands`.
+- Audit/observability-only — the gateway is **not** expected to relay an actuator command from
+  here. The actual relay instruction is still `devices.commands`; this just lets the gateway (or
+  any other listener) tell "a dashboard user just dispatched this" apart from its own relay
+  bookkeeping without parsing a second copy of the command out of `devices.commands`.
+- `requestedAt` (ISO timestamp) — when the backend dispatched the command, informational only.
+- Best-effort: a failure publishing here is logged but does **not** fail the
+  `POST /devices/:id/actions` request — the real command on `devices.commands` already went out by
+  the time this is attempted.
+
 ### `devices.events` (gateway → cloud)
 
 Reports whether a `devices.commands` relay actually landed on the device — published by the
 gateway's `publishEventResult` right after it relays a command down to the device's local MQTT.
+
+The backend itself also self-publishes here (`DeviceService.triggerDeviceAction`, always with
+`status: "ok"`) right after dispatching a command, purely to get an immediate optimistic update to
+the dashboard through the same `handleDeviceChannelEvent` path — see `devices.commands` above. The
+gateway's own message for the same `{ deviceId, key }` follows shortly after and is the
+authoritative one (it can still flip the result to `status: "error"` if the command didn't
+actually apply — see the `status` field below).
 
 ```json
 {
