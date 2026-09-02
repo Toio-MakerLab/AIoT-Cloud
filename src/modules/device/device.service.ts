@@ -77,7 +77,14 @@ export interface DeviceActionResultEvent {
   changedAt: Date;
 }
 
-/** Payload of a `devices.cloud.events` message, deviceId already stripped off by the Kafka consumer. */
+/**
+ * Payload of a `devices.cloud.events` or `devices.cloud.commands` message, deviceId already
+ * stripped off by the Kafka consumer — both are handled identically by
+ * `handleDeviceChannelEvent`, the former reporting the outcome of a command the backend relayed,
+ * the latter a change the gateway made on its own initiative (see `KAFKA_COMMAND_TOPIC`'s doc
+ * comment). `status`/`error` only ever apply to the former; a gateway-initiated change has no
+ * "failed" case to report.
+ */
 export interface DeviceChannelEventPayload {
   key?: string;
   value?: unknown;
@@ -234,11 +241,11 @@ export class DeviceService {
   /**
    * Resolves (and, on first boot, registers) the Kafka config handed to a device on the KAFKA
    * push channel. A GATEWAY sits between many local devices and the cloud, so unlike a single
-   * device it needs the full set of uplink topics (telemetry/status/events) plus the shared
-   * downlink command topic — not just telemetry. It also gets its own dedicated producer
-   * `clientId`, generated once and persisted to `device.config.kafka`, so every message the
-   * gateway sends to Kafka is attributable to that specific gateway instead of every gateway
-   * sharing the platform's single default clientId.
+   * device it needs the full set of uplink topics (telemetry/status/events/gateway-initiated
+   * changes) plus the shared downlink command topic — not just telemetry. It also gets its own
+   * dedicated producer `clientId`, generated once and persisted to `device.config.kafka`, so every
+   * message the gateway sends to Kafka is attributable to that specific gateway instead of every
+   * gateway sharing the platform's single default clientId.
    */
   private async resolveKafkaConfig(device: DeviceEntity): Promise<DeviceKafkaConfig> {
     if (device.config?.kafka) {
@@ -250,11 +257,17 @@ export class DeviceService {
 
     const kafka: DeviceKafkaConfig = {
       brokers: kafkaFallback.brokers,
-      topics: isGateway ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC] : [KAFKA_TELEMETRY_TOPIC],
+      topics: isGateway
+        ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC]
+        : [KAFKA_TELEMETRY_TOPIC],
       // Only gateways consume this — they relay cloud -> device commands to whatever they bridge
-      // locally (see docs/gateway-kafka-integration.md). Standalone (non-gateway) Kafka devices
-      // have nothing to relay to, so they're never told about it.
-      commandTopic: isGateway ? KAFKA_COMMAND_TOPIC : null,
+      // locally, and also treat a command addressed to their own deviceId as self-directed (see
+      // docs/gateway-kafka-integration.md). Standalone (non-gateway) Kafka devices have nothing to
+      // relay to, so they're never told about it. Set to the shared inbox
+      // (`KAFKA_GATEWAY_COMMANDS_TOPIC`) explicitly, purely so it's visible in the boot-config
+      // response — `triggerDeviceAction` already falls back to that same topic for any device
+      // with no `commandTopic` of its own, gateway included.
+      commandTopic: isGateway ? KAFKA_GATEWAY_COMMANDS_TOPIC : null,
       clientId: isGateway ? `${kafkaFallback.clientId}-gw-${device.deviceId}` : kafkaFallback.clientId,
       username: kafkaFallback.sasl?.username ?? null,
       password: kafkaFallback.sasl?.password ?? null,
@@ -356,12 +369,12 @@ export class DeviceService {
     // The actual Kafka topic the command is published on. A gateway (or any device configured
     // directly on the KAFKA push channel) gets its own dedicated commandTopic — accept whatever
     // is configured on the device instead of always hardcoding the shared bus, so a gateway can
-    // be pointed at its own topic (e.g. "device.gateway.command"). Falls back to the shared bus
-    // topic (`KAFKA_COMMAND_TOPIC`, NOT `KAFKA_GATEWAY_COMMANDS_TOPIC` — that one is config-sync
-    // only, see its doc comment) for devices with no Kafka config of their own (e.g. MQTT-only
-    // relay nodes, which are bridged by a separate gateway device that IS listening on the
-    // shared bus).
-    const kafkaTopic = device.config?.kafka?.commandTopic ?? KAFKA_COMMAND_TOPIC;
+    // be pointed at its own topic (e.g. "device.gateway.command"). Falls back to the shared
+    // per-gateway inbox (`KAFKA_GATEWAY_COMMANDS_TOPIC`, NOT `KAFKA_COMMAND_TOPIC` — that one is
+    // only set as a gateway's own commandTopic for actions targeted at itself, see its doc
+    // comment) for devices with no Kafka config of their own (e.g. MQTT-only relay nodes, which
+    // are bridged by a separate gateway device that IS listening on the shared inbox).
+    const kafkaTopic = device.config?.kafka?.commandTopic ?? KAFKA_GATEWAY_COMMANDS_TOPIC;
     const publishedAt = new Date();
 
     try {
@@ -747,17 +760,20 @@ export class DeviceService {
   }
 
   /**
-   * Handles the gateway's per-channel command-result envelope (`devices.cloud.events`):
-   * confirmation that a `devices.cloud.commands` relay actually landed on the device (or didn't).
-   * On `status: "ok"`, `key`/`value` describe the channel's newly-applied actuator state and are
-   * merged into the device's persisted `channelStates`, broadcast to the dashboard as a
-   * `device.channelState` event. On `status: "error"` the command wasn't applied — `channelStates`
-   * is left untouched, since surfacing it there would show a state the device never actually
-   * reached. Either way (as long as a `key` was named), also dispatches `device.actionResult` — a
-   * lighter, point-in-time event an ACTION panel uses to resolve its own optimistic value
-   * immediately instead of waiting out its confirmation timeout, success or failure alike.
-   * Receiving the event at all proves the gateway is actively bridging the device, so it's still
-   * marked ONLINE regardless of outcome.
+   * Handles a per-channel state-change envelope from either of two gateway->cloud topics:
+   * `devices.cloud.events` — confirmation that a `devices.gateway.commands` relay actually landed
+   * on the device (or didn't) — or `devices.cloud.commands` — a change the gateway made on its own
+   * initiative, with no preceding cloud command (see `KAFKA_COMMAND_TOPIC`'s doc comment). Both
+   * shapes are otherwise identical and handled the same way. On `status: "ok"` (the only possible
+   * outcome for a gateway-initiated change; `devices.cloud.commands` never carries `status`),
+   * `key`/`value` describe the channel's newly-applied actuator state and are merged into the
+   * device's persisted `channelStates`, broadcast to the dashboard as a `device.channelState`
+   * event. On `status: "error"` the command wasn't applied — `channelStates` is left untouched,
+   * since surfacing it there would show a state the device never actually reached. Either way (as
+   * long as a `key` was named), also dispatches `device.actionResult` — a lighter, point-in-time
+   * event an ACTION panel uses to resolve its own optimistic value immediately instead of waiting
+   * out its confirmation timeout, success or failure alike. Receiving the event at all proves the
+   * gateway is actively bridging the device, so it's still marked ONLINE regardless of outcome.
    */
   async handleDeviceChannelEvent(deviceId: string, event: DeviceChannelEventPayload): Promise<void> {
     const device = await this.deviceRepository.findOneBy({ deviceId });

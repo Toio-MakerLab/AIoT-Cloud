@@ -39,7 +39,7 @@ export interface DeviceKafkaConfig {
   /**
    * Topic the cloud publishes to for sending events/commands down to this device — only set for
    * gateways, since they're the ones that consume it and relay to the devices they bridge (see
-   * `KAFKA_COMMAND_TOPIC`). Not part of `topics` above since that list is produce-only.
+   * `KAFKA_GATEWAY_COMMANDS_TOPIC`). Not part of `topics` above since that list is produce-only.
    */
   commandTopic?: string | null;
   /**

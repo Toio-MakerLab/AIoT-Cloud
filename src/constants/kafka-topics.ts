@@ -7,37 +7,45 @@
 export const KAFKA_TELEMETRY_TOPIC = 'devices.cloud.telemetry';
 
 /**
- * Shared Kafka topic for backend -> gateway command delivery. Devices on the KAFKA push
- * channel sit behind a local gateway (ESP32 -> gateway -> cloud); the gateway consumes this
- * topic and relays matching commands to the ESP32 over its own local MQTT broker. Each
- * message carries `{ deviceId, key, value }`, keyed/partitioned by deviceId like the
- * telemetry topic.
+ * Shared Kafka topic for gateway -> backend uplink of a channel/state change the gateway itself
+ * decided to make — as opposed to `KAFKA_DEVICE_EVENTS_TOPIC`, which reports the outcome of a
+ * command the backend told it to relay (see `KAFKA_GATEWAY_COMMANDS_TOPIC`). Covers anything the
+ * gateway applies on its own initiative: a locally-fired automation rule flipping a relay, a
+ * physical/local input, or any other gateway-initiated change with no preceding cloud command.
+ * Each message carries `{ deviceId, key, value }`, keyed/partitioned by deviceId like the other
+ * topics, and is handled the same way as `KAFKA_DEVICE_EVENTS_TOPIC` — merged into the device's
+ * `channelStates` and broadcast over `device.channelState`/`device.actionResult`.
  *
- * Consume-only for the gateway, despite the `cloud` in its name (which here means "the cloud's
- * own downlink bus", not "cloud-received") — `KafkaConsumerService` never subscribes to this
- * topic, only produces to it (`DeviceService.triggerDeviceAction`), so a gateway publishing an
- * echo/confirmation here would silently go nowhere. A gateway confirming a command was actually
- * applied on the device must publish that on `KAFKA_DEVICE_EVENTS_TOPIC` instead.
+ * `cloud` in the name is a holdover from when this was the downlink command bus (before the
+ * gateway-initiated-change use case existed) — the topic itself wasn't renamed, only its
+ * direction/purpose, so an integration written against the old (cloud -> gateway) contract needs
+ * updating to publish here instead of consuming.
  */
 export const KAFKA_COMMAND_TOPIC = 'devices.cloud.commands';
 
 /**
- * Dedicated Kafka topic for backend -> gateway config-sync pushes (see
- * `DeviceService.pushConfigSync`) — kept separate from `KAFKA_COMMAND_TOPIC` above since this is a
- * "re-fetch your boot-config now" nudge, not an actuator command, and only ever reaches a device
- * that's itself a Kafka consumer (a gateway), never a plain MQTT node bridged by one. Each message
- * carries `{ deviceId, type: 'config_sync', configVersion }`, keyed/partitioned by deviceId like
- * the other topics.
+ * The shared per-gateway inbox topic: a gateway's fixed subscription (not overridden by
+ * `config.kafka.commandTopic`) for every backend -> gateway downlink, distinguished by which
+ * fields are present:
+ * - Actuator commands to relay onward — `{ deviceId, key, value, topic? }` — published by
+ *   `DeviceService.triggerDeviceAction` whenever a user triggers a device action, for every
+ *   device (including a gateway's own self-directed actions, e.g. `restart` — the gateway treats
+ *   a command whose `deviceId` matches its own as self-directed rather than something to relay).
+ * - Config-sync nudges — `{ deviceId, type: 'config_sync', configVersion }` — published by
+ *   `DeviceService.pushConfigSync`, a "re-fetch your boot-config now" signal, not an actuator
+ *   command.
+ * Either way only ever means something to a device that's itself a Kafka consumer (a gateway),
+ * never a plain MQTT node bridged by one. Keyed/partitioned by deviceId like the other topics.
  */
 export const KAFKA_GATEWAY_COMMANDS_TOPIC = 'devices.gateway.commands';
 
 /**
  * Dedicated Kafka topic for backend -> gateway relay-action notifications — published by
  * `DeviceService.triggerDeviceAction` right alongside the real command it sends on
- * `KAFKA_COMMAND_TOPIC` (or the device's own `config.kafka.commandTopic`). Unlike that topic, a
- * gateway is not expected to relay from here — this is audit/observability-only, so the gateway
- * knows a dashboard-initiated action was dispatched for one of its bridged devices without having
- * to infer it from a duplicate `KAFKA_COMMAND_TOPIC` message. Each message carries
+ * `KAFKA_GATEWAY_COMMANDS_TOPIC` (or the device's own `config.kafka.commandTopic`). Unlike that
+ * topic, a gateway is not expected to relay from here — this is audit/observability-only, so the
+ * gateway knows a dashboard-initiated action was dispatched for one of its bridged devices without
+ * having to infer it from a duplicate `KAFKA_GATEWAY_COMMANDS_TOPIC` message. Each message carries
  * `{ deviceId, key, value, topic?, requestedAt }`, keyed/partitioned by deviceId like the other
  * topics.
  */
@@ -54,7 +62,7 @@ export const KAFKA_STATUS_TOPIC = 'devices.cloud.status';
  * Shared Kafka topic for gateway -> backend per-channel command-result envelopes — distinct from
  * `devices.cloud.telemetry`/`devices.cloud.status`. Each message carries
  * `{ deviceId, key, value, topic?, status, error? }`: the gateway's confirmation that a
- * `devices.cloud.commands` relay actually landed on the device. `key`/`value` are the channel and
+ * `devices.gateway.commands` relay actually landed on the device. `key`/`value` are the channel and
  * the actuator state the gateway applied (e.g. `{ key: "relay1", value: "ON" }`); `status` is
  * `"ok"` or `"error"` (with `error` then carrying a message describing what went wrong); `topic`
  * echoes the device's own downlink MQTT topic the command was relayed to when the gateway resolved

@@ -3,7 +3,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Consumer, EachMessagePayload, SASLOptions } from 'kafkajs';
 import { Kafka } from 'kafkajs';
 
-import { KAFKA_ALERT_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_TELEMETRY_TOPIC } from '../../constants/kafka-topics.ts';
+import {
+  KAFKA_ALERT_TOPIC,
+  KAFKA_COMMAND_TOPIC,
+  KAFKA_DEVICE_EVENTS_TOPIC,
+  KAFKA_STATUS_TOPIC,
+  KAFKA_TELEMETRY_TOPIC,
+} from '../../constants/kafka-topics.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceService } from '../device/device.service.ts';
 
@@ -41,7 +47,7 @@ interface KafkaAlertPayload {
 }
 
 /**
- * Raw kafkajs consumer for the four inbound gateway->cloud topics, replacing
+ * Raw kafkajs consumer for the five inbound gateway->cloud topics, replacing
  * @nestjs/microservices' ServerKafka + @EventPattern controller. Connects/subscribes once on app
  * startup (onModuleInit — part of Nest's normal bootstrap, never a standalone script) and runs
  * for the process lifetime.
@@ -126,7 +132,7 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.consumer.connect();
       await this.consumer.subscribe({
-        topics: [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_ALERT_TOPIC],
+        topics: [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC, KAFKA_ALERT_TOPIC],
         fromBeginning: false,
       });
       await this.consumer.run({ eachMessage: (payload) => this.handleMessage(payload) });
@@ -172,7 +178,10 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
           await this.handleStatus(data);
           break;
         }
-        case KAFKA_DEVICE_EVENTS_TOPIC: {
+        case KAFKA_DEVICE_EVENTS_TOPIC:
+        case KAFKA_COMMAND_TOPIC: {
+          // Same envelope shape, same handler either way — see `DeviceService.handleDeviceChannelEvent`'s
+          // doc comment for how the two topics differ in meaning.
           await this.handleDeviceEvent(data);
           break;
         }

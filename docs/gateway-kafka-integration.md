@@ -19,8 +19,8 @@ it bridges. There is no separate "gateway API" — it's a regular device from
 the backend's point of view, set to `pushChannel: "KAFKA"`.
 
 The template also defines one action, `restart` (`BUTTON`) — triggering it
-(`POST /devices/:id/actions`) publishes to `devices.commands` as usual; the
-gateway should treat a command whose `deviceId` matches its own as
+(`POST /devices/:id/actions`) publishes to `devices.gateway.commands` as
+usual; the gateway should treat a command whose `deviceId` matches its own as
 self-directed (restart itself) rather than something to relay downstream.
 
 ## Connection
@@ -58,11 +58,15 @@ in order.
 |---|---|---|
 | `devices.telemetry` | gateway → cloud | `KAFKA_TELEMETRY_TOPIC` |
 | `devices.status` | gateway → cloud | `KAFKA_STATUS_TOPIC` |
-| `devices.commands` (default) | cloud → gateway | `KAFKA_COMMAND_TOPIC` |
 | `devices.gateway.commands` | cloud → gateway | `KAFKA_GATEWAY_COMMANDS_TOPIC` |
 | `devices.gateway.events` | cloud → gateway | `KAFKA_GATEWAY_EVENTS_TOPIC` |
 | `devices.events` | gateway → cloud | `KAFKA_DEVICE_EVENTS_TOPIC` |
+| `devices.commands` | gateway → cloud | `KAFKA_COMMAND_TOPIC` |
 | `devices.cloud.alerts` | gateway/device → cloud | `KAFKA_ALERT_TOPIC` |
+
+`devices.commands`'s name is a holdover from before it changed direction (see its own section
+below) — don't let the name mislead: it's gateway → cloud now, same as the four other topics
+sharing that direction.
 
 Defined in `src/constants/kafka-topics.ts`.
 
@@ -105,14 +109,16 @@ Defined in `src/constants/kafka-topics.ts`.
   dropped.
 - Consumed by `KafkaController.handleStatus` → `DeviceService.handleDeviceStatusMessage`.
 
-### `devices.commands` (cloud → gateway)
+### `devices.gateway.commands` (cloud → gateway)
 
-Published on the device's own `config.kafka.commandTopic` when it has one
-configured (e.g. a gateway pointed at its own dedicated topic, such as
-`device.gateway.command`), falling back to the shared `devices.commands`
-(`KAFKA_COMMAND_TOPIC`) bus for devices with no Kafka config of their own
-(e.g. MQTT-only relay nodes, bridged by a separate gateway device that IS
-listening on the shared bus).
+The shared per-gateway inbox topic — every gateway (any device registered with
+`pushChannel: "KAFKA"`) has a fixed subscription to this topic name, **not** overridden by
+`config.kafka.commandTopic`. Carries two message shapes, distinguished by which fields are
+present:
+
+**Actuator command to relay** — published by `DeviceService.triggerDeviceAction` for any device
+with no `config.kafka.commandTopic` of its own (e.g. MQTT-only relay nodes, bridged by a separate
+gateway device that IS listening on this shared inbox):
 
 ```json
 {
@@ -123,41 +129,24 @@ listening on the shared bus).
 }
 ```
 
-- Published by the backend (`DeviceService.triggerDeviceAction`) when a user
-  triggers a device action via `POST /devices/:id/actions`.
 - `topic` (string, optional) — the device's own downlink MQTT command topic
   for this channel (NOT the Kafka topic the message itself was sent on),
   resolved server-side from the device's stored config: the per-channel
   topic matching `key` in `config.mqtt.topics.channels`, falling back to
   `config.mqtt.topics.command`. Omitted for devices with no MQTT config of
-  their own (e.g. a gateway bridged directly over the KAFKA push channel).
-- The gateway consumes this topic, looks up `deviceId` among the devices it
+  their own.
+- The gateway consumes this, looks up `deviceId` among the devices it
   bridges, and relays `{ key, value }` to that device over its own local
   MQTT — publishing on `topic` directly rather than re-deriving it from a
   separately-cached boot-config.
-- **Consume-only for the gateway — never publish/echo back on this topic.**
-  This is the backend's own downlink bus (the backend both produces to it and
-  is the sole consumer of `devices.commands`-shaped messages); a gateway
-  publishing a confirmation here would just be replaying the command it was
-  told to send, not proving the device actually applied it, and the backend
-  doesn't parse gateway-originated messages on this topic at all — see
-  `KafkaConsumerService`, which only subscribes to the four gateway→cloud
-  topics below. Report the applied result on `devices.events` instead.
 - Alongside this, `triggerDeviceAction` also publishes to `devices.gateway.events` (below, for
   gateway-side observability) and self-publishes an optimistic `{ deviceId, key, value, status: "ok" }`
   onto `devices.events` itself, so the dashboard sees the change immediately via the same path a
   real gateway confirmation takes, without waiting on the round trip to the physical device. The
   gateway's own (authoritative) confirmation on `devices.events` follows shortly after.
 
-### `devices.gateway.commands` (cloud → gateway)
-
-A dedicated topic, separate from `devices.commands` above — this is a
-"re-fetch your boot-config now" nudge, not an actuator command, and only
-ever means something to a device that's itself a Kafka consumer (a gateway),
-never a plain MQTT node bridged by one. Every gateway (any device registered
-with `pushChannel: "KAFKA"`) should subscribe to this fixed topic name — it
-is **not** overridden by `config.kafka.commandTopic` the way `devices.commands`
-can be.
+**Config-sync nudge** — published by `DeviceService.pushConfigSync`, a "re-fetch your boot-config
+now" signal, not an actuator command:
 
 ```json
 {
@@ -167,8 +156,7 @@ can be.
 }
 ```
 
-- Published by the backend (`DeviceService.pushConfigSync`) when a user
-  clicks "Push to device" on the Device Config dialog, or whenever else the
+- Published when a user clicks "Push to device" on the Device Config dialog, or whenever else the
   cloud wants a gateway to pick up a config change immediately instead of
   waiting for its own poll/reboot cycle.
 - `type` (string) — always `"config_sync"` for now; treat an unrecognized
@@ -187,10 +175,15 @@ can be.
   Kafka connection of its own to receive this on; a bridged MQTT node's
   owning gateway would need to be synced instead.
 
+**Either shape:** consume-only for the gateway — never publish/echo back here; report an applied
+(or failed) result on `devices.events` instead, or, for a change the gateway makes entirely on its
+own initiative with no preceding command from here, publish on `devices.commands` (see below).
+
 ### `devices.gateway.events` (cloud → gateway)
 
-A companion to `devices.commands` above, published right alongside it whenever a user triggers a
-device action via `POST /devices/:id/actions` — same trigger, same payload shape, different topic.
+A companion to the actuator-command shape of `devices.gateway.commands` above, published right
+alongside it whenever a user triggers a device action via `POST /devices/:id/actions` — same
+trigger, same payload shape, different topic.
 
 ```json
 {
@@ -206,23 +199,24 @@ device action via `POST /devices/:id/actions` — same trigger, same payload sha
   Every gateway should subscribe to this fixed topic name (not overridden by
   `config.kafka.commandTopic`) the same way it does for `devices.gateway.commands`.
 - Audit/observability-only — the gateway is **not** expected to relay an actuator command from
-  here. The actual relay instruction is still `devices.commands`; this just lets the gateway (or
-  any other listener) tell "a dashboard user just dispatched this" apart from its own relay
-  bookkeeping without parsing a second copy of the command out of `devices.commands`.
+  here. The actual relay instruction is still `devices.gateway.commands`; this just lets the
+  gateway (or any other listener) tell "a dashboard user just dispatched this" apart from its own
+  relay bookkeeping without parsing a second copy of the command out of `devices.gateway.commands`.
 - `requestedAt` (ISO timestamp) — when the backend dispatched the command, informational only.
 - Best-effort: a failure publishing here is logged but does **not** fail the
-  `POST /devices/:id/actions` request — the real command on `devices.commands` already went out by
-  the time this is attempted.
+  `POST /devices/:id/actions` request — the real command on `devices.gateway.commands` already
+  went out by the time this is attempted.
 
 ### `devices.events` (gateway → cloud)
 
-Reports whether a `devices.commands` relay actually landed on the device — published by the
-gateway's `publishEventResult` right after it relays a command down to the device's local MQTT.
+Reports whether a `devices.gateway.commands` relay actually landed on the device — published by
+the gateway's `publishEventResult` right after it relays a command down to the device's local
+MQTT.
 
 The backend itself also self-publishes here (`DeviceService.triggerDeviceAction`, always with
 `status: "ok"`) right after dispatching a command, purely to get an immediate optimistic update to
-the dashboard through the same `handleDeviceChannelEvent` path — see `devices.commands` above. The
-gateway's own message for the same `{ deviceId, key }` follows shortly after and is the
+the dashboard through the same `handleDeviceChannelEvent` path — see `devices.gateway.commands`
+above. The gateway's own message for the same `{ deviceId, key }` follows shortly after and is the
 authoritative one (it can still flip the result to `status: "error"` if the command didn't
 actually apply — see the `status` field below).
 
@@ -269,6 +263,36 @@ command actually applying:
 - Either way, receiving the event at all marks the device `ONLINE` (same as telemetry) since it
   proves the gateway is actively bridging it.
 - Consumed by `KafkaConsumerService.handleDeviceEvent` → `DeviceService.handleDeviceChannelEvent`.
+
+### `devices.commands` (gateway → cloud)
+
+Same envelope shape as `devices.events` above (`{ deviceId, key, value }`, no `status`/`error`)
+and handled by the exact same code path — but for a channel/state change the gateway decided to
+make **on its own initiative**, with no preceding `devices.gateway.commands` relay to confirm. Use
+this for a locally-fired automation rule flipping a relay, a physical/local input changing a
+channel, or any other gateway-initiated change the cloud should know about.
+
+```json
+{
+  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "key": "relay1",
+  "value": "ON"
+}
+```
+
+- `deviceId`/`key`/`value` — same meaning as on `devices.events`'s `status: "ok"` case: merged into
+  the device's persisted `channelStates`, broadcast over the `channelState` websocket event, and
+  marks the device `ONLINE`.
+- No `status`/`error` fields — there's no "failed to apply" case to report here, since by
+  definition the gateway is reporting a change it already made, not confirming one the cloud asked
+  for. Always treated as a success.
+- The topic's name (`devices.commands`, and the `cloud` in its underlying constant
+  `KAFKA_COMMAND_TOPIC = 'devices.cloud.commands'`) is a holdover from an earlier version of this
+  contract where it was the cloud → gateway downlink bus — don't let that mislead: **this topic is
+  gateway → cloud only now.** A gateway built against the old (cloud → gateway) contract needs
+  updating to publish here instead of consuming.
+- Consumed by `KafkaConsumerService.handleDeviceEvent` → `DeviceService.handleDeviceChannelEvent`
+  (same handler as `devices.events`).
 
 ### `devices.cloud.alerts` (gateway/device → cloud)
 
@@ -335,7 +359,7 @@ Either shape accepts an optional `channels` field:
 ## Fetching device config (REST)
 
 Before bridging a device, the gateway fetches its config to learn the push
-channel, per-channel command topics (for relaying `devices.commands` back to
+channel, per-channel command topics (for relaying `devices.gateway.commands` back to
 the device's local MQTT), and any Kafka override.
 
 ```
@@ -378,8 +402,9 @@ x-device-secret: <shared secret>
     "http": null,
     "kafka": {
       "brokers": "kafka.internal:9092",
-      "topic": "devices.telemetry",
-      "clientId": "aiot-lab-service",
+      "topics": ["devices.telemetry", "devices.status", "devices.events", "devices.commands"],
+      "commandTopic": "devices.gateway.commands",
+      "clientId": "aiot-lab-service-gw-01a04142-ba64-79c2-b29c-6c8ae29af427",
       "username": "cloud-kafka-user",
       "password": "***"
     },
@@ -392,8 +417,9 @@ x-device-secret: <shared secret>
   the device has no per-device override configured (the common case), the
   backend fills it in from its own `KAFKA_BROKERS`/`KAFKA_SASL_*` env config
   — `username`/`password` are only present when `KAFKA_SASL_ENABLED=true`.
-  `topic` here is always `devices.telemetry` — see the topic list above for
-  where to actually publish telemetry vs. status.
+- `topics` — every topic this device (a gateway, in practice) should **produce** to; see the topic
+  list above for what each one means. `commandTopic` is separate (produce-only vs. the one topic
+  this device should **consume**) — not part of `topics` above.
 
 - `mqtt` is present regardless of `pushChannel` — it always describes the
   device's **local** MQTT topics on the gateway's own broker, since that's
@@ -401,7 +427,7 @@ x-device-secret: <shared secret>
   tells the gateway which **uplink** to cloud to use (`MQTT` direct,
   `KAFKA` via this gateway, `HTTP`).
 - `topics.channels[].key` matches the `key` field the gateway will receive
-  on `devices.commands` — use it to look up which local topic to relay a
+  on `devices.gateway.commands` — use it to look up which local topic to relay a
   given command to (`topics.channels[].topic`).
 - Fetch this per device when first seen, and again whenever
   `devices.gateway.commands` (above) delivers a `config_sync` nudge for a
