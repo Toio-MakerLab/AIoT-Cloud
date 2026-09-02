@@ -135,6 +135,10 @@ export class DeviceService {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceTemplateNotFound');
     }
 
+    if (!template.isActive) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceTemplateInactive');
+    }
+
     const existing = await this.deviceRepository.findOneBy({ deviceId: dto.deviceId });
 
     if (existing) {

@@ -49,7 +49,10 @@ export function AddDeviceDialog({ open, onOpenChange, initialDeviceId }: Props) 
   }, [open, initialDeviceId]);
 
   const { data: templatesPage, isLoading: templatesLoading } = useDeviceTemplatesQuery();
-  const templates = templatesPage?.data ?? [];
+  // Inactive templates shouldn't be offered for new devices — the backend rejects
+  // registration against one anyway (`error.deviceTemplateInactive`), so filter them
+  // out here purely so the dropdown doesn't show a choice that's guaranteed to fail.
+  const templates = (templatesPage?.data ?? []).filter((template) => template.isActive);
   const registerDevice = useRegisterDeviceMutation();
   const updateDeviceConfig = useUpdateDeviceConfigMutation();
 
