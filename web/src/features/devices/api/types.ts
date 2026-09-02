@@ -19,6 +19,17 @@ export const DeviceStatus = {
 } as const;
 export type DeviceStatus = (typeof DeviceStatus)[keyof typeof DeviceStatus];
 
+/** src/constants/device-lifecycle-stage.ts */
+export const DeviceLifecycleStage = {
+  NEW: 'NEW',
+  ACTIVE: 'ACTIVE',
+  AGING: 'AGING',
+  MAINTENANCE_DUE: 'MAINTENANCE_DUE',
+  END_OF_LIFE: 'END_OF_LIFE',
+  DECOMMISSIONED: 'DECOMMISSIONED',
+} as const;
+export type DeviceLifecycleStage = (typeof DeviceLifecycleStage)[keyof typeof DeviceLifecycleStage];
+
 export const DeviceTemplateType = {
   SENSOR_NODE: 'SENSOR_NODE',
   RELAY_NODE: 'RELAY_NODE',
@@ -184,12 +195,47 @@ export interface IDevice {
   offlineAlert?: IDeviceOfflineAlertConfig | null;
   alertRules?: IDeviceAlertRule[] | null;
   failsafe?: IDeviceFailsafeConfig | null;
+  installedAt?: string | null;
+  expectedLifespanMonths?: number | null;
+  lifecycleStage?: DeviceLifecycleStage;
+  lifecycleScore?: number | null;
+  lifecycleAssessedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface IRegisterDeviceResult {
   device: IDevice;
+}
+
+/** One weighted component behind an assessment's overall `score` — src/modules/device/dtos/device-lifecycle.dto.ts */
+export interface IDeviceLifecycleFactor {
+  key: 'age' | 'connectivity' | 'telemetryHealth';
+  label: string;
+  /** 0-100; higher is healthier. */
+  score: number;
+  /** This factor's share of the overall score, 0-1. */
+  weight: number;
+  detail: string;
+}
+
+/** Response for GET /devices/:id/lifecycle — recomputed fresh (and persisted) on every call. */
+export interface IDeviceLifecycleAssessment {
+  deviceId: string;
+  stage: DeviceLifecycleStage;
+  score: number;
+  installedAt: string;
+  expectedLifespanMonths: number;
+  ageMonths: number;
+  remainingLifespanMonths: number;
+  factors: IDeviceLifecycleFactor[];
+  assessedAt: string;
+  decommissionedAt: string | null;
+}
+
+export interface IUpdateDeviceLifecycle {
+  installedAt?: string | null;
+  expectedLifespanMonths?: number | null;
 }
 
 export interface IUnclaimedDevice {

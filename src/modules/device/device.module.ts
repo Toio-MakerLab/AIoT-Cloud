@@ -6,6 +6,9 @@ import { KafkaModule } from '../kafka/kafka.module.ts';
 import { DeviceController } from './device.controller.ts';
 import { DeviceEntity } from './device.entity.ts';
 import { DeviceService } from './device.service.ts';
+import { DeviceLifecycleController } from './device-lifecycle.controller.ts';
+import { DeviceLifecycleScheduler } from './device-lifecycle.scheduler.ts';
+import { DeviceLifecycleService } from './device-lifecycle.service.ts';
 import { DeviceProvisioningController } from './device-provisioning.controller.ts';
 import { DeviceSecretController } from './device-secret.controller.ts';
 import { DeviceSecretEntity } from './device-secret.entity.ts';
@@ -23,8 +26,8 @@ import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
     // DeviceService back, so forwardRef() on both sides breaks the resulting circular import.
     forwardRef(() => KafkaModule),
   ],
-  controllers: [DeviceController, DeviceProvisioningController, DeviceSecretController],
+  controllers: [DeviceController, DeviceProvisioningController, DeviceSecretController, DeviceLifecycleController],
   exports: [DeviceService],
-  providers: [DeviceService, DeviceSecretService, DeviceSecretGuard, DeviceStatusScheduler],
+  providers: [DeviceService, DeviceSecretService, DeviceSecretGuard, DeviceStatusScheduler, DeviceLifecycleService, DeviceLifecycleScheduler],
 })
 export class DeviceModule {}

@@ -1,6 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 
 import { AbstractEntity } from '../../common/abstract.entity.ts';
+import { DeviceLifecycleStage } from '../../constants/device-lifecycle-stage.ts';
 import { DevicePushChannel } from '../../constants/device-push-channel.ts';
 import { DeviceStatus } from '../../constants/device-status.ts';
 import { UseDto } from '../../decorators/use-dto.decorator.ts';
@@ -88,4 +89,32 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
   /** Safe state a gateway falls back to on its own when it loses the cloud. */
   @Column({ nullable: true, type: 'jsonb' })
   failsafe!: DeviceFailsafeConfig | null;
+
+  /** Commissioning date the lifecycle score's age factor counts from; falls back to `createdAt` when unset. */
+  @Column({ nullable: true, type: 'timestamp' })
+  installedAt!: Date | null;
+
+  /** Months this device is expected to remain serviceable; falls back to DEFAULT_EXPECTED_LIFESPAN_MONTHS when unset. */
+  @Column({ nullable: true, type: 'int' })
+  expectedLifespanMonths!: number | null;
+
+  /**
+   * Last computed lifecycle stage; kept fresh by DeviceLifecycleScheduler and recomputed on-demand
+   * via GET .../lifecycle. Plain varchar rather than a Postgres enum type on purpose — stage values
+   * are validated in code (DeviceLifecycleStage), not the DB, so adding/renaming one is a one-line
+   * TS change instead of an `ALTER TYPE` migration.
+   */
+  @Column({ type: 'varchar', default: DeviceLifecycleStage.NEW })
+  lifecycleStage!: DeviceLifecycleStage;
+
+  /** Last computed lifecycle health score, 0-100 — see DeviceLifecycleService.assessDevice. */
+  @Column({ nullable: true, type: 'int' })
+  lifecycleScore!: number | null;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  lifecycleAssessedAt!: Date | null;
+
+  /** Set once a user/admin manually decommissions the device; DeviceLifecycleService then stops recomputing its stage. */
+  @Column({ nullable: true, type: 'timestamp' })
+  decommissionedAt!: Date | null;
 }

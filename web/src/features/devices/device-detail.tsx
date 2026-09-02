@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDeviceQuery } from './api/queries';
 import { DeviceActionsPanel } from './components/device-actions-panel';
+import { DeviceLifecyclePanel } from './components/device-lifecycle-panel';
 import { GatewayAutomationPanel } from './components/gateway-automation-panel';
 import { OfflineAlertPanel } from './components/offline-alert-panel';
 import { TelemetryHistoryPanel } from './components/telemetry-history-panel';
@@ -77,6 +78,8 @@ export default function DeviceDetail() {
               actionSchema={device.template?.actionSchema}
               channelSupported={device.pushChannel === 'MQTT' || device.pushChannel === 'KAFKA'}
             />
+
+            <DeviceLifecyclePanel deviceId={device.id} />
 
             <TelemetryHistoryPanel
               deviceId={device.id}

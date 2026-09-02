@@ -40,6 +40,7 @@ import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
 import { UpdateSensorNodeTelemetrySchema1789100000000 } from '../../database/migrations/1789100000000-UpdateSensorNodeTelemetrySchema.ts';
 import { AddNotificationMessages1789200000000 } from '../../database/migrations/1789200000000-AddNotificationMessages.ts';
 import { NotificationMessageEntity } from '../../modules/notification/notification-message.entity.ts';
+import { AddDeviceLifecycle1789300000000 } from '../../database/migrations/1789300000000-AddDeviceLifecycle.ts';
 
 @Injectable()
 export class ApiConfigService {
@@ -148,7 +149,8 @@ export class ApiConfigService {
         AddDeviceAlertRulesAndFailsafe1788900000000,
         CreateFactoriesTable1789000000000,
         UpdateSensorNodeTelemetrySchema1789100000000,
-        AddNotificationMessages1789200000000
+        AddNotificationMessages1789200000000,
+        AddDeviceLifecycle1789300000000
       ],
       dropSchema: this.isTest,
       type: 'postgres',

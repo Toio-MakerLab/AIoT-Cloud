@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { devicesApi } from './api';
-import type { IDevicesQuery, IRegisterDevice, ITriggerDeviceAction, IUpdateDeviceConfig } from './types';
+import type { IDevicesQuery, IRegisterDevice, ITriggerDeviceAction, IUpdateDeviceConfig, IUpdateDeviceLifecycle } from './types';
 
 export const DEVICES_QUERY_KEY = 'devices';
 export const DEVICE_TEMPLATES_QUERY_KEY = 'device-templates';
 export const DEVICE_TELEMETRY_QUERY_KEY = 'device-telemetry';
 export const UNCLAIMED_DEVICES_QUERY_KEY = 'unclaimed-devices';
+export const DEVICE_LIFECYCLE_QUERY_KEY = 'device-lifecycle';
 
 // Devices are swept to OFFLINE server-side every 10s once idle past the 1-minute
 // threshold; poll at the same cadence so the online/offline badge stays current.
@@ -86,3 +87,27 @@ export const useTriggerDeviceActionMutation = (id: string) => {
 };
 
 export const usePushConfigSyncMutation = (id: string) => useMutation({ mutationFn: () => devicesApi.pushConfigSync(id) });
+
+/** Not polled — only refetched on mount/invalidation, since assessment only changes meaningfully day to day. */
+export const useDeviceLifecycleQuery = (id: string) =>
+  useQuery({
+    queryKey: [DEVICE_LIFECYCLE_QUERY_KEY, id],
+    queryFn: () => devicesApi.getDeviceLifecycle(id),
+    enabled: !!id,
+  });
+
+export const useUpdateDeviceLifecycleMutation = (id: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: IUpdateDeviceLifecycle) => devicesApi.updateDeviceLifecycle(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [DEVICE_LIFECYCLE_QUERY_KEY, id] }),
+  });
+};
+
+export const useDecommissionDeviceMutation = (id: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => devicesApi.decommissionDevice(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [DEVICE_LIFECYCLE_QUERY_KEY, id] }),
+  });
+};

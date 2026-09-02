@@ -22,7 +22,7 @@ import type { UserDto } from './dtos/user.dto.ts';
 import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
 import { UserSettingsEntity } from './user-settings.entity.ts';
-import type { ApiConfigService } from '../../shared/services/api-config.service.ts';
+import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 

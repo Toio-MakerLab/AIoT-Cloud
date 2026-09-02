@@ -1,5 +1,6 @@
 import { AbstractDto } from '../../../common/dto/abstract.dto.ts';
 import { decodeBase64 } from '../../../common/utils.ts';
+import { DeviceLifecycleStage } from '../../../constants/device-lifecycle-stage.ts';
 import { DevicePushChannel } from '../../../constants/device-push-channel.ts';
 import { DeviceStatus } from '../../../constants/device-status.ts';
 import {
@@ -7,6 +8,8 @@ import {
   ClassFieldOptional,
   DateFieldOptional,
   EnumField,
+  EnumFieldOptional,
+  NumberFieldOptional,
   StringField,
   StringFieldOptional,
 } from '../../../decorators/field.decorators.ts';
@@ -64,6 +67,21 @@ export class DeviceDto extends AbstractDto {
 
   failsafe?: DeviceFailsafeConfig | null;
 
+  @DateFieldOptional({ nullable: true })
+  installedAt?: Date | null;
+
+  @NumberFieldOptional({ nullable: true, int: true })
+  expectedLifespanMonths?: number | null;
+
+  @EnumFieldOptional(() => DeviceLifecycleStage)
+  lifecycleStage?: DeviceLifecycleStage;
+
+  @NumberFieldOptional({ nullable: true, int: true })
+  lifecycleScore?: number | null;
+
+  @DateFieldOptional({ nullable: true })
+  lifecycleAssessedAt?: Date | null;
+
   constructor(entity: DeviceEntity) {
     super(entity);
     this.deviceId = entity.deviceId;
@@ -89,5 +107,10 @@ export class DeviceDto extends AbstractDto {
     this.offlineAlert = entity.offlineAlert;
     this.alertRules = entity.alertRules;
     this.failsafe = entity.failsafe;
+    this.installedAt = entity.installedAt;
+    this.expectedLifespanMonths = entity.expectedLifespanMonths;
+    this.lifecycleStage = entity.lifecycleStage;
+    this.lifecycleScore = entity.lifecycleScore;
+    this.lifecycleAssessedAt = entity.lifecycleAssessedAt;
   }
 }

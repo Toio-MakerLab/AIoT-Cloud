@@ -1,6 +1,7 @@
 import apiClient from '@/lib/api-client';
 import type {
   IDevice,
+  IDeviceLifecycleAssessment,
   IDevicesQuery,
   IDeviceTelemetry,
   IDeviceTemplateSummary,
@@ -13,6 +14,7 @@ import type {
   ITriggerDeviceActionResult,
   IUnclaimedDevice,
   IUpdateDeviceConfig,
+  IUpdateDeviceLifecycle,
 } from './types';
 
 export const devicesApi = {
@@ -67,6 +69,20 @@ export const devicesApi = {
    */
   getDeviceTemplates: async (take = 100) => {
     const response = await apiClient.get<IPageResponse<IDeviceTemplateSummary>>('/device-templates', { params: { take } });
+    return response.data;
+  },
+  /** Recomputes the device's lifecycle score/stage on demand — backend persists the fresher result. */
+  getDeviceLifecycle: async (id: string) => {
+    const response = await apiClient.get<IResponseCore<IDeviceLifecycleAssessment>>(`/devices/${id}/lifecycle`);
+    return response.data;
+  },
+  updateDeviceLifecycle: async (id: string, data: IUpdateDeviceLifecycle) => {
+    const response = await apiClient.patch<IResponseCore<IDeviceLifecycleAssessment>>(`/devices/${id}/lifecycle`, data);
+    return response.data;
+  },
+  /** Manually retires the device; its stage stops recomputing from telemetry/connectivity after this. */
+  decommissionDevice: async (id: string) => {
+    const response = await apiClient.post<IResponseCore<IDeviceLifecycleAssessment>>(`/devices/${id}/lifecycle/decommission`);
     return response.data;
   },
 };
