@@ -81,7 +81,7 @@ export class NotificationController {
 
   /** The user's notification inbox — one row per channel a warning was actually sent to (see `NotificationService.sendWarning`). */
   @Get('messages')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   @ApiPageResponse({ description: 'Get notification messages', type: PageDto })
   getMessages(
@@ -93,21 +93,21 @@ export class NotificationController {
 
   // Registered before the `:id`-shaped routes below so it isn't swallowed by them.
   @Get('messages/unread-count')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   getUnreadMessageCount(@AuthUser() user: UserEntity): Promise<ResponseCore<{ count: number }>> {
     return this.notificationService.getUnreadCount(user.id as string);
   }
 
   @Patch('messages/read-all')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   markAllMessagesAsRead(@AuthUser() user: UserEntity): Promise<ResponseCore<null>> {
     return this.notificationService.markAllMessagesAsRead(user.id as string);
   }
 
   @Patch('messages/:id/read')
-  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
   markMessageAsRead(@AuthUser() user: UserEntity, @Param('id') id: string): Promise<ResponseCore<NotificationMessageDto>> {
     return this.notificationService.markMessageAsRead(user.id as string, id);
