@@ -25,6 +25,9 @@ import { AddDeviceChannelStates1788700000000 } from '../../database/migrations/1
 import { AddDeviceOfflineAlert1788800000000 } from '../../database/migrations/1788800000000-AddDeviceOfflineAlert.ts';
 import { AddDeviceAlertRulesAndFailsafe1788900000000 } from '../../database/migrations/1788900000000-AddDeviceAlertRulesAndFailsafe.ts';
 import { CreateFactoriesTable1789000000000 } from '../../database/migrations/1789000000000-CreateFactoriesTable.ts';
+import { UpdateSensorNodeTelemetrySchema1789100000000 } from '../../database/migrations/1789100000000-UpdateSensorNodeTelemetrySchema.ts';
+import { AddNotificationMessages1789200000000 } from '../../database/migrations/1789200000000-AddNotificationMessages.ts';
+import { AddDeviceLifecycle1789300000000 } from '../../database/migrations/1789300000000-AddDeviceLifecycle.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -34,13 +37,10 @@ import { UnclaimedDeviceEntity } from '../../modules/device/unclaimed-device.ent
 import { DeviceTemplateEntity } from '../../modules/device-template/device-template.entity.ts';
 import { FactoryEntity } from '../../modules/factory/factory.entity.ts';
 import { NotificationConfigEntity } from '../../modules/notification/notification-config.entity.ts';
+import { NotificationMessageEntity } from '../../modules/notification/notification-message.entity.ts';
 import { UserEntity } from '../../modules/user/user.entity.ts';
 import { UserSettingsEntity } from '../../modules/user/user-settings.entity.ts';
 import { SnakeNamingStrategy } from '../../snake-naming.strategy.ts';
-import { UpdateSensorNodeTelemetrySchema1789100000000 } from '../../database/migrations/1789100000000-UpdateSensorNodeTelemetrySchema.ts';
-import { AddNotificationMessages1789200000000 } from '../../database/migrations/1789200000000-AddNotificationMessages.ts';
-import { NotificationMessageEntity } from '../../modules/notification/notification-message.entity.ts';
-import { AddDeviceLifecycle1789300000000 } from '../../database/migrations/1789300000000-AddDeviceLifecycle.ts';
 
 @Injectable()
 export class ApiConfigService {
@@ -124,7 +124,7 @@ export class ApiConfigService {
         DashboardEntity,
         NotificationConfigEntity,
         FactoryEntity,
-        NotificationMessageEntity
+        NotificationMessageEntity,
       ],
       migrations: [
         InitSchema1787210034577,
@@ -150,7 +150,7 @@ export class ApiConfigService {
         CreateFactoriesTable1789000000000,
         UpdateSensorNodeTelemetrySchema1789100000000,
         AddNotificationMessages1789200000000,
-        AddDeviceLifecycle1789300000000
+        AddDeviceLifecycle1789300000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',
@@ -333,7 +333,7 @@ export class ApiConfigService {
     }
 
     return value;
-  } 
+  }
 
   private getFallback(key: string, fallback: string): string {
     const value = this.configService.get<string>(key);

@@ -45,7 +45,17 @@ export async function bootstrap(): Promise<NestExpressApplication> {
           'worker-src': ["'self'"],
           // Chỉ giữ nếu Cloudflare Analytics đang được nhúng trực tiếp.
           'script-src': ["'self'", 'https://static.cloudflareinsights.com'],
-          'script-src-elem': ["'self'", 'https://static.cloudflareinsights.com'],
+          'script-src-elem': [
+            "'self'",
+            'https://static.cloudflareinsights.com',
+            'https://cdn.jsdelivr.net',
+            'https://firebaseinstallations.googleapis.com',
+            'https://fcm.googleapis.com',
+            'https://fcmregistrations.googleapis.com',
+            'https://*.firebaseio.com',
+            'https://www.googletagmanager.com',
+            'https://www.google-analytics.com',
+          ],
           'img-src': ["'self'", 'data:', 'blob:', '*'],
         },
       },

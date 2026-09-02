@@ -7,44 +7,44 @@ import packageJson from './package.json';
 
 // https://vite.dev/config/
 export default defineConfig({
-    define: {
-      __APP_VERSION__: JSON.stringify(packageJson.version),
-    },
-    plugins: [
-      TanStackRouterVite({
-        target: 'react',
-        autoCodeSplitting: true,
-      }),
-      react(),
-      tailwindcss(),
-    ],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+  },
+  plugins: [
+    TanStackRouterVite({
+      target: 'react',
+      autoCodeSplitting: true,
+    }),
+    react(),
+    tailwindcss(),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
 
-        // fix loading all icon chunks in dev mode
-        // https://github.com/tabler/tabler-icons/issues/1233
-        '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
-      },
+      // fix loading all icon chunks in dev mode
+      // https://github.com/tabler/tabler-icons/issues/1233
+      '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
     },
-    build: {
-      target: 'es2022',
-      outDir: '../dist-client',
+  },
+  build: {
+    target: 'es2022',
+    outDir: '../dist-client',
+  },
+  server: {
+    port: 8080,
+    host: true,
+    strictPort: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
     },
-    server: {
-      port: 8080,
-      host: true,
-      strictPort: true,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
-      // proxy: {
-      //   '/api': {
-      //     target: 'http://localhost:3000',
-      //     changeOrigin: true,
-      //     // optional: remove prefix /api when sending to backend
-      //     rewrite: (path) => path.replace(/^\/api/, ''),
-      //   },
-      // },
-    },
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:3000',
+    //     changeOrigin: true,
+    //     // optional: remove prefix /api when sending to backend
+    //     rewrite: (path) => path.replace(/^\/api/, ''),
+    //   },
+    // },
+  },
 });

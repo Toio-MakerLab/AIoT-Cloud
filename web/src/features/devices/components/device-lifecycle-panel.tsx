@@ -160,12 +160,7 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
               </Label>
               <Label className="space-y-1.5">
                 <span className="text-muted-foreground text-xs">Expected lifespan (months)</span>
-                <Input
-                  type="number"
-                  min={1}
-                  value={expectedLifespanMonths}
-                  onChange={(event) => setExpectedLifespanMonths(event.target.value)}
-                />
+                <Input type="number" min={1} value={expectedLifespanMonths} onChange={(event) => setExpectedLifespanMonths(event.target.value)} />
               </Label>
             </div>
 

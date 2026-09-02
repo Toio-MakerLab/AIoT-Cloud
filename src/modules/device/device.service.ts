@@ -257,9 +257,7 @@ export class DeviceService {
 
     const kafka: DeviceKafkaConfig = {
       brokers: kafkaFallback.brokers,
-      topics: isGateway
-        ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC]
-        : [KAFKA_TELEMETRY_TOPIC],
+      topics: isGateway ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC] : [KAFKA_TELEMETRY_TOPIC],
       // Only gateways consume this — they relay cloud -> device commands to whatever they bridge
       // locally, and also treat a command addressed to their own deviceId as self-directed (see
       // docs/gateway-kafka-integration.md). Standalone (non-gateway) Kafka devices have nothing to

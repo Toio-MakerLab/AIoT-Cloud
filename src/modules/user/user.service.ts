@@ -11,6 +11,7 @@ import { ResponseCore } from '../../common/dto/response-core.dto.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import type { IFile } from '../../interfaces/IFile.ts';
+import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { MailService } from '../../shared/services/mail.service.ts';
 import type { Reference } from '../../types.ts';
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
@@ -22,7 +23,6 @@ import type { UserDto } from './dtos/user.dto.ts';
 import type { UsersPageOptionsDto } from './dtos/users-page-options.dto.ts';
 import { UserEntity } from './user.entity.ts';
 import { UserSettingsEntity } from './user-settings.entity.ts';
-import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
