@@ -216,7 +216,7 @@ export class DeviceService {
    */
   private async resolveKafkaConfig(device: DeviceEntity): Promise<DeviceKafkaConfig> {
     if (device.config?.kafka) {
-      return { ...device.config.kafka, password: decodeBase64(device.config.kafka.password) };
+      return { ...device.config.kafka, password: device.config.kafka.password };
     }
 
     const kafkaFallback = this.apiConfigService.kafkaConfig;
