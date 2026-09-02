@@ -39,12 +39,15 @@ export const KAFKA_GATEWAY_COMMANDS_TOPIC = 'devices.gateway.commands';
 export const KAFKA_STATUS_TOPIC = 'devices.cloud.status';
 
 /**
- * Shared Kafka topic for gateway -> backend raw device-event envelopes — distinct from
- * `devices.telemetry`/`devices.status`. Each message carries `{ device_id, topic, message }`,
- * where `topic` names the logical channel the event relates to (e.g. `devices.commands` when
- * it's confirming a command the gateway just relayed downstream) and `message` is a raw
- * `key=value` string (e.g. `"relay1=OFF"`) describing the resulting per-channel actuator state.
- * Keyed/partitioned by `device_id` like the other topics.
+ * Shared Kafka topic for gateway -> backend per-channel command-result envelopes — distinct from
+ * `devices.cloud.telemetry`/`devices.cloud.status`. Each message carries
+ * `{ deviceId, key, value, topic?, status, error? }`: the gateway's confirmation that a
+ * `devices.cloud.commands` relay actually landed on the device. `key`/`value` are the channel and
+ * the actuator state the gateway applied (e.g. `{ key: "relay1", value: "ON" }`); `status` is
+ * `"ok"` or `"error"` (with `error` then carrying a message describing what went wrong); `topic`
+ * echoes the device's own downlink MQTT topic the command was relayed to when the gateway resolved
+ * one from an explicit relay topic — omitted when it instead fell back to resolving via
+ * boot-config. Keyed/partitioned by `deviceId` like the other topics.
  */
 export const KAFKA_DEVICE_EVENTS_TOPIC = 'devices.cloud.events';
 

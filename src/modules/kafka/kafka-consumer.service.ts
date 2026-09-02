@@ -19,9 +19,12 @@ interface KafkaStatusPayload {
 }
 
 interface KafkaDeviceEventPayload {
-  device_id?: string;
+  deviceId?: string;
+  key?: string;
+  value?: unknown;
   topic?: string;
-  message?: unknown;
+  status?: string;
+  error?: string;
   [key: string]: unknown;
 }
 
@@ -214,15 +217,15 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async handleDeviceEvent(data: KafkaDeviceEventPayload): Promise<void> {
-    const { device_id: deviceId, topic, message } = data ?? {};
+    const { deviceId, ...event } = data ?? {};
 
     if (!deviceId) {
-      this.logger.warn(`Received Kafka device event without device_id: ${JSON.stringify(data)}`);
+      this.logger.warn(`Received Kafka device event without deviceId: ${JSON.stringify(data)}`);
 
       return;
     }
 
-    await this.deviceService.handleDeviceChannelEvent(deviceId, topic ?? KAFKA_DEVICE_EVENTS_TOPIC, message);
+    await this.deviceService.handleDeviceChannelEvent(deviceId, event);
   }
 
   private async handleAlert(data: KafkaAlertPayload): Promise<void> {

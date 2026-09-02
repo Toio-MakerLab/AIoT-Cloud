@@ -49,8 +49,7 @@ doesn't need its own separate copy of these secrets configured out of band.
 ## Topics
 
 Six shared topics, **not** per-device. Devices are distinguished by the
-`deviceId` (or `device_id` — see `devices.events` below) field inside the
-payload, and every message must be produced with the device id as the
+`deviceId` field inside the payload, and every message must be produced with the device id as the
 **Kafka message key** (`kafkajs`: `{ key: deviceId, value: JSON.stringify(payload) }`)
 so all messages for one device land in the same partition and are processed
 in order.
@@ -184,33 +183,52 @@ can be.
 
 ### `devices.events` (gateway → cloud)
 
+Reports whether a `devices.commands` relay actually landed on the device — published by the
+gateway's `publishEventResult` right after it relays a command down to the device's local MQTT.
+
 ```json
 {
-  "device_id": "01a04142-ba64-79c2-b29c-6c8ae29af427",
-  "topic": "devices.commands",
-  "message": "relay1=OFF"
+  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "key": "relay1",
+  "value": "ON",
+  "topic": "devices/01a04142-ba64-79c2-b29c-6c8ae29af427/channel/1/command",
+  "status": "ok"
 }
 ```
 
-- A raw event envelope, separate from `devices.telemetry`/`devices.status`
-  — used for reporting the applied result of something the gateway did
-  locally (e.g. confirming a `devices.commands` relay actually landed on the
-  device) rather than a periodic telemetry sample.
-- `device_id` (string, required, **snake_case** — this topic's payload shape
-  differs from the other three) — must match a registered device the same
-  way the other topics do.
-- `topic` (string, optional) — names the logical topic/channel the event is
-  about; free-form, stored as-is for unclaimed-device debugging, not
-  interpreted by the backend.
-- `message` (string, required) — a raw `key=value` pair (e.g. `"relay1=OFF"`)
-  describing one channel's resulting actuator state. Merged into the
-  device's persisted `channelStates` (`{ relay1: "OFF" }`), which is
-  broadcast to the dashboard over the `channelState` websocket event.
-  Messages that aren't a parseable `key=value` string are logged and
-  ignored.
-- Also marks the device `ONLINE` (same as telemetry) since receiving one
-  implies the gateway is actively bridging it.
-- Consumed by `KafkaController.handleDeviceEvent` → `DeviceService.handleDeviceChannelEvent`.
+On failure, `status` is `"error"` and an `error` field carries what went wrong instead of the
+command actually applying:
+
+```json
+{
+  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "key": "relay1",
+  "value": "ON",
+  "status": "error",
+  "error": "device did not ack within timeout"
+}
+```
+
+- A per-channel command-result envelope, separate from `devices.telemetry`/`devices.status`
+  — used for reporting the applied result of something the gateway did locally, rather than a
+  periodic telemetry sample.
+- `deviceId` (string, required) — must match a registered device the same way the other topics do.
+- `key`/`value` (strings, required on `status: "ok"`) — the channel and the actuator state the
+  gateway applied, e.g. `{ key: "relay1", value: "ON" }`. Merged into the device's persisted
+  `channelStates` (`{ relay1: "ON" }`), which is broadcast to the dashboard over the `channelState`
+  websocket event.
+- `topic` (string, optional) — the device's own downlink MQTT topic the command was relayed to,
+  when the gateway resolved one from an explicit per-channel relay topic; omitted when it instead
+  fell back to resolving the device via boot-config. Stored as-is for unclaimed-device debugging,
+  not otherwise interpreted by the backend.
+- `status` (string, optional, defaults to `"ok"`) — `"ok"` or `"error"`. On `"error"`, `key`/`value`
+  describe the command that was *attempted*, not one that took effect — `channelStates` is left
+  untouched and the failure is just logged server-side.
+- `error` (string, optional) — present on `status: "error"`, a message describing what went wrong
+  (e.g. a device ack timeout).
+- Either way, receiving the event at all marks the device `ONLINE` (same as telemetry) since it
+  proves the gateway is actively bridging it.
+- Consumed by `KafkaConsumerService.handleDeviceEvent` → `DeviceService.handleDeviceChannelEvent`.
 
 ### `devices.cloud.alerts` (gateway/device → cloud)
 

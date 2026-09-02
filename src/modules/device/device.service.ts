@@ -60,6 +60,15 @@ export interface DeviceChannelStateEvent {
   changedAt: Date;
 }
 
+/** Payload of a `devices.cloud.events` message, deviceId already stripped off by the Kafka consumer. */
+export interface DeviceChannelEventPayload {
+  key?: string;
+  value?: unknown;
+  topic?: string;
+  status?: string;
+  error?: string;
+}
+
 export interface DeviceAlertEvent {
   deviceId: string;
   message: string;
@@ -643,36 +652,44 @@ export class DeviceService {
   }
 
   /**
-   * Handles the gateway's raw device-event envelope (`devices.events`): a `key=value` snapshot of
-   * an actuator/channel's applied state (e.g. after relaying a `devices.commands` message down to
-   * the device), rather than a full telemetry payload. Merged into the device's persisted
-   * `channelStates` and broadcast to the dashboard as a `device.channelState` event.
+   * Handles the gateway's per-channel command-result envelope (`devices.cloud.events`):
+   * confirmation that a `devices.cloud.commands` relay actually landed on the device (or didn't).
+   * On `status: "ok"`, `key`/`value` describe the channel's newly-applied actuator state and are
+   * merged into the device's persisted `channelStates`, broadcast to the dashboard as a
+   * `device.channelState` event. On `status: "error"` the command wasn't applied — `channelStates`
+   * is left untouched and `error` is just logged, since surfacing it there would show a state the
+   * device never actually reached. Either way, receiving the event at all proves the gateway is
+   * actively bridging the device, so it's still marked ONLINE.
    */
-  async handleDeviceChannelEvent(deviceId: string, sourceTopic: string, message: unknown): Promise<void> {
+  async handleDeviceChannelEvent(deviceId: string, event: DeviceChannelEventPayload): Promise<void> {
     const device = await this.deviceRepository.findOneBy({ deviceId });
 
     if (!device) {
       this.logger.warn(`Ignoring device event for unclaimed device ${deviceId}`);
-      await this.recordUnclaimedDevice(deviceId, sourceTopic, message);
-
-      return;
-    }
-
-    const parsed = this.parseChannelStateMessage(message);
-
-    if (!parsed) {
-      this.logger.warn(`Ignoring unrecognized device event message from ${deviceId} on ${sourceTopic}: ${JSON.stringify(message)}`);
+      await this.recordUnclaimedDevice(deviceId, event.topic ?? KAFKA_DEVICE_EVENTS_TOPIC, event);
 
       return;
     }
 
     const changedAt = new Date();
-    const channelStates = { ...(device.channelStates ?? {}), [parsed.key]: parsed.value };
     const wasOffline = device.status !== DeviceStatus.ONLINE;
+    const failed = (event.status ?? 'ok').trim().toLowerCase() === 'error';
 
-    await this.deviceRepository.update(device.id, { channelStates, lastSeenAt: changedAt, status: DeviceStatus.ONLINE });
+    if (failed) {
+      this.logger.warn(
+        `Device ${deviceId} failed to apply channel command ${event.key ?? '?'}=${String(event.value ?? '?')}: ${event.error ?? 'unknown error'}`,
+      );
+      await this.deviceRepository.update(device.id, { lastSeenAt: changedAt, status: DeviceStatus.ONLINE });
+    } else if (event.key) {
+      const channelStates = { ...(device.channelStates ?? {}), [event.key]: String(event.value ?? '') };
 
-    this.eventEmitter.emit('device.channelState', { deviceId, channelStates, changedAt } satisfies DeviceChannelStateEvent);
+      await this.deviceRepository.update(device.id, { channelStates, lastSeenAt: changedAt, status: DeviceStatus.ONLINE });
+      this.eventEmitter.emit('device.channelState', { deviceId, channelStates, changedAt } satisfies DeviceChannelStateEvent);
+    } else {
+      this.logger.warn(`Ignoring unrecognized device event from ${deviceId}: ${JSON.stringify(event)}`);
+
+      return;
+    }
 
     if (wasOffline) {
       this.eventEmitter.emit('device.status', { deviceId, status: DeviceStatus.ONLINE, changedAt } satisfies DeviceStatusEvent);
