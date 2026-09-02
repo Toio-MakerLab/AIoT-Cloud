@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "User Management",
+    "subtitle": "Manage user accounts and their roles here."
+  },
+  "columns": {
+    "username": "Username",
+    "email": "Email",
+    "role": "Role"
+  },
+  "toolbar": {
+    "filterPlaceholder": "Filter users..."
+  },
+  "roles": {
+    "root": "Root",
+    "admin": "Admin",
+    "user": "User",
+    "guest": "Guest"
+  },
+  "actionDialog": {
+    "usernameMin": "Username must be at least 3 characters.",
+    "passwordMin": "Password must be at least 6 characters.",
+    "updated": "User updated",
+    "created": "User created",
+    "editTitle": "Edit User",
+    "addTitle": "Add User",
+    "editDescription": "Update the user's details here.",
+    "addDescription": "Create a new user account here.",
+    "clickSaveHint": "Click save when you're done.",
+    "username": "Username",
+    "password": "Password",
+    "passwordKeepUnchanged": "(leave blank to keep unchanged)",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "selectRole": "Select a role",
+    "factory": "Factory",
+    "selectFactory": "Select a factory",
+    "noFactory": "No factory"
+  },
+  "primaryButtons": {
+    "addUser": "Add User"
+  }
+}

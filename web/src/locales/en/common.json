@@ -1,0 +1,96 @@
+{
+  "actions": {
+    "save": "Save",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "create": "Create",
+    "update": "Update",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "clearFilters": "Clear filters",
+    "reset": "Reset",
+    "refresh": "Refresh",
+    "export": "Export",
+    "import": "Import",
+    "copy": "Copy",
+    "copied": "Copied",
+    "view": "View",
+    "download": "Download",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "openMenu": "Open menu",
+    "selectAll": "Select all",
+    "clearSelection": "Clear selection"
+  },
+  "words": {
+    "yes": "Yes",
+    "no": "No",
+    "name": "Name",
+    "label": "label",
+    "description": "Description",
+    "type": "Type",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "optional": "Optional",
+    "required": "Required",
+    "unknown": "Unknown",
+    "none": "None",
+    "all": "All"
+  },
+  "table": {
+    "noResults": "No results.",
+    "noResultsFound": "No results found.",
+    "selectedCount": "{{count}} selected",
+    "rowsSelected": "{{selected}} of {{total}} row(s) selected.",
+    "rowsPerPage": "Rows per page",
+    "pageOf": "Page {{page}} of {{pageCount}}",
+    "goToFirstPage": "Go to first page",
+    "goToPreviousPage": "Go to previous page",
+    "goToNextPage": "Go to next page",
+    "goToLastPage": "Go to last page",
+    "toggleColumns": "Toggle columns",
+    "columns": "Columns",
+    "sortAsc": "Asc",
+    "sortDesc": "Desc",
+    "hideColumn": "Hide"
+  },
+  "confirmDialog": {
+    "defaultTitle": "Are you sure?",
+    "defaultDesc": "This action cannot be undone."
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong!",
+    "genericTitle": "Oops! Something went wrong",
+    "genericDesc": "We apologize for the inconvenience. Please try again later."
+  },
+  "validation": {
+    "required": "This field is required."
+  },
+  "select": {
+    "placeholder": "Select"
+  },
+  "authGuard": {
+    "settingUpAccount": "Setting up your account..."
+  },
+  "timeRange": {
+    "placeholder": "Time range",
+    "lastHour": "Last hour",
+    "last6Hours": "Last 6 hours",
+    "last24Hours": "Last 24 hours",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days"
+  }
+}

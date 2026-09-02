@@ -14,6 +14,7 @@ import {
   type VisibilityState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Factory } from '../data/schema';
 import { DataTablePagination } from './data-table-pagination';
@@ -32,6 +33,7 @@ interface DataTableProps {
 }
 
 export function FactoriesTable({ columns, data }: DataTableProps) {
+  const { t } = useTranslation('common');
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -87,7 +89,7 @@ export function FactoriesTable({ columns, data }: DataTableProps) {
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  {t('table.noResults')}
                 </TableCell>
               </TableRow>
             )}

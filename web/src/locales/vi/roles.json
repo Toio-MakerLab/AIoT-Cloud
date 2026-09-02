@@ -1,0 +1,14 @@
+{
+  "title": "Vai trò & Phân quyền",
+  "description": "Kiểm soát tài nguyên nào mỗi vai trò được đọc, tạo, cập nhật, hoặc xóa.",
+  "permissionMatrix": "Ma trận phân quyền",
+  "selectRoleHint": "Chọn một vai trò, sau đó bật/tắt quyền truy cập cho mỗi tài nguyên.",
+  "resource": "Tài nguyên",
+  "permissionsUpdated": "Đã cập nhật quyền cho {{role}}",
+  "actions": {
+    "read": "Đọc",
+    "create": "Tạo",
+    "update": "Cập nhật",
+    "delete": "Xóa"
+  }
+}

@@ -2,7 +2,9 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { IconDeviceUnknown, IconPlus, IconTrash } from '@tabler/icons-react';
+import { useMemo } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { SelectDropdown } from '@/components/select-dropdown';
@@ -13,36 +15,38 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateDeviceTemplateMutation, useUpdateDeviceTemplateMutation } from '../api/queries';
-import { deviceTemplateTypes, getDeviceTemplateTypeMeta } from '../data/data';
+import { getDeviceTemplateTypeMeta, getDeviceTemplateTypes } from '../data/data';
 import type { DeviceTemplate } from '../data/schema';
 import { actionFieldSchema, deviceTemplateTypeSchema, telemetryFieldSchema } from '../data/schema';
 
-const formSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required.' }),
-  type: deviceTemplateTypeSchema,
-  manufacturer: z.string().optional(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-  isActive: z.boolean(),
-  telemetrySchema: z.array(telemetryFieldSchema),
-  actionSchema: z.array(actionFieldSchema),
-});
-type DeviceTemplateForm = z.infer<typeof formSchema>;
+function buildFormSchema(t: (key: string, options?: Record<string, unknown>) => string) {
+  return z.object({
+    name: z.string().min(1, { message: t('actionDialog.nameRequired') }),
+    type: deviceTemplateTypeSchema,
+    manufacturer: z.string().optional(),
+    description: z.string().optional(),
+    icon: z.string().optional(),
+    isActive: z.boolean(),
+    telemetrySchema: z.array(telemetryFieldSchema),
+    actionSchema: z.array(actionFieldSchema),
+  });
+}
+type DeviceTemplateForm = z.infer<ReturnType<typeof buildFormSchema>>;
 
-function newChannel(index: number) {
+function newChannel(index: number, t: (key: string, options?: Record<string, unknown>) => string) {
   return {
     key: `channel${index}`,
-    label: `Channel ${index}`,
+    label: t('actionDialog.channelN', { index }),
     type: 'TOGGLE' as const,
     onValue: 'ON',
     offValue: 'OFF',
   };
 }
 
-function newTelemetryField(index: number) {
+function newTelemetryField(index: number, t: (key: string, options?: Record<string, unknown>) => string) {
   return {
     key: `field${index}`,
-    label: `Field ${index}`,
+    label: t('actionDialog.fieldN', { index }),
     unit: '',
   };
 }
@@ -54,7 +58,11 @@ interface Props {
 }
 
 export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: Props) {
+  const { t } = useTranslation('deviceTemplates');
+  const { t: tCommon } = useTranslation('common');
   const isEdit = !!currentRow;
+  const formSchema = useMemo(() => buildFormSchema(t), [t]);
+  const deviceTemplateTypes = useMemo(() => getDeviceTemplateTypes(t), [t]);
   const createDeviceTemplate = useCreateDeviceTemplateMutation();
   const updateDeviceTemplate = useUpdateDeviceTemplateMutation();
   const isSubmitting = createDeviceTemplate.isPending || updateDeviceTemplate.isPending;
@@ -99,10 +107,10 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
           id: currentRow.id,
           data: values,
         });
-        toast.success('Device template updated');
+        toast.success(t('actionDialog.updated'));
       } else {
         await createDeviceTemplate.mutateAsync(values);
-        toast.success('Device template created');
+        toast.success(t('actionDialog.created'));
       }
       form.reset();
       onOpenChange(false);
@@ -111,7 +119,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
       // HTTP 200 with a non-zero `error` code, so they surface here as a
       // thrown Error rather than an AxiosError the global mutation error
       // handler can parse — toast the message explicitly.
-      toast.error(error instanceof Error ? error.message : 'Something went wrong!');
+      toast.error(error instanceof Error ? error.message : tCommon('errors.somethingWentWrong'));
     }
   };
 
@@ -125,9 +133,9 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader className="text-left">
-          <DialogTitle>{isEdit ? 'Edit Template' : 'Add Template'}</DialogTitle>
+          <DialogTitle>{isEdit ? t('actionDialog.editTitle') : t('actionDialog.addTitle')}</DialogTitle>
           <DialogDescription>
-            {isEdit ? 'Update the device template here.' : 'Create a new device template here.'} Click save when you're done.
+            {isEdit ? t('actionDialog.editDescription') : t('actionDialog.addDescription')} {t('actionDialog.clickSaveHint')}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -137,7 +145,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               name="name"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-                  <FormLabel className="col-span-2 text-right">Name</FormLabel>
+                  <FormLabel className="col-span-2 text-right">{tCommon('words.name')}</FormLabel>
                   <FormControl className="col-span-4">
                     <Input placeholder="Soil Moisture Sensor v2" {...field} />
                   </FormControl>
@@ -150,11 +158,11 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               name="type"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-                  <FormLabel className="col-span-2 text-right">Type</FormLabel>
+                  <FormLabel className="col-span-2 text-right">{tCommon('words.type')}</FormLabel>
                   <SelectDropdown
                     defaultValue={field.value}
                     onValueChange={field.onChange}
-                    placeholder="Select a type"
+                    placeholder={t('actionDialog.selectType')}
                     className="col-span-4"
                     items={deviceTemplateTypes.map(({ label, value }) => ({
                       label,
@@ -170,7 +178,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               name="manufacturer"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-                  <FormLabel className="col-span-2 text-right">Manufacturer</FormLabel>
+                  <FormLabel className="col-span-2 text-right">{t('actionDialog.manufacturer')}</FormLabel>
                   <FormControl className="col-span-4">
                     <Input placeholder="Acme Sensors Inc." {...field} />
                   </FormControl>
@@ -189,7 +197,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                 const isImageUrl = !!field.value && /^(https?:\/\/|\/)/.test(field.value);
                 return (
                   <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-                    <FormLabel className="col-span-2 text-right">Icon</FormLabel>
+                    <FormLabel className="col-span-2 text-right">{t('actionDialog.icon')}</FormLabel>
                     <div className="col-span-4 flex items-center gap-2">
                       <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded">
                         {isImageUrl ? (
@@ -199,10 +207,10 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                         )}
                       </div>
                       <FormControl>
-                        <Input placeholder="Optional image URL" {...field} />
+                        <Input placeholder={t('actionDialog.iconPlaceholder')} {...field} />
                       </FormControl>
                     </div>
-                    <FormDescription className="col-span-4 col-start-3">Leave blank to use the default icon for this device type.</FormDescription>
+                    <FormDescription className="col-span-4 col-start-3">{t('actionDialog.iconHint')}</FormDescription>
                     <FormMessage className="col-span-4 col-start-3" />
                   </FormItem>
                 );
@@ -213,9 +221,9 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               name="description"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-                  <FormLabel className="col-span-2 text-right">Description</FormLabel>
+                  <FormLabel className="col-span-2 text-right">{tCommon('words.description')}</FormLabel>
                   <FormControl className="col-span-4">
-                    <Textarea placeholder="What this template represents..." className="resize-none" {...field} />
+                    <Textarea placeholder={t('actionDialog.descriptionPlaceholder')} className="resize-none" {...field} />
                   </FormControl>
                   <FormMessage className="col-span-4 col-start-3" />
                 </FormItem>
@@ -226,7 +234,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
               name="isActive"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1">
-                  <FormLabel className="col-span-2 text-right">Active</FormLabel>
+                  <FormLabel className="col-span-2 text-right">{tCommon('words.active')}</FormLabel>
                   <FormControl className="col-span-4">
                     <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
@@ -236,7 +244,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
             />
             {form.watch('type') === 'SENSOR_NODE' ? (
               <div className="grid grid-cols-6 items-start gap-x-4 gap-y-1">
-                <FormLabel className="col-span-2 pt-2 text-right">Telemetry Fields</FormLabel>
+                <FormLabel className="col-span-2 pt-2 text-right">{t('actionDialog.telemetryFields')}</FormLabel>
                 <div className="col-span-4 space-y-3">
                   {telemetryFields.fields.map((field, index) => (
                     <div key={field.id} className="flex items-center gap-2">
@@ -246,7 +254,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                         render={({ field: keyField }) => (
                           <FormItem className="flex-1 space-y-0">
                             <FormControl>
-                              <Input placeholder="key" {...keyField} />
+                              <Input placeholder={t('actionDialog.key')} {...keyField} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -258,7 +266,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                         render={({ field: labelField }) => (
                           <FormItem className="flex-1 space-y-0">
                             <FormControl>
-                              <Input placeholder="label" {...labelField} />
+                              <Input placeholder={tCommon('words.label')} {...labelField} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -270,7 +278,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                         render={({ field: unitField }) => (
                           <FormItem className="w-20 space-y-0">
                             <FormControl>
-                              <Input placeholder="unit" {...unitField} value={unitField.value ?? ''} />
+                              <Input placeholder={t('actionDialog.unit')} {...unitField} value={unitField.value ?? ''} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -284,17 +292,17 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => telemetryFields.append(newTelemetryField(telemetryFields.fields.length + 1))}
+                    onClick={() => telemetryFields.append(newTelemetryField(telemetryFields.fields.length + 1, t))}
                   >
                     <IconPlus className="size-4" />
-                    Add Field
+                    {t('actionDialog.addField')}
                   </Button>
                 </div>
               </div>
             ) : null}
             {form.watch('type') === 'RELAY_NODE' ? (
               <div className="grid grid-cols-6 items-start gap-x-4 gap-y-1">
-                <FormLabel className="col-span-2 pt-2 text-right">Channels</FormLabel>
+                <FormLabel className="col-span-2 pt-2 text-right">{t('actionDialog.channels')}</FormLabel>
                 <div className="col-span-4 space-y-3">
                   {actionFields.fields.map((field, index) => {
                     const type = form.watch(`actionSchema.${index}.type`);
@@ -307,7 +315,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                             render={({ field: keyField }) => (
                               <FormItem className="flex-1 space-y-0">
                                 <FormControl>
-                                  <Input placeholder="key" {...keyField} />
+                                  <Input placeholder={t('actionDialog.key')} {...keyField} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -319,7 +327,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                             render={({ field: labelField }) => (
                               <FormItem className="flex-1 space-y-0">
                                 <FormControl>
-                                  <Input placeholder="label" {...labelField} />
+                                  <Input placeholder={tCommon('words.label')} {...labelField} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -338,10 +346,10 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                                 <SelectDropdown
                                   defaultValue={typeField.value}
                                   onValueChange={typeField.onChange}
-                                  placeholder="Type"
+                                  placeholder={tCommon('words.type')}
                                   items={[
-                                    { label: 'Toggle', value: 'TOGGLE' },
-                                    { label: 'Button', value: 'BUTTON' },
+                                    { label: t('actionDialog.toggle'), value: 'TOGGLE' },
+                                    { label: t('actionDialog.button'), value: 'BUTTON' },
                                   ]}
                                 />
                               </FormItem>
@@ -355,7 +363,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                                 render={({ field: onField }) => (
                                   <FormItem className="flex-1 space-y-0">
                                     <FormControl>
-                                      <Input placeholder="on value" {...onField} value={onField.value ?? ''} />
+                                      <Input placeholder={t('actionDialog.onValue')} {...onField} value={onField.value ?? ''} />
                                     </FormControl>
                                   </FormItem>
                                 )}
@@ -366,7 +374,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                                 render={({ field: offField }) => (
                                   <FormItem className="flex-1 space-y-0">
                                     <FormControl>
-                                      <Input placeholder="off value" {...offField} value={offField.value ?? ''} />
+                                      <Input placeholder={t('actionDialog.offValue')} {...offField} value={offField.value ?? ''} />
                                     </FormControl>
                                   </FormItem>
                                 )}
@@ -377,9 +385,14 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                       </div>
                     );
                   })}
-                  <Button type="button" variant="outline" size="sm" onClick={() => actionFields.append(newChannel(actionFields.fields.length + 1))}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => actionFields.append(newChannel(actionFields.fields.length + 1, t))}
+                  >
                     <IconPlus className="size-4" />
-                    Add Channel
+                    {t('actionDialog.addChannel')}
                   </Button>
                 </div>
               </div>
@@ -388,7 +401,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
         </Form>
         <DialogFooter>
           <Button type="submit" form="device-template-form" disabled={isSubmitting}>
-            Save changes
+            {tCommon('actions.saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

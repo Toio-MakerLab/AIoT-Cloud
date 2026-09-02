@@ -1,0 +1,18 @@
+{
+  "myAccount": "Tài khoản của tôi",
+  "subtitle": "Thông tin tài khoản hiện tại của bạn.",
+  "profile": "Hồ sơ",
+  "description": "Thông tin gắn với tài khoản của bạn.",
+  "loading": "Đang tải...",
+  "username": "Tên đăng nhập",
+  "role": "Vai trò",
+  "firstName": "Tên",
+  "lastName": "Họ",
+  "email": "Email",
+  "verified": "Đã xác thực",
+  "notVerified": "Chưa xác thực",
+  "phone": "Số điện thoại",
+  "resendVerificationEmail": "Gửi lại email xác thực",
+  "verificationEmailSent": "Đã gửi email xác thực",
+  "resendFailed": "Gửi lại email xác thực thất bại"
+}

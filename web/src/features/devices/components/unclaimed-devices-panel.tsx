@@ -1,14 +1,20 @@
 import { IconPlus } from '@tabler/icons-react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, type Locale } from 'date-fns';
+import { enUS, vi } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Language } from '@/context/language-context';
 import { useIsGuest } from '@/hooks/use-is-guest';
 import { useUnclaimedDevicesQuery } from '../api/queries';
 import { useDevices } from '../context/devices-context';
 
+const DATE_FNS_LOCALES: Record<Language, Locale> = { [Language.EN]: enUS, [Language.VI]: vi };
+
 export function UnclaimedDevicesPanel() {
+  const { t, i18n } = useTranslation('devices');
   const { data } = useUnclaimedDevicesQuery();
   const { setOpen, setPrefillDeviceId } = useDevices();
   const isGuest = useIsGuest();
@@ -28,21 +34,19 @@ export function UnclaimedDevicesPanel() {
     <Card className="mb-4">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          Unclaimed Devices
+          {t('unclaimedPanel.title')}
           <Badge variant="secondary">{unclaimedDevices.length}</Badge>
         </CardTitle>
-        <CardDescription>
-          Devices publishing MQTT traffic that aren't registered to any account yet. Register one to start managing it.
-        </CardDescription>
+        <CardDescription>{t('unclaimedPanel.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Device ID</TableHead>
-              <TableHead>Last Topic</TableHead>
-              <TableHead>Last Seen</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead>{t('unclaimedPanel.deviceId')}</TableHead>
+              <TableHead>{t('unclaimedPanel.lastTopic')}</TableHead>
+              <TableHead>{t('unclaimedPanel.lastSeen')}</TableHead>
+              <TableHead className="text-right">{t('unclaimedPanel.action')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -50,11 +54,13 @@ export function UnclaimedDevicesPanel() {
               <TableRow key={device.id}>
                 <TableCell className="font-mono text-sm">{device.deviceId}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">{device.lastTopic}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{formatDistanceToNow(device.lastSeenAt, { addSuffix: true })}</TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {formatDistanceToNow(device.lastSeenAt, { addSuffix: true, locale: DATE_FNS_LOCALES[i18n.language as Language] })}
+                </TableCell>
                 <TableCell className="text-right">
                   <Button size="sm" variant="outline" onClick={() => handleRegister(device.deviceId)}>
                     <IconPlus className="size-4" />
-                    Register
+                    {t('unclaimedPanel.register')}
                   </Button>
                 </TableCell>
               </TableRow>

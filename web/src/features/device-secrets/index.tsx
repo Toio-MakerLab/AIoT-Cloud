@@ -1,5 +1,7 @@
 import { IconPlus } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitch } from '@/components/language-switch';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { NotificationsNav } from '@/components/notifications-nav';
@@ -12,6 +14,7 @@ import { CreateDeviceSecretDialog } from './components/create-device-secret-dial
 import { DeviceSecretsTable } from './components/device-secrets-table';
 
 export default function DeviceSecrets() {
+  const { t } = useTranslation('deviceSecrets');
   const [createOpen, setCreateOpen] = useState(false);
   const { data } = useDeviceSecretsQuery();
 
@@ -21,6 +24,7 @@ export default function DeviceSecrets() {
         <Search />
         <div className="ml-auto flex items-center space-x-4">
           <ThemeSwitch />
+          <LanguageSwitch />
           <NotificationsNav />
           <ProfileDropdown />
         </div>
@@ -29,12 +33,12 @@ export default function DeviceSecrets() {
       <Main>
         <div className="mb-2 flex flex-wrap items-center justify-between space-y-2">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Device Secrets</h2>
-            <p className="text-muted-foreground">Manage the shared secrets device firmware uses to authenticate.</p>
+            <h2 className="text-2xl font-bold tracking-tight">{t('list.title')}</h2>
+            <p className="text-muted-foreground">{t('list.subtitle')}</p>
           </div>
           <Button onClick={() => setCreateOpen(true)}>
             <IconPlus className="mr-1 h-4 w-4" />
-            Create secret
+            {t('list.createSecret')}
           </Button>
         </div>
         <div className="-mx-4 flex-1 overflow-auto px-4 py-1">

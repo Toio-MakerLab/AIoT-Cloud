@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -11,19 +13,23 @@ import { Theme, useTheme } from '@/context/theme-context';
 import { cn } from '@/lib/utils';
 import { showSubmittedData } from '@/utils/show-submitted-data';
 
-const appearanceFormSchema = z.object({
-  theme: z.nativeEnum(Theme, {
-    required_error: 'Please select a theme.',
-  }),
-  font: z.enum(fonts, {
-    invalid_type_error: 'Select a font',
-    required_error: 'Please select a font.',
-  }),
-});
+function buildFormSchema(t: (key: string) => string) {
+  return z.object({
+    theme: z.nativeEnum(Theme, {
+      required_error: t('appearance.form.themeRequired'),
+    }),
+    font: z.enum(fonts, {
+      invalid_type_error: t('appearance.form.fontInvalid'),
+      required_error: t('appearance.form.fontRequired'),
+    }),
+  });
+}
 
-type AppearanceFormValues = z.infer<typeof appearanceFormSchema>;
+type AppearanceFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 export function AppearanceForm() {
+  const { t } = useTranslation('settings');
+  const appearanceFormSchema = useMemo(() => buildFormSchema(t), [t]);
   const { font, setFont } = useFont();
   const { theme, setTheme } = useTheme();
 
@@ -53,7 +59,7 @@ export function AppearanceForm() {
           name="font"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Font</FormLabel>
+              <FormLabel>{t('appearance.form.font')}</FormLabel>
               <div className="relative w-max">
                 <FormControl>
                   <select
@@ -73,7 +79,7 @@ export function AppearanceForm() {
                 </FormControl>
                 <ChevronDownIcon className="absolute top-2.5 right-3 h-4 w-4 opacity-50" />
               </div>
-              <FormDescription className="font-manrope">Set the font you want to use in the dashboard.</FormDescription>
+              <FormDescription className="font-manrope">{t('appearance.form.fontDescription')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -83,8 +89,8 @@ export function AppearanceForm() {
           name="theme"
           render={({ field }) => (
             <FormItem className="space-y-1">
-              <FormLabel>Theme</FormLabel>
-              <FormDescription>Select the theme for the dashboard.</FormDescription>
+              <FormLabel>{t('appearance.form.theme')}</FormLabel>
+              <FormDescription>{t('appearance.form.themeDescription')}</FormDescription>
               <FormMessage />
               <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid max-w-md grid-cols-2 gap-8 pt-2">
                 <FormItem>
@@ -108,7 +114,7 @@ export function AppearanceForm() {
                         </div>
                       </div>
                     </div>
-                    <span className="block w-full p-2 text-center font-normal">Light</span>
+                    <span className="block w-full p-2 text-center font-normal">{t('appearance.form.light')}</span>
                   </FormLabel>
                 </FormItem>
                 <FormItem>
@@ -132,7 +138,7 @@ export function AppearanceForm() {
                         </div>
                       </div>
                     </div>
-                    <span className="block w-full p-2 text-center font-normal">Dark</span>
+                    <span className="block w-full p-2 text-center font-normal">{t('appearance.form.dark')}</span>
                   </FormLabel>
                 </FormItem>
               </RadioGroup>
@@ -140,7 +146,7 @@ export function AppearanceForm() {
           )}
         />
 
-        <Button type="submit">Update preferences</Button>
+        <Button type="submit">{t('appearance.form.updatePreferences')}</Button>
       </form>
     </Form>
   );

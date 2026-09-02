@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,13 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { IDashboardWidget, IDevice, WidgetType } from '../api/types';
 
-const formSchema = z.object({
-  deviceId: z.string().min(1, { message: 'Device is required.' }),
-  widgetType: z.enum(['VALUE', 'CHART', 'ACTION']),
-  field: z.string().min(1, { message: 'Field is required.' }),
-  title: z.string().min(1, { message: 'Title is required.' }),
-});
-type AddPanelForm = z.infer<typeof formSchema>;
+function buildFormSchema(t: (key: string, options?: Record<string, unknown>) => string) {
+  return z.object({
+    deviceId: z.string().min(1, { message: t('addPanel.deviceRequired') }),
+    widgetType: z.enum(['VALUE', 'CHART', 'ACTION']),
+    field: z.string().min(1, { message: t('addPanel.fieldRequired') }),
+    title: z.string().min(1, { message: t('addPanel.titleRequired') }),
+  });
+}
+type AddPanelForm = z.infer<ReturnType<typeof buildFormSchema>>;
 
 interface Props {
   open: boolean;
@@ -26,6 +29,8 @@ interface Props {
 }
 
 export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }: Props) {
+  const { t } = useTranslation('dashboard');
+  const formSchema = useMemo(() => buildFormSchema(t), [t]);
   const form = useForm<AddPanelForm>({
     resolver: zodResolver(formSchema),
     defaultValues: { deviceId: '', widgetType: 'VALUE', field: '', title: '' },
@@ -77,8 +82,8 @@ export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }:
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Panel</DialogTitle>
-          <DialogDescription>Pick a device and telemetry field to display on this dashboard.</DialogDescription>
+          <DialogTitle>{t('addPanel.title')}</DialogTitle>
+          <DialogDescription>{t('addPanel.description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form id="add-panel-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -87,15 +92,15 @@ export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }:
               name="deviceId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Device</FormLabel>
+                  <FormLabel>{t('addPanel.device')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a device" />
+                        <SelectValue placeholder={t('addPanel.selectDevice')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {devices.length === 0 && <div className="text-muted-foreground px-2 py-1.5 text-sm">No devices found</div>}
+                      {devices.length === 0 && <div className="text-muted-foreground px-2 py-1.5 text-sm">{t('addPanel.noDevices')}</div>}
                       {devices.map((device) => (
                         <SelectItem key={device.id} value={device.id}>
                           {device.name} ({device.deviceId})
@@ -112,7 +117,7 @@ export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }:
               name="widgetType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Widget Type</FormLabel>
+                  <FormLabel>{t('addPanel.widgetType')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
@@ -120,9 +125,9 @@ export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }:
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="VALUE">Value</SelectItem>
-                      <SelectItem value="CHART">Chart</SelectItem>
-                      <SelectItem value="ACTION">Action</SelectItem>
+                      <SelectItem value="VALUE">{t('addPanel.value')}</SelectItem>
+                      <SelectItem value="CHART">{t('addPanel.chart')}</SelectItem>
+                      <SelectItem value="ACTION">{t('addPanel.action')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -135,15 +140,15 @@ export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }:
                 name="field"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Channel</FormLabel>
+                    <FormLabel>{t('addPanel.channel')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a channel" />
+                          <SelectValue placeholder={t('addPanel.selectChannel')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {channels.length === 0 && <div className="text-muted-foreground px-2 py-1.5 text-sm">Selected device has no channels</div>}
+                        {channels.length === 0 && <div className="text-muted-foreground px-2 py-1.5 text-sm">{t('addPanel.noChannels')}</div>}
                         {channels.map((channel) => (
                           <SelectItem key={channel.key} value={channel.key}>
                             {channel.label}
@@ -161,7 +166,7 @@ export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }:
                 name="field"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telemetry Field</FormLabel>
+                    <FormLabel>{t('addPanel.telemetryField')}</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. temperature" {...field} />
                     </FormControl>
@@ -175,9 +180,9 @@ export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }:
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>{t('addPanel.panelTitle')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Panel title" {...field} />
+                    <Input placeholder={t('addPanel.panelTitlePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -187,7 +192,7 @@ export function AddPanelDialog({ open, onOpenChange, devices, nextSlot, onAdd }:
         </Form>
         <DialogFooter>
           <Button type="submit" form="add-panel-form">
-            Add Panel
+            {t('addPanel.title')}
           </Button>
         </DialogFooter>
       </DialogContent>

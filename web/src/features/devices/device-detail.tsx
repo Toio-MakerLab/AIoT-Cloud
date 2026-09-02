@@ -1,5 +1,7 @@
 import { IconArrowLeft } from '@tabler/icons-react';
 import { Link, useParams } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitch } from '@/components/language-switch';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { NotificationsNav } from '@/components/notifications-nav';
@@ -20,6 +22,7 @@ import { deviceStatusColors, getDevicePushChannelLabel } from './data/data';
 import type { DeviceStatus } from './data/schema';
 
 export default function DeviceDetail() {
+  const { t } = useTranslation('devices');
   const { deviceId } = useParams({ from: '/_authenticated/devices/$deviceId' });
   const { data, isLoading } = useDeviceQuery(deviceId);
   const device = data?.data;
@@ -30,6 +33,7 @@ export default function DeviceDetail() {
         <Search />
         <div className="ml-auto flex items-center space-x-4">
           <ThemeSwitch />
+          <LanguageSwitch />
           <NotificationsNav />
           <ProfileDropdown />
         </div>
@@ -39,14 +43,14 @@ export default function DeviceDetail() {
         <Button variant="ghost" size="sm" className="mb-4" asChild>
           <Link to="/devices">
             <IconArrowLeft className="mr-2 h-4 w-4" />
-            Back to devices
+            {t('detail.backToDevices')}
           </Link>
         </Button>
 
         {isLoading ? (
-          <p className="text-muted-foreground">Loading device…</p>
+          <p className="text-muted-foreground">{t('detail.loading')}</p>
         ) : !device ? (
-          <p className="text-muted-foreground">Device not found.</p>
+          <p className="text-muted-foreground">{t('detail.notFound')}</p>
         ) : (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -61,15 +65,15 @@ export default function DeviceDetail() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Overview</CardTitle>
+                <CardTitle>{t('detail.overview')}</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <span className="text-muted-foreground">Template</span>
+                <span className="text-muted-foreground">{t('detail.template')}</span>
                 <span>{device.template?.name ?? '—'}</span>
-                <span className="text-muted-foreground">Push channel</span>
+                <span className="text-muted-foreground">{t('detail.pushChannel')}</span>
                 <span>{getDevicePushChannelLabel(device.pushChannel)}</span>
-                <span className="text-muted-foreground">Last seen</span>
-                <span>{device.lastSeenAt ? new Date(device.lastSeenAt).toLocaleString() : 'Never'}</span>
+                <span className="text-muted-foreground">{t('detail.lastSeen')}</span>
+                <span>{device.lastSeenAt ? new Date(device.lastSeenAt).toLocaleString() : t('detail.never')}</span>
               </CardContent>
             </Card>
 

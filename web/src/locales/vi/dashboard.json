@@ -1,0 +1,52 @@
+{
+  "title": "Tổng quan",
+  "subtitle": "Xây dựng chế độ xem trực tiếp cho dữ liệu telemetry của thiết bị.",
+  "selectDashboard": "Chọn một dashboard",
+  "newDashboard": "Dashboard mới",
+  "dashboardNamePlaceholder": "Tên dashboard",
+  "default": "Mặc định",
+  "addPanelButton": "Thêm bảng điều khiển",
+  "saving": "Đang lưu...",
+  "save": "Lưu",
+  "nameRequired": "Tên dashboard là bắt buộc.",
+  "dashboardSaved": "Đã lưu dashboard",
+  "panel": {
+    "device": "Thiết bị",
+    "panel": "Bảng điều khiển",
+    "noField": "không có trường",
+    "online": "Trực tuyến",
+    "offline": "Ngoại tuyến",
+    "removePanel": "Xóa bảng điều khiển",
+    "on": "Bật",
+    "off": "Tắt",
+    "channelNotFound": "Không tìm thấy kênh trong mẫu thiết bị",
+    "deviceOffline": "Thiết bị đang ngoại tuyến",
+    "updated": "Cập nhật {{time}}",
+    "noDataYet": "Chưa có dữ liệu",
+    "failedToApply": "Áp dụng {{label}} thất bại",
+    "failedToSendAction": "Gửi lệnh thất bại"
+  },
+  "grid": {
+    "emptyState": "Chưa có bảng điều khiển nào. Nhấn \"{{addPanel}}\" để bắt đầu."
+  },
+  "addPanel": {
+    "title": "Thêm bảng điều khiển",
+    "description": "Chọn thiết bị và trường telemetry để hiển thị trên dashboard này.",
+    "deviceRequired": "Thiết bị là bắt buộc.",
+    "fieldRequired": "Trường là bắt buộc.",
+    "titleRequired": "Tiêu đề là bắt buộc.",
+    "device": "Thiết bị",
+    "selectDevice": "Chọn một thiết bị",
+    "noDevices": "Không tìm thấy thiết bị",
+    "widgetType": "Loại widget",
+    "value": "Giá trị",
+    "chart": "Biểu đồ",
+    "action": "Hành động",
+    "channel": "Kênh",
+    "selectChannel": "Chọn một kênh",
+    "noChannels": "Thiết bị đã chọn không có kênh nào",
+    "telemetryField": "Trường Telemetry",
+    "panelTitle": "Tiêu đề",
+    "panelTitlePlaceholder": "Tiêu đề bảng điều khiển"
+  }
+}

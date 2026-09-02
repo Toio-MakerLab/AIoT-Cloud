@@ -1,6 +1,7 @@
 import { CheckIcon, PlusCircledIcon } from '@radix-ui/react-icons';
 import type { Column } from '@tanstack/react-table';
 import type * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
@@ -19,6 +20,7 @@ interface DataTableFacetedFilterProps<TData, TValue> {
 }
 
 export function DataTableFacetedFilter<TData, TValue>({ column, title, options }: DataTableFacetedFilterProps<TData, TValue>) {
+  const { t } = useTranslation('common');
   const facets = column?.getFacetedUniqueValues();
   const selectedValues = new Set(column?.getFilterValue() as string[]);
   return (
@@ -36,7 +38,7 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title, options }
               <div className="hidden space-x-1 lg:flex">
                 {selectedValues.size > 2 ? (
                   <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                    {selectedValues.size} selected
+                    {t('table.selectedCount', { count: selectedValues.size })}
                   </Badge>
                 ) : (
                   options
@@ -56,7 +58,7 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title, options }
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{t('table.noResultsFound')}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value);
@@ -95,7 +97,7 @@ export function DataTableFacetedFilter<TData, TValue>({ column, title, options }
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem onSelect={() => column?.setFilterValue(undefined)} className="justify-center text-center">
-                    Clear filters
+                    {t('actions.clearFilters')}
                   </CommandItem>
                 </CommandGroup>
               </>

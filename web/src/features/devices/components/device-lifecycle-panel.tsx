@@ -1,5 +1,6 @@
 import { IconLoader2 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -16,15 +17,6 @@ import type { DeviceLifecycleStage } from '../api/types';
 interface Props {
   deviceId: string;
 }
-
-const stageLabels: Record<DeviceLifecycleStage, string> = {
-  NEW: 'New',
-  ACTIVE: 'Active',
-  AGING: 'Aging',
-  MAINTENANCE_DUE: 'Maintenance due',
-  END_OF_LIFE: 'End of life',
-  DECOMMISSIONED: 'Decommissioned',
-};
 
 const stageColors: Record<DeviceLifecycleStage, string> = {
   NEW: 'bg-sky-100/30 text-sky-900 dark:text-sky-200 border-sky-200',
@@ -49,6 +41,15 @@ function scoreBarColor(score: number) {
  * factor is computed from, or manually decommission the device.
  */
 export function DeviceLifecyclePanel({ deviceId }: Props) {
+  const { t } = useTranslation('devices');
+  const stageLabels: Record<DeviceLifecycleStage, string> = {
+    NEW: t('lifecyclePanel.stages.new'),
+    ACTIVE: t('lifecyclePanel.stages.active'),
+    AGING: t('lifecyclePanel.stages.aging'),
+    MAINTENANCE_DUE: t('lifecyclePanel.stages.maintenanceDue'),
+    END_OF_LIFE: t('lifecyclePanel.stages.endOfLife'),
+    DECOMMISSIONED: t('lifecyclePanel.stages.decommissioned'),
+  };
   const isGuest = useIsGuest();
   const { data, isLoading } = useDeviceLifecycleQuery(deviceId);
   const assessment = data?.data;
@@ -71,10 +72,10 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Lifecycle Assessment</CardTitle>
+          <CardTitle>{t('lifecyclePanel.title')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground text-sm">Loading…</p>
+          <p className="text-muted-foreground text-sm">{t('lifecyclePanel.loading')}</p>
         </CardContent>
       </Card>
     );
@@ -88,7 +89,7 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
         installedAt: installedAt ? new Date(installedAt).toISOString() : null,
         expectedLifespanMonths: expectedLifespanMonths ? Number(expectedLifespanMonths) : null,
       });
-      toast.success('Lifecycle settings saved');
+      toast.success(t('lifecyclePanel.settingsSaved'));
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -98,7 +99,7 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
     try {
       await decommissionDevice.mutateAsync();
       setConfirmOpen(false);
-      toast.success('Device marked as decommissioned');
+      toast.success(t('lifecyclePanel.decommissioned'));
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -108,8 +109,8 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2">
         <div>
-          <CardTitle>Lifecycle Assessment</CardTitle>
-          <CardDescription>Health score derived from device age, connectivity, and telemetry warning breaches.</CardDescription>
+          <CardTitle>{t('lifecyclePanel.title')}</CardTitle>
+          <CardDescription>{t('lifecyclePanel.description')}</CardDescription>
         </div>
         <Badge variant="outline" className={stageColors[assessment.stage]}>
           {stageLabels[assessment.stage]}
@@ -118,7 +119,7 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
       <CardContent className="space-y-4">
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-bold tabular-nums">{assessment.score}</span>
-          <span className="text-muted-foreground text-sm">/ 100 health score</span>
+          <span className="text-muted-foreground text-sm">{t('lifecyclePanel.healthScore')}</span>
         </div>
 
         <div className="space-y-3">
@@ -137,29 +138,33 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
         </div>
 
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-          <span className="text-muted-foreground">Age</span>
+          <span className="text-muted-foreground">{t('lifecyclePanel.age')}</span>
+          <span>{t('lifecyclePanel.ageMonths', { age: assessment.ageMonths, expected: assessment.expectedLifespanMonths })}</span>
+          <span className="text-muted-foreground">{t('lifecyclePanel.remainingLifespan')}</span>
           <span>
-            {assessment.ageMonths} / {assessment.expectedLifespanMonths} months
+            {assessment.remainingLifespanMonths > 0
+              ? t('lifecyclePanel.remainingMonths', { months: assessment.remainingLifespanMonths })
+              : t('lifecyclePanel.pastExpectedLifespan')}
           </span>
-          <span className="text-muted-foreground">Remaining lifespan</span>
-          <span>{assessment.remainingLifespanMonths > 0 ? `${assessment.remainingLifespanMonths} months` : 'Past expected lifespan'}</span>
-          <span className="text-muted-foreground">Last assessed</span>
+          <span className="text-muted-foreground">{t('lifecyclePanel.lastAssessed')}</span>
           <span>{new Date(assessment.assessedAt).toLocaleString()}</span>
         </div>
 
         {isDecommissioned && assessment.decommissionedAt && (
-          <p className="text-muted-foreground text-sm">Decommissioned on {new Date(assessment.decommissionedAt).toLocaleString()}.</p>
+          <p className="text-muted-foreground text-sm">
+            {t('lifecyclePanel.decommissionedOn', { date: new Date(assessment.decommissionedAt).toLocaleString() })}
+          </p>
         )}
 
         {!isGuest && !isDecommissioned && (
           <div className="space-y-3 rounded-md border p-3">
             <div className="grid grid-cols-2 gap-3">
               <Label className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">Installed on</span>
+                <span className="text-muted-foreground text-xs">{t('lifecyclePanel.installedOn')}</span>
                 <Input type="date" value={installedAt} onChange={(event) => setInstalledAt(event.target.value)} />
               </Label>
               <Label className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">Expected lifespan (months)</span>
+                <span className="text-muted-foreground text-xs">{t('lifecyclePanel.expectedLifespanMonths')}</span>
                 <Input type="number" min={1} value={expectedLifespanMonths} onChange={(event) => setExpectedLifespanMonths(event.target.value)} />
               </Label>
             </div>
@@ -167,10 +172,10 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => void handleSaveConfig()} disabled={updateLifecycle.isPending}>
                 {updateLifecycle.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-                Save
+                {t('lifecyclePanel.save')}
               </Button>
               <Button size="sm" variant="destructive" onClick={() => setConfirmOpen(true)}>
-                Decommission
+                {t('lifecyclePanel.decommission')}
               </Button>
             </div>
           </div>
@@ -182,9 +187,9 @@ export function DeviceLifecyclePanel({ deviceId }: Props) {
         onOpenChange={setConfirmOpen}
         handleConfirm={() => void handleDecommission()}
         disabled={decommissionDevice.isPending}
-        title="Decommission device"
-        desc="This marks the device as retired and stops its lifecycle stage from being recomputed. This cannot be undone from here."
-        confirmText="Decommission"
+        title={t('lifecyclePanel.decommissionTitle')}
+        desc={t('lifecyclePanel.decommissionDesc')}
+        confirmText={t('lifecyclePanel.decommission')}
         destructive
       />
     </Card>

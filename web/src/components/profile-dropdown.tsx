@@ -1,4 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import { useAuthStore } from '@/stores/authStore';
 
 export function ProfileDropdown() {
   const navigate = useNavigate();
+  const { t } = useTranslation('nav');
   // const { signOut, isAuthenticated } = useLogto()
   const { user, reset, isAuthenticated } = useAuthStore((state) => state.auth);
 
@@ -30,13 +32,13 @@ export function ProfileDropdown() {
 
     // Clear local auth state
     reset();
-    toast.success('Logged out successfully');
+    toast.success(t('profileDropdown.loggedOut'));
     navigate({ to: '/sign-in' });
   };
 
   // Get user display name and initials using LogtoService
   // const displayName = LogtoService.getUserDisplayName(user)
-  const displayName = user?.fullName || 'User';
+  const displayName = user?.fullName || t('profileDropdown.defaultUser');
   // const initials = LogtoService.getUserInitials(user)
 
   return (
@@ -53,14 +55,14 @@ export function ProfileDropdown() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm leading-none font-medium">{displayName}</p>
-            <p className="text-muted-foreground text-xs leading-none">{user?.email || 'No email'}</p>
+            <p className="text-muted-foreground text-xs leading-none">{user?.email || t('profileDropdown.noEmail')}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
             <Link to="/profile">
-              Profile
+              {t('profileDropdown.profile')}
               <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
             </Link>
           </DropdownMenuItem>
@@ -72,7 +74,7 @@ export function ProfileDropdown() {
           </DropdownMenuItem> */}
           <DropdownMenuItem asChild>
             <Link to="/settings">
-              Settings
+              {t('profileDropdown.settings')}
               <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
             </Link>
           </DropdownMenuItem>
@@ -80,7 +82,7 @@ export function ProfileDropdown() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
-          Log out
+          {t('profileDropdown.logOut')}
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>

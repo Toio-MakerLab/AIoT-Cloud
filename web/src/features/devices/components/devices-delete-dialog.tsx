@@ -2,6 +2,7 @@
 
 import { IconAlertTriangle } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,8 @@ interface Props {
 }
 
 export function DevicesDeleteDialog({ open, onOpenChange, currentRow }: Props) {
+  const { t } = useTranslation('devices');
+  const { t: tCommon } = useTranslation('common');
   const [value, setValue] = useState('');
   const deleteDevice = useDeleteDeviceMutation();
 
@@ -25,7 +28,7 @@ export function DevicesDeleteDialog({ open, onOpenChange, currentRow }: Props) {
     try {
       await deleteDevice.mutateAsync(currentRow.id);
       onOpenChange(false);
-      toast.success('Device deleted');
+      toast.success(t('deleteDialog.deleted'));
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
     }
@@ -39,25 +42,24 @@ export function DevicesDeleteDialog({ open, onOpenChange, currentRow }: Props) {
       disabled={value.trim() !== currentRow.name || deleteDevice.isPending}
       title={
         <span className="text-destructive">
-          <IconAlertTriangle className="stroke-destructive mr-1 inline-block" size={18} /> Delete Device
+          <IconAlertTriangle className="stroke-destructive mr-1 inline-block" size={18} /> {t('deleteDialog.title')}
         </span>
       }
       desc={
         <div className="space-y-4">
           <p className="mb-2">
-            Are you sure you want to delete <span className="font-bold">{currentRow.name}</span>?
+            {t('deleteDialog.confirmPrefix')} <span className="font-bold">{currentRow.name}</span>?
             <br />
-            This will permanently remove the device (ID: <span className="font-mono">{currentRow.deviceId}</span>) from your account. This cannot be
-            undone.
+            {t('deleteDialog.warning', { deviceId: currentRow.deviceId })}
           </p>
 
           <Label className="my-2">
-            Device name:
-            <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder="Enter device name to confirm deletion." />
+            {t('deleteDialog.deviceName')}
+            <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={t('deleteDialog.confirmPlaceholder')} />
           </Label>
         </div>
       }
-      confirmText="Delete"
+      confirmText={tCommon('actions.delete')}
       destructive
     />
   );

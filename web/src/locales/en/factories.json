@@ -1,0 +1,37 @@
+{
+  "list": {
+    "title": "Factories",
+    "subtitle": "Manage factories and the users/devices/dashboards assigned to them."
+  },
+  "toolbar": {
+    "filterPlaceholder": "Filter factories..."
+  },
+  "columns": {
+    "address": "Address"
+  },
+  "actionDialog": {
+    "nameRequired": "Name is required.",
+    "updated": "Factory updated",
+    "created": "Factory created",
+    "editTitle": "Edit Factory",
+    "addTitle": "Add Factory",
+    "editDescription": "Update the factory here.",
+    "addDescription": "Create a new factory here.",
+    "clickSaveHint": "Click save when you're done.",
+    "address": "Address",
+    "descriptionPlaceholder": "What this factory represents..."
+  },
+  "primaryButtons": {
+    "addFactory": "Add Factory"
+  },
+  "deleteDialog": {
+    "deleted": "Factory deleted",
+    "title": "Delete Factory",
+    "confirmPrefix": "Are you sure you want to delete",
+    "warning": "This action will permanently remove the factory from the system. Factories still assigned to users or devices cannot be deleted. This cannot be undone.",
+    "name": "Name:",
+    "confirmPlaceholder": "Enter factory name to confirm deletion.",
+    "warningTitle": "Warning!",
+    "warningDescription": "Please be careful, this operation cannot be rolled back."
+  }
+}

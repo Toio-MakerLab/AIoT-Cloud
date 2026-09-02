@@ -1,5 +1,4 @@
 import {
-  IconBrowserCheck,
   IconBuildingFactory2,
   IconCpu,
   IconHelp,
@@ -14,252 +13,102 @@ import {
   IconUserCog,
   IconUsers,
 } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import type { SidebarData } from '../types';
 
-export const sidebarData: SidebarData = {
-  user: {
-    name: 'vkhangstack',
-    email: 'vkhangstack@gmail.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-  navGroups: [
-    // {
-    //   title: 'General',
-    //   items: [
-    //     {
-    //       title: 'Dashboard',
-    //       url: '/',
-    //       icon: IconLayoutDashboard,
-    //     },
-    //     {
-    //       title: "Blog's",
-    //       icon: IconBrandBlogger,
-    //       items: [
-    //         {
-    //           title: 'Posts',
-    //           url: '/posts',
-    //           icon: IconFileText,
-    //         },
-    //         {
-    //           title: 'Categories',
-    //           url: '/categories',
-    //           icon: IconFolder,
-    //         },
-    //         {
-    //           title: 'Tags',
-    //           url: '/posts/tags',
-    //           icon: IconTag,
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       title: 'Tasks',
-    //       url: '/tasks',
-    //       icon: IconChecklist,
-    //     },
-    //     {
-    //       title: 'Notes',
-    //       url: '/notes',
-    //       icon: IconNotebook,
-    //     },
-    //     {
-    //       title: 'Timetable',
-    //       url: '/timetables',
-    //       icon: IconCalendarWeek,
-    //     },
-    //     {
-    //       title: 'Drawings',
-    //       url: '/drawings',
-    //       icon: IconPencil,
-    //     },
-    //     {
-    //       title: 'Warehouse 3D',
-    //       url: '/warehouse',
-    //       icon: IconBuildingWarehouse,
-    //     },
-    //     {
-    //       title: 'Apps',
-    //       url: '/apps',
-    //       icon: IconPackages,
-    //     },
-    //     {
-    //       title: 'Chats',
-    //       url: '/chats',
-    //       badge: '3',
-    //       icon: IconMessages,
-    //     },
-    //     {
-    //       title: 'Users',
-    //       url: '/users',
-    //       icon: IconUsers,
-    //     },
-    //     // {
-    //     //   title: 'Secured by Clerk',
-    //     //   icon: ClerkLogo,
-    //     //   items: [
-    //     //     {
-    //     //       title: 'Sign In',
-    //     //       url: '/clerk/sign-in',
-    //     //     },
-    //     //     {
-    //     //       title: 'Sign Up',
-    //     //       url: '/clerk/sign-up',
-    //     //     },
-    //     //     {
-    //     //       title: 'User Management',
-    //     //       url: '/clerk/user-management',
-    //     //     },
-    //     //   ],
-    //     // },
-    //   ],
-    // },
-    // {
-    //   title: 'Pages',
-    //   items: [
-    //     {
-    //       title: 'Auth',
-    //       icon: IconLockAccess,
-    //       items: [
-    //         {
-    //           title: 'Sign In',
-    //           url: '/sign-in',
-    //         },
-    //         {
-    //           title: 'Sign In (2 Col)',
-    //           url: '/sign-in-2',
-    //         },
-    //         {
-    //           title: 'Sign Up',
-    //           url: '/sign-up',
-    //         },
-    //         {
-    //           title: 'Forgot Password',
-    //           url: '/forgot-password',
-    //         },
-    //         {
-    //           title: 'OTP',
-    //           url: '/otp',
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       title: 'Errors',
-    //       icon: IconBug,
-    //       items: [
-    //         {
-    //           title: 'Unauthorized',
-    //           url: '/401',
-    //           icon: IconLock,
-    //         },
-    //         {
-    //           title: 'Forbidden',
-    //           url: '/403',
-    //           icon: IconUserOff,
-    //         },
-    //         {
-    //           title: 'Not Found',
-    //           url: '/404',
-    //           icon: IconError404,
-    //         },
-    //         {
-    //           title: 'Internal Server Error',
-    //           url: '/500',
-    //           icon: IconServerOff,
-    //         },
-    //         {
-    //           title: 'Maintenance Error',
-    //           url: '/503',
-    //           icon: IconBarrierBlock,
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // },
-    {
-      title: 'IoT',
-      items: [
-        {
-          title: 'Dashboard',
-          url: '/',
-          icon: IconLayoutDashboard,
-        },
-        {
-          title: 'Devices',
-          url: '/devices',
-          icon: IconCpu,
-        },
-        {
-          title: 'Device Templates',
-          url: '/device-templates',
-          icon: IconRouter,
-        },
-        {
-          title: 'Device Secrets',
-          url: '/device-secrets',
-          icon: IconKey,
-        },
-        {
-          title: 'Users',
-          url: '/users',
-          icon: IconUsers,
-        },
-        {
-          title: 'Factories',
-          url: '/factories',
-          icon: IconBuildingFactory2,
-        },
-      ],
+// Static `sidebarData` was replaced by this hook so nav titles can be translated
+// (see `LanguageProvider`/`useTranslation('nav')`) — the shape (icons/urls/groups) is unchanged.
+export function useSidebarData(): SidebarData {
+  const { t } = useTranslation('nav');
+
+  return {
+    user: {
+      name: 'vkhangstack',
+      email: 'vkhangstack@gmail.com',
+      avatar: '/avatars/shadcn.jpg',
     },
-    {
-      title: 'Other',
-      items: [
-        {
-          title: 'My Account',
-          url: '/profile',
-          icon: IconUserCog,
-        },
-        {
-          title: 'Settings',
-          icon: IconSettings,
-          items: [
-            {
-              title: 'Profile',
-              url: '/settings',
-              icon: IconUserCog,
-            },
-            {
-              title: 'Account',
-              url: '/settings/account',
-              icon: IconTool,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: IconPalette,
-            },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: IconNotification,
-            },
-            // {
-            //   title: 'Display',
-            //   url: '/settings/display',
-            //   icon: IconBrowserCheck,
-            // },
-            {
-              title: 'Roles & Permissions',
-              url: '/settings/roles',
-              icon: IconShieldLock,
-            },
-          ],
-        },
-        {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: IconHelp,
-        },
-      ],
-    },
-  ],
-};
+    navGroups: [
+      {
+        title: t('groups.iot'),
+        items: [
+          {
+            title: t('items.dashboard'),
+            url: '/',
+            icon: IconLayoutDashboard,
+          },
+          {
+            title: t('items.devices'),
+            url: '/devices',
+            icon: IconCpu,
+          },
+          {
+            title: t('items.deviceTemplates'),
+            url: '/device-templates',
+            icon: IconRouter,
+          },
+          {
+            title: t('items.deviceSecrets'),
+            url: '/device-secrets',
+            icon: IconKey,
+          },
+          {
+            title: t('items.users'),
+            url: '/users',
+            icon: IconUsers,
+          },
+          {
+            title: t('items.factories'),
+            url: '/factories',
+            icon: IconBuildingFactory2,
+          },
+        ],
+      },
+      {
+        title: t('groups.other'),
+        items: [
+          {
+            title: t('items.myAccount'),
+            url: '/profile',
+            icon: IconUserCog,
+          },
+          {
+            title: t('items.settings'),
+            icon: IconSettings,
+            items: [
+              {
+                title: t('items.settingsProfile'),
+                url: '/settings',
+                icon: IconUserCog,
+              },
+              {
+                title: t('items.settingsAccount'),
+                url: '/settings/account',
+                icon: IconTool,
+              },
+              {
+                title: t('items.settingsAppearance'),
+                url: '/settings/appearance',
+                icon: IconPalette,
+              },
+              {
+                title: t('items.settingsNotifications'),
+                url: '/settings/notifications',
+                icon: IconNotification,
+              },
+              {
+                title: t('items.settingsRoles'),
+                url: '/settings/roles',
+                icon: IconShieldLock,
+              },
+            ],
+          },
+          {
+            title: t('items.helpCenter'),
+            url: '/help-center',
+            icon: IconHelp,
+          },
+        ],
+      },
+    ],
+  };
+}

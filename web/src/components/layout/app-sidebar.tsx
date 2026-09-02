@@ -5,7 +5,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } fr
 import { RoleType } from '@/constants/role-type';
 import { useIsRoot } from '@/features/account/hooks/use-is-root';
 import { useAuthStore } from '@/stores/authStore';
-import { sidebarData } from './data/sidebar-data';
+import { useSidebarData } from './data/sidebar-data';
 
 // The Roles & Permissions page is root-only (see useIsRoot), so hide its
 // static sidebar entry for everyone else instead of letting them click
@@ -50,6 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const role = useAuthStore((state) => state.auth.user?.role);
   const isAdmin = isRoot || role === RoleType.ADMIN;
   const isGuest = role === RoleType.GUEST;
+  const sidebarData = useSidebarData();
 
   // Menu is defined statically and gated by role — `/v1/account/menu`
   // isn't implemented by this backend, so there's no dynamic menu to merge.

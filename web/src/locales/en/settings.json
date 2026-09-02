@@ -1,0 +1,129 @@
+{
+  "nav": {
+    "profile": "Profile",
+    "account": "Account",
+    "appearance": "Appearance",
+    "notifications": "Notifications"
+  },
+  "title": "Settings",
+  "subtitle": "Manage your account settings and set e-mail preferences.",
+  "sidebarNav": {
+    "placeholder": "Theme"
+  },
+  "account": {
+    "title": "Account",
+    "description": "Update your account settings. Set your preferred language and timezone.",
+    "dangerZone": {
+      "title": "Danger zone",
+      "description": "Permanently delete your account and all associated data. This action cannot be undone.",
+      "deleteAccount": "Delete account",
+      "accountDeleted": "Account deleted",
+      "deleteAccountTitle": "Delete Account",
+      "confirmPrefix": "Are you sure you want to delete your account",
+      "warning": "This will permanently remove your account and all associated data. This cannot be undone.",
+      "username": "Username:",
+      "confirmPlaceholder": "Enter your username to confirm deletion.",
+      "warningTitle": "Warning!",
+      "warningDescription": "Please be careful, this operation cannot be rolled back."
+    },
+    "form": {
+      "nameMin": "Name must be at least 2 characters.",
+      "nameMax": "Name must not be longer than 30 characters.",
+      "dobRequired": "A date of birth is required.",
+      "languageRequired": "Please select a language.",
+      "languageEnglish": "English",
+      "languageVietnamese": "Vietnamese",
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "nameDescription": "This is the name that will be displayed on your profile and in emails.",
+      "dob": "Date of birth",
+      "pickDate": "Pick a date",
+      "dobDescription": "Your date of birth is used to calculate your age.",
+      "language": "Language",
+      "selectLanguage": "Select language",
+      "searchLanguage": "Search language...",
+      "noLanguageFound": "No language found.",
+      "languageDescription": "This is the language that will be used across the app.",
+      "update": "Update account"
+    }
+  },
+  "appearance": {
+    "title": "Appearance",
+    "description": "Customize the appearance of the app. Automatically switch between day and night themes.",
+    "form": {
+      "themeRequired": "Please select a theme.",
+      "fontInvalid": "Select a font",
+      "fontRequired": "Please select a font.",
+      "font": "Font",
+      "fontDescription": "Set the font you want to use in the dashboard.",
+      "theme": "Theme",
+      "themeDescription": "Select the theme for the dashboard.",
+      "light": "Light",
+      "dark": "Dark",
+      "updatePreferences": "Update preferences"
+    }
+  },
+  "display": {
+    "title": "Display",
+    "description": "Turn items on or off to control what's displayed in the app.",
+    "form": {
+      "selectAtLeastOne": "You have to select at least one item.",
+      "items": {
+        "recents": "Recents",
+        "home": "Home",
+        "applications": "Applications",
+        "desktop": "Desktop",
+        "downloads": "Downloads",
+        "documents": "Documents"
+      },
+      "sidebar": "Sidebar",
+      "sidebarDescription": "Select the items you want to display in the sidebar.",
+      "update": "Update display"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "description": "This is how others will see you on the site.",
+    "form": {
+      "firstNameRequired": "First name is required.",
+      "lastNameRequired": "Last name is required.",
+      "usernameMin": "Username must be at least 2 characters.",
+      "usernameMax": "Username must not be longer than 30 characters.",
+      "updated": "Profile updated",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "username": "Username",
+      "email": "Email",
+      "phoneNumber": "Phone number",
+      "updateProfile": "Update profile"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Configure how you receive notifications.",
+    "form": {
+      "zaloDescription": "Receive device warnings in a Zalo bot chat.",
+      "webPushLabel": "Web Push",
+      "webPushDescription": "Receive device warnings as a browser push notification.",
+      "linkZalo": "Link Zalo",
+      "zaloOpenBot": "Open the bot below and send it this code as a message:",
+      "copyCode": "Copy code",
+      "openZaloBot": "Open Zalo bot",
+      "checkStatus": "Check status",
+      "pollExhausted": "Stopped checking automatically — click \"Check status\" to try again.",
+      "pollingStatus": "Checking automatically... ({{attempts}}/{{max}})",
+      "browserUnsupported": "This browser does not support push notifications.",
+      "enableFailed": "Could not enable browser notifications. Check permission settings and try again.",
+      "enabled": "Browser notifications enabled",
+      "enableBrowserNotifications": "Enable browser notifications",
+      "templateSaved": "Message template saved",
+      "testSent": "Test message sent",
+      "linked": "Linked",
+      "notLinked": "Not linked",
+      "messageTemplate": "Message template",
+      "saveTemplate": "Save template",
+      "sendTestMessage": "Send test message",
+      "deviceWarning": "Device warning"
+    }
+  }
+}

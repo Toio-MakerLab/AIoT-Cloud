@@ -1,4 +1,5 @@
 import { IconLoader } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { FormControl } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -24,12 +25,13 @@ export function SelectDropdown({
   className = '',
   isControlled = false,
 }: SelectDropdownProps) {
+  const { t } = useTranslation('common');
   const defaultState = isControlled ? { value: defaultValue, onValueChange } : { defaultValue, onValueChange };
   return (
     <Select {...defaultState}>
       <FormControl>
         <SelectTrigger disabled={disabled} className={cn(className)}>
-          <SelectValue placeholder={placeholder ?? 'Select'} />
+          <SelectValue placeholder={placeholder ?? t('select.placeholder')} />
         </SelectTrigger>
       </FormControl>
       <SelectContent>
@@ -38,7 +40,7 @@ export function SelectDropdown({
             <div className="flex items-center justify-center gap-2">
               <IconLoader className="h-5 w-5 animate-spin" />
               {'  '}
-              Loading...
+              {t('actions.loading')}
             </div>
           </SelectItem>
         ) : (

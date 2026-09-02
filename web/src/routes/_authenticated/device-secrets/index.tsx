@@ -1,4 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitch } from '@/components/language-switch';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { NotificationsNav } from '@/components/notifications-nav';
@@ -17,6 +19,7 @@ export const Route = createFileRoute('/_authenticated/device-secrets/')({
 // on DeviceSecretController), so non-admins are blocked from the whole page,
 // mirroring the device-templates route.
 function DeviceSecretsPage() {
+  const { t } = useTranslation('errors');
   const role = useAuthStore((state) => state.auth.user?.role);
   const isAdmin = role === RoleType.ADMIN || role === RoleType.ROOT;
 
@@ -27,14 +30,15 @@ function DeviceSecretsPage() {
           <Search />
           <div className="ml-auto flex items-center space-x-4">
             <ThemeSwitch />
+            <LanguageSwitch />
             <NotificationsNav />
             <ProfileDropdown />
           </div>
         </Header>
         <Main>
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <h2 className="text-2xl font-bold tracking-tight">Access denied</h2>
-            <p className="text-muted-foreground">You don't have access to this page.</p>
+            <h2 className="text-2xl font-bold tracking-tight">{t('accessDenied.title')}</h2>
+            <p className="text-muted-foreground">{t('accessDenied.desc')}</p>
           </div>
         </Main>
       </>

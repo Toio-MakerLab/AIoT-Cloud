@@ -6,13 +6,17 @@
 
 export type TimeRangePreset = '1h' | '6h' | '24h' | '7d' | '30d';
 
-export const TIME_RANGE_OPTIONS: { value: TimeRangePreset; label: string }[] = [
-  { value: '1h', label: 'Last hour' },
-  { value: '6h', label: 'Last 6 hours' },
-  { value: '24h', label: 'Last 24 hours' },
-  { value: '7d', label: 'Last 7 days' },
-  { value: '30d', label: 'Last 30 days' },
-];
+// Labels come from the `common` i18n namespace (`timeRange.*`) rather than being hardcoded here,
+// so callers build the option list via `getTimeRangeOptions(t)` instead of importing a static array.
+export function getTimeRangeOptions(t: (key: string, options?: Record<string, unknown>) => string): { value: TimeRangePreset; label: string }[] {
+  return [
+    { value: '1h', label: t('timeRange.lastHour') },
+    { value: '6h', label: t('timeRange.last6Hours') },
+    { value: '24h', label: t('timeRange.last24Hours') },
+    { value: '7d', label: t('timeRange.last7Days') },
+    { value: '30d', label: t('timeRange.last30Days') },
+  ];
+}
 
 const HOUR_MS = 60 * 60 * 1000;
 const PRESET_MS: Record<TimeRangePreset, number> = {

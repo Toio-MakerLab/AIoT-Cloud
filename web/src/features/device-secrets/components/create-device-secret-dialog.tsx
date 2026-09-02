@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { IconCheck, IconCopy } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function CreateDeviceSecretDialog({ open, onOpenChange }: Props) {
+  const { t } = useTranslation('deviceSecrets');
   const [plaintext, setPlaintext] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const createDeviceSecret = useCreateDeviceSecretMutation();
@@ -56,7 +58,7 @@ export function CreateDeviceSecretDialog({ open, onOpenChange }: Props) {
     if (!plaintext) return;
     await navigator.clipboard.writeText(plaintext);
     setCopied(true);
-    toast.success('Secret copied to clipboard');
+    toast.success(t('createDialog.copied'));
   };
 
   return (
@@ -65,10 +67,8 @@ export function CreateDeviceSecretDialog({ open, onOpenChange }: Props) {
         {plaintext ? (
           <>
             <DialogHeader>
-              <DialogTitle>Device secret created</DialogTitle>
-              <DialogDescription>
-                Copy this value now — it won't be shown again. Configure it as the `x-device-secret` header on your device firmware.
-              </DialogDescription>
+              <DialogTitle>{t('createDialog.createdTitle')}</DialogTitle>
+              <DialogDescription>{t('createDialog.createdDescription')}</DialogDescription>
             </DialogHeader>
             <div className="flex items-center gap-2">
               <Input readOnly value={plaintext} className="font-mono text-xs" />
@@ -77,25 +77,22 @@ export function CreateDeviceSecretDialog({ open, onOpenChange }: Props) {
               </Button>
             </div>
             <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)}>Done</Button>
+              <Button onClick={() => handleOpenChange(false)}>{t('createDialog.done')}</Button>
             </DialogFooter>
           </>
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)}>
               <DialogHeader>
-                <DialogTitle>Create device secret</DialogTitle>
-                <DialogDescription>
-                  Any device sending this value in the `x-device-secret` header will authenticate. Several secrets can be active at once, so you can
-                  roll one out before revoking the old one.
-                </DialogDescription>
+                <DialogTitle>{t('createDialog.title')}</DialogTitle>
+                <DialogDescription>{t('createDialog.description')}</DialogDescription>
               </DialogHeader>
               <FormField
                 control={form.control}
                 name="label"
                 render={({ field }) => (
                   <FormItem className="py-2">
-                    <FormLabel>Label (optional)</FormLabel>
+                    <FormLabel>{t('createDialog.label')}</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g. Production 2026-08" {...field} />
                     </FormControl>
@@ -105,7 +102,7 @@ export function CreateDeviceSecretDialog({ open, onOpenChange }: Props) {
               />
               <DialogFooter>
                 <Button type="submit" disabled={createDeviceSecret.isPending}>
-                  Create
+                  {t('createDialog.create')}
                 </Button>
               </DialogFooter>
             </form>

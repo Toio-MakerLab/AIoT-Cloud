@@ -1,6 +1,7 @@
 import { IconAlertTriangle } from '@tabler/icons-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,6 +17,8 @@ interface Props {
 }
 
 export function DeleteAccountDialog({ open, onOpenChange, username }: Props) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   const [value, setValue] = useState('');
   const navigate = useNavigate();
   const reset = useAuthStore((state) => state.auth.reset);
@@ -28,7 +31,7 @@ export function DeleteAccountDialog({ open, onOpenChange, username }: Props) {
       await deleteProfile.mutateAsync();
       onOpenChange(false);
       reset();
-      toast.success('Account deleted');
+      toast.success(t('account.dangerZone.accountDeleted'));
       navigate({ to: '/sign-in' });
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
@@ -47,29 +50,29 @@ export function DeleteAccountDialog({ open, onOpenChange, username }: Props) {
       isLoading={deleteProfile.isPending}
       title={
         <span className="text-destructive">
-          <IconAlertTriangle className="stroke-destructive mr-1 inline-block" size={18} /> Delete Account
+          <IconAlertTriangle className="stroke-destructive mr-1 inline-block" size={18} /> {t('account.dangerZone.deleteAccountTitle')}
         </span>
       }
       desc={
         <div className="space-y-4">
           <p className="mb-2">
-            Are you sure you want to delete your account <span className="font-bold">{username}</span>?
+            {t('account.dangerZone.confirmPrefix')} <span className="font-bold">{username}</span>?
             <br />
-            This will permanently remove your account and all associated data. This cannot be undone.
+            {t('account.dangerZone.warning')}
           </p>
 
           <Label className="my-2">
-            Username:
-            <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder="Enter your username to confirm deletion." />
+            {t('account.dangerZone.username')}
+            <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder={t('account.dangerZone.confirmPlaceholder')} />
           </Label>
 
           <Alert variant="destructive">
-            <AlertTitle>Warning!</AlertTitle>
-            <AlertDescription>Please be careful, this operation cannot be rolled back.</AlertDescription>
+            <AlertTitle>{t('account.dangerZone.warningTitle')}</AlertTitle>
+            <AlertDescription>{t('account.dangerZone.warningDescription')}</AlertDescription>
           </Alert>
         </div>
       }
-      confirmText="Delete"
+      confirmText={tCommon('actions.delete')}
       destructive
     />
   );

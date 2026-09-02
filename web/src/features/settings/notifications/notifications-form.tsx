@@ -1,6 +1,7 @@
 import { Bell, Check, Copy, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import {
   useUpsertNotificationConfigMutation,
   useZaloLinkCodeMutation,
 } from './api/queries';
-import { type INotificationConfig, NOTIFICATION_CHANNELS } from './api/types';
+import { getNotificationChannels, type INotificationConfig } from './api/types';
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLL_ATTEMPTS = 15;
@@ -42,6 +43,7 @@ function useCopyToClipboard() {
  */
 /** Rendered only while a channel isn't linked yet — full-width block below the channel header. */
 function ZaloLinkPanel() {
+  const { t } = useTranslation('settings');
   const requestLinkCode = useZaloLinkCodeMutation();
   const { copied, copy } = useCopyToClipboard();
   const [pollAttempts, setPollAttempts] = useState(0);
@@ -77,14 +79,14 @@ function ZaloLinkPanel() {
     return (
       <Button type="button" size="sm" onClick={handleRequest} disabled={requestLinkCode.isPending}>
         {requestLinkCode.isPending && <Loader2 className="size-4 animate-spin" />}
-        Link Zalo
+        {t('notifications.form.linkZalo')}
       </Button>
     );
   }
 
   return (
     <div className="w-full min-w-0 space-y-3 rounded-md border p-4">
-      <p className="text-sm text-muted-foreground">Open the bot below and send it this code as a message:</p>
+      <p className="text-sm text-muted-foreground">{t('notifications.form.zaloOpenBot')}</p>
       <div className="flex flex-col items-start gap-4 sm:flex-row">
         {link.shareUrl && (
           <div className="shrink-0 self-center rounded-md border p-2 sm:self-start">
@@ -99,8 +101,8 @@ function ZaloLinkPanel() {
               variant="outline"
               size="icon"
               className="shrink-0"
-              title="Copy code"
-              aria-label="Copy code"
+              title={t('notifications.form.copyCode')}
+              aria-label={t('notifications.form.copyCode')}
               onClick={() => copy(link.code)}
             >
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
@@ -108,7 +110,7 @@ function ZaloLinkPanel() {
           </div>
           {link.shareUrl && (
             <a className="inline-flex items-center gap-1 text-sm text-primary underline" href={link.shareUrl} target="_blank" rel="noreferrer">
-              Open Zalo bot
+              {t('notifications.form.openZaloBot')}
               <ExternalLink className="size-3.5" />
             </a>
           )}
@@ -126,12 +128,12 @@ function ZaloLinkPanel() {
           disabled={configsQuery.isFetching}
         >
           <RefreshCw className="size-4" />
-          Check status
+          {t('notifications.form.checkStatus')}
         </Button>
         <span className="text-xs text-muted-foreground">
           {pollExhausted
-            ? 'Stopped checking automatically — click "Check status" to try again.'
-            : `Checking automatically... (${pollAttempts}/${MAX_POLL_ATTEMPTS})`}
+            ? t('notifications.form.pollExhausted')
+            : t('notifications.form.pollingStatus', { attempts: pollAttempts, max: MAX_POLL_ATTEMPTS })}
         </span>
       </div>
     </div>
@@ -145,12 +147,13 @@ function ZaloLinkPanel() {
  * a toast + no-op — this is a progressive-enhancement feature, never a hard requirement.
  */
 function WebPushLinkPanel() {
+  const { t } = useTranslation('settings');
   const registerToken = useRegisterWebPushTokenMutation();
   const [isEnabling, setIsEnabling] = useState(false);
 
   const handleEnable = async () => {
     if (!('serviceWorker' in navigator)) {
-      toast.error('This browser does not support push notifications.');
+      toast.error(t('notifications.form.browserUnsupported'));
       return;
     }
 
@@ -160,12 +163,12 @@ function WebPushLinkPanel() {
       const token = await requestWebPushPermission(registration);
 
       if (!token) {
-        toast.error('Could not enable browser notifications. Check permission settings and try again.');
+        toast.error(t('notifications.form.enableFailed'));
         return;
       }
 
       await registerToken.mutateAsync(token);
-      toast.success('Browser notifications enabled');
+      toast.success(t('notifications.form.enabled'));
     } catch (error) {
       toast.error(getResponseMessage(error));
     } finally {
@@ -177,13 +180,15 @@ function WebPushLinkPanel() {
     <Button type="button" size="sm" onClick={handleEnable} disabled={isEnabling || registerToken.isPending}>
       {(isEnabling || registerToken.isPending) && <Loader2 className="size-4 animate-spin" />}
       <Bell className="size-4" />
-      Enable browser notifications
+      {t('notifications.form.enableBrowserNotifications')}
     </Button>
   );
 }
 
 function ChannelRow({ config }: { config: INotificationConfig }) {
-  const meta = NOTIFICATION_CHANNELS.find((c) => c.value === config.channel);
+  const { t } = useTranslation('settings');
+  const channels = useMemo(() => getNotificationChannels(t), [t]);
+  const meta = channels.find((c) => c.value === config.channel);
   const upsertConfig = useUpsertNotificationConfigMutation();
   const testChannel = useTestChannelMutation();
   const [messageTemplate, setMessageTemplate] = useState(config.messageTemplate ?? '');
@@ -205,7 +210,7 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
         channel: config.channel,
         data: { messageTemplate: messageTemplate || null },
       });
-      toast.success('Message template saved');
+      toast.success(t('notifications.form.templateSaved'));
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -214,7 +219,7 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
   const handleTestMessage = async () => {
     try {
       await testChannel.mutateAsync(config.channel);
-      toast.success('Test message sent');
+      toast.success(t('notifications.form.testSent'));
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -226,7 +231,9 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
         <div className="min-w-0 space-y-0.5">
           <div className="flex flex-wrap items-center gap-2">
             <Label>{meta?.label ?? config.channel}</Label>
-            <Badge variant={config.isLinked ? 'success' : 'outline'}>{config.isLinked ? 'Linked' : 'Not linked'}</Badge>
+            <Badge variant={config.isLinked ? 'success' : 'outline'}>
+              {config.isLinked ? t('notifications.form.linked') : t('notifications.form.notLinked')}
+            </Badge>
           </div>
           <p className="text-sm text-muted-foreground">{meta?.description}</p>
         </div>
@@ -238,7 +245,7 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
         <>
           <Separator />
           <div className="space-y-2">
-            <Label htmlFor={`template-${config.channel}`}>Message template</Label>
+            <Label htmlFor={`template-${config.channel}`}>{t('notifications.form.messageTemplate')}</Label>
             <Textarea
               id={`template-${config.channel}`}
               placeholder="Device {{deviceName}} — {{field}} is {{value}} (expected {{min}}-{{max}})"
@@ -248,11 +255,11 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
             <div className="flex gap-2">
               <Button type="button" size="sm" onClick={handleSaveTemplate} disabled={upsertConfig.isPending}>
                 {upsertConfig.isPending && <Loader2 className="size-4 animate-spin" />}
-                Save template
+                {t('notifications.form.saveTemplate')}
               </Button>
               <Button type="button" size="sm" variant="outline" onClick={handleTestMessage} disabled={testChannel.isPending}>
                 {testChannel.isPending && <Loader2 className="size-4 animate-spin" />}
-                Send test message
+                {t('notifications.form.sendTestMessage')}
               </Button>
             </div>
           </div>
@@ -263,17 +270,22 @@ function ChannelRow({ config }: { config: INotificationConfig }) {
 }
 
 export function NotificationsForm() {
+  const { t } = useTranslation('settings');
+  const channels = useMemo(() => getNotificationChannels(t), [t]);
   const { data, isLoading } = useNotificationConfigsQuery();
   const configs = data?.data ?? [];
 
   // Surface web-push notifications as a toast while this tab is focused — the service worker's
   // onBackgroundMessage handles the tab-unfocused/closed case with a native browser notification.
-  useEffect(() => onForegroundPushMessage((payload) => toast.info(payload.title ?? 'Device warning', { description: payload.body })), []);
+  useEffect(
+    () => onForegroundPushMessage((payload) => toast.info(payload.title ?? t('notifications.form.deviceWarning'), { description: payload.body })),
+    [t],
+  );
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {NOTIFICATION_CHANNELS.map(({ value }) => (
+        {channels.map(({ value }) => (
           <Skeleton key={value} className="h-20 w-full" />
         ))}
       </div>
@@ -282,7 +294,7 @@ export function NotificationsForm() {
 
   return (
     <div className="space-y-4">
-      {NOTIFICATION_CHANNELS.map(({ value }) => {
+      {channels.map(({ value }) => {
         const config = configs.find((c) => c.channel === value) ?? {
           id: value,
           channel: value,

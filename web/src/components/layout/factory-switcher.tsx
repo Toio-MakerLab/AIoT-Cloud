@@ -1,6 +1,7 @@
 import { IconBuildingFactory2 } from '@tabler/icons-react';
 import { Link } from '@tanstack/react-router';
 import { ChevronsUpDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { RoleType } from '@/constants/role-type';
@@ -12,14 +13,15 @@ import { useAuthStore } from '@/stores/authStore';
 // display of the caller's own factory, plus a shortcut into `/factories` management for admins.
 export function FactorySwitcher() {
   const { isMobile } = useSidebar();
+  const { t } = useTranslation('nav');
   const role = useAuthStore((state) => state.auth.user?.role);
   const isGuest = role === RoleType.GUEST;
   const isAdmin = role === RoleType.ADMIN || role === RoleType.ROOT;
   // GUEST accounts have unrestricted system-wide read access instead of a factory.
   const { data: factory, isPending } = useMyFactoryQuery(!isGuest);
 
-  const name = isGuest ? 'All Factories' : isPending ? 'Loading…' : (factory?.name ?? 'No factory assigned');
-  const subtitle = isGuest ? 'Guest (read-only)' : (factory?.address ?? 'Unassigned');
+  const name = isGuest ? t('factorySwitcher.allFactories') : isPending ? t('factorySwitcher.loading') : (factory?.name ?? t('factorySwitcher.none'));
+  const subtitle = isGuest ? t('factorySwitcher.guest') : (factory?.address ?? t('factorySwitcher.unassigned'));
 
   return (
     <SidebarMenu>
@@ -43,7 +45,7 @@ export function FactorySwitcher() {
             side={isMobile ? 'bottom' : 'right'}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">Factory</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-muted-foreground text-xs">{t('factorySwitcher.factory')}</DropdownMenuLabel>
             <DropdownMenuItem disabled className="gap-2 p-2">
               <div className="flex size-6 items-center justify-center rounded-sm border">
                 <IconBuildingFactory2 className="size-3.5" />
@@ -56,7 +58,7 @@ export function FactorySwitcher() {
                   <div className="bg-background flex size-6 items-center justify-center rounded-md border">
                     <IconBuildingFactory2 className="size-4" />
                   </div>
-                  <span className="text-muted-foreground font-medium">Manage factories</span>
+                  <span className="text-muted-foreground font-medium">{t('factorySwitcher.manageFactories')}</span>
                 </Link>
               </DropdownMenuItem>
             )}

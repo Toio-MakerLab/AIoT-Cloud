@@ -1,21 +1,25 @@
 export type NotificationChannel = 'ZALO' | 'WEB_PUSH';
 
-export const NOTIFICATION_CHANNELS: {
+// Labels come from the `settings` i18n namespace, so callers build the channel list via
+// `getNotificationChannels(t)` instead of importing a static array.
+export function getNotificationChannels(t: (key: string) => string): {
   value: NotificationChannel;
   label: string;
   description: string;
-}[] = [
-  {
-    value: 'ZALO',
-    label: 'Zalo',
-    description: 'Receive device warnings in a Zalo bot chat.',
-  },
-  {
-    value: 'WEB_PUSH',
-    label: 'Web Push',
-    description: 'Receive device warnings as a browser push notification.',
-  },
-];
+}[] {
+  return [
+    {
+      value: 'ZALO',
+      label: 'Zalo',
+      description: t('notifications.form.zaloDescription'),
+    },
+    {
+      value: 'WEB_PUSH',
+      label: t('notifications.form.webPushLabel'),
+      description: t('notifications.form.webPushDescription'),
+    },
+  ];
+}
 
 export interface INotificationConfig {
   id: string;

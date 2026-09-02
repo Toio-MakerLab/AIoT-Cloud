@@ -1,0 +1,192 @@
+{
+  "list": {
+    "title": "My Devices",
+    "subtitle": "Manage the IoT devices linked to your account."
+  },
+  "detail": {
+    "backToDevices": "Back to devices",
+    "loading": "Loading device…",
+    "notFound": "Device not found.",
+    "overview": "Overview",
+    "template": "Template",
+    "pushChannel": "Push channel",
+    "lastSeen": "Last seen",
+    "never": "Never"
+  },
+  "columns": {
+    "viewConfig": "View Config",
+    "editConfig": "Edit Config",
+    "name": "Name",
+    "deviceId": "Device ID",
+    "template": "Template",
+    "status": "Status",
+    "lastSeen": "Last Seen",
+    "never": "Never",
+    "online": "online",
+    "offline": "offline",
+    "deviceCountTotal": "{{count}} device(s) total.",
+    "filterPlaceholder": "Filter devices...",
+    "noDevicesYet": "No devices yet."
+  },
+  "primaryButtons": {
+    "addDevice": "Add Device"
+  },
+  "deleteDialog": {
+    "deleted": "Device deleted",
+    "title": "Delete Device",
+    "confirmPrefix": "Are you sure you want to delete",
+    "warning": "This will permanently remove the device (ID: {{deviceId}}) from your account. This cannot be undone.",
+    "deviceName": "Device name:",
+    "confirmPlaceholder": "Enter device name to confirm deletion."
+  },
+  "telemetryHistory": {
+    "title": "Telemetry History",
+    "description": "Recorded values for one field over time.",
+    "field": "Field",
+    "export": "Export",
+    "exportXml": "Export as XML",
+    "exportExcel": "Export as Excel",
+    "loading": "Loading history…",
+    "noData": "No telemetry recorded in this time range."
+  },
+  "addDialog": {
+    "templateRequired": "Please choose a template.",
+    "nameRequired": "Device name is required.",
+    "deviceAdded": "Device added",
+    "configSaved": "Device config saved",
+    "title": "Add Device",
+    "description": "Choose a template and name your device, then scan its QR code.",
+    "template": "Template",
+    "loadingTemplates": "Loading templates...",
+    "selectTemplate": "Select a template",
+    "deviceName": "Device Name",
+    "nextScanQrCode": "Next: Scan QR Code",
+    "scanTitle": "Scan Device QR Code",
+    "scanDescription": "Scan the QR code printed on the physical device, or type its ID manually.",
+    "typeIdInstead": "Type ID instead",
+    "useCameraInstead": "Use camera instead",
+    "cameraAccessError": "Could not access the camera.",
+    "useManualEntry": "Use manual entry below instead.",
+    "deviceIdManual": "Device ID (manual entry)",
+    "deviceIdPlaceholder": "Enter the device's physical ID",
+    "useThisId": "Use this ID",
+    "back": "Back",
+    "configureTitle": "Configure Device (optional)",
+    "configureDescription": "Set the network parameters this device will fetch at boot, or skip and configure later.",
+    "skip": "Skip",
+    "saveAndFinish": "Save & Finish"
+  },
+  "actionsPanel": {
+    "failedToSend": "Failed to send action",
+    "on": "On",
+    "off": "Off",
+    "sent": "{{label}} sent",
+    "trigger": "Trigger",
+    "title": "Actions",
+    "description": "Send a command to this device. Delivery is a live round-trip — the device must be online to receive it.",
+    "channelUnsupported": "Actions are unsupported for this device's push channel"
+  },
+  "configDialog": {
+    "updated": "Device config updated",
+    "pushSent": "Push sent — device will re-fetch config v{{version}}",
+    "pushDisabledHint": "Only KAFKA-push devices (gateways) can receive a config-sync push.",
+    "title": "Device Config",
+    "description": "Configure the network parameters this device fetches at boot.",
+    "pushToDevice": "Push to device"
+  },
+  "configFields": {
+    "active": "Active",
+    "apiEndpoint": "API Endpoint",
+    "pushChannel": "Push Channel",
+    "selectChannel": "Select a channel",
+    "broker": "Broker",
+    "port": "Port",
+    "username": "Username",
+    "password": "Password",
+    "telemetryTopic": "Telemetry Topic",
+    "commandTopic": "Command Topic",
+    "statusTopic": "Status Topic",
+    "channelLabel": "Ch.{{index}} ({{label}})",
+    "pushUrl": "Push URL",
+    "brokers": "Brokers",
+    "topics": "Topics",
+    "clientId": "Client ID",
+    "alertRulesLabel": "Alert rules — one per line, \"<field><operator><threshold>:<actionKey>=<actionValue>\"",
+    "failsafe": "Failsafe",
+    "failsafeRulesLabel": "Failsafe actions — one per line, \"<actionKey>=<actionValue>\""
+  },
+  "configViewDialog": {
+    "title": "Device Config",
+    "description": "Current network parameters served from the boot-config endpoint.",
+    "alertRules": "Alert rules",
+    "enabledNoActions": "enabled (no actions)",
+    "disabled": "disabled"
+  },
+  "lifecyclePanel": {
+    "stages": {
+      "new": "New",
+      "active": "Active",
+      "aging": "Aging",
+      "maintenanceDue": "Maintenance due",
+      "endOfLife": "End of life",
+      "decommissioned": "Decommissioned"
+    },
+    "title": "Lifecycle Assessment",
+    "loading": "Loading…",
+    "settingsSaved": "Lifecycle settings saved",
+    "decommissioned": "Device marked as decommissioned",
+    "description": "Health score derived from device age, connectivity, and telemetry warning breaches.",
+    "healthScore": "/ 100 health score",
+    "age": "Age",
+    "ageMonths": "{{age}} / {{expected}} months",
+    "remainingLifespan": "Remaining lifespan",
+    "remainingMonths": "{{months}} months",
+    "pastExpectedLifespan": "Past expected lifespan",
+    "lastAssessed": "Last assessed",
+    "decommissionedOn": "Decommissioned on {{date}}.",
+    "installedOn": "Installed on",
+    "expectedLifespanMonths": "Expected lifespan (months)",
+    "save": "Save",
+    "decommission": "Decommission",
+    "decommissionTitle": "Decommission device",
+    "decommissionDesc": "This marks the device as retired and stops its lifecycle stage from being recomputed. This cannot be undone from here."
+  },
+  "gatewayAutomation": {
+    "alertRulesSaved": "Alert rules saved",
+    "failsafeSaved": "Failsafe config saved",
+    "title": "Gateway Automation",
+    "description": "Rules the gateway itself caches and acts on, without a cloud round-trip.",
+    "saveRules": "Save rules",
+    "failsafeDescription": "Safe state the gateway applies on its own when it can't reach the cloud.",
+    "saveFailsafe": "Save failsafe"
+  },
+  "offlineAlert": {
+    "saved": "Alert rule saved",
+    "title": "Alert Rules",
+    "description": "Notify when this gateway goes offline (no heartbeat past the offline threshold).",
+    "offlineAlert": "Offline alert",
+    "offlineAlertDescription": "Send a notification the moment this device is marked OFFLINE.",
+    "notifyVia": "Notify via",
+    "noChannelsHint": "No channels selected: alerts go to all your enabled channels.",
+    "save": "Save"
+  },
+  "unclaimedPanel": {
+    "title": "Unclaimed Devices",
+    "description": "Devices publishing MQTT traffic that aren't registered to any account yet. Register one to start managing it.",
+    "deviceId": "Device ID",
+    "lastTopic": "Last Topic",
+    "lastSeen": "Last Seen",
+    "action": "Action",
+    "register": "Register"
+  },
+  "warningGates": {
+    "saved": "Warning gate for \"{{label}}\" saved",
+    "enabled": "Enabled",
+    "min": "Min",
+    "max": "Max",
+    "noChannelsHint": "No channels selected: warnings for this field go to all your enabled channels.",
+    "save": "Save",
+    "title": "Warning Gates",
+    "description": "Configure min/max thresholds per telemetry field and which notification channels a breach should send to."
+  }
+}

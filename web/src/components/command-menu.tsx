@@ -1,16 +1,19 @@
 import { IconArrowRightDashed, IconChevronRight, IconDeviceLaptop, IconMoon, IconSun } from '@tabler/icons-react';
 import { useNavigate } from '@tanstack/react-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { useSearch } from '@/context/search-context';
 import { Theme, useTheme } from '@/context/theme-context';
-import { sidebarData } from './layout/data/sidebar-data';
+import { useSidebarData } from './layout/data/sidebar-data';
 import { ScrollArea } from './ui/scroll-area';
 
 export function CommandMenu() {
   const navigate = useNavigate();
   const { setTheme } = useTheme();
   const { open, setOpen } = useSearch();
+  const { t } = useTranslation('nav');
+  const sidebarData = useSidebarData();
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
@@ -22,10 +25,10 @@ export function CommandMenu() {
 
   return (
     <CommandDialog modal open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Type a command or search..." />
+      <CommandInput placeholder={t('commandMenu.placeholder')} />
       <CommandList>
         <ScrollArea type="hover" className="h-72 pr-1">
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>{t('commandMenu.noResults')}</CommandEmpty>
           {sidebarData.navGroups.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((navItem) => {
@@ -63,17 +66,17 @@ export function CommandMenu() {
             </CommandGroup>
           ))}
           <CommandSeparator />
-          <CommandGroup heading="Theme">
+          <CommandGroup heading={t('commandMenu.theme')}>
             <CommandItem onSelect={() => runCommand(() => setTheme(Theme.Light))}>
-              <IconSun /> <span>Light</span>
+              <IconSun /> <span>{t('commandMenu.light')}</span>
             </CommandItem>
             <CommandItem onSelect={() => runCommand(() => setTheme(Theme.Dark))}>
               <IconMoon className="scale-90" />
-              <span>Dark</span>
+              <span>{t('commandMenu.dark')}</span>
             </CommandItem>
             <CommandItem onSelect={() => runCommand(() => setTheme(Theme.System))}>
               <IconDeviceLaptop />
-              <span>System</span>
+              <span>{t('commandMenu.system')}</span>
             </CommandItem>
           </CommandGroup>
         </ScrollArea>

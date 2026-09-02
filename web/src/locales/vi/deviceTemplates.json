@@ -1,0 +1,60 @@
+{
+  "list": {
+    "title": "Mẫu thiết bị",
+    "subtitle": "Quản lý các mẫu thiết bị dùng để khởi tạo thiết bị."
+  },
+  "columns": {
+    "manufacturer": "Nhà sản xuất"
+  },
+  "toolbar": {
+    "filterPlaceholder": "Lọc mẫu thiết bị..."
+  },
+  "types": {
+    "sensorNode": "Nút cảm biến",
+    "relayNode": "Nút relay",
+    "relayCurrentNode": "Nút relay + dòng điện",
+    "gateway": "Gateway",
+    "other": "Khác"
+  },
+  "actionDialog": {
+    "nameRequired": "Tên là bắt buộc.",
+    "channelN": "Kênh {{index}}",
+    "fieldN": "Trường {{index}}",
+    "updated": "Đã cập nhật mẫu thiết bị",
+    "created": "Đã tạo mẫu thiết bị",
+    "editTitle": "Sửa mẫu thiết bị",
+    "addTitle": "Thêm mẫu thiết bị",
+    "editDescription": "Cập nhật mẫu thiết bị tại đây.",
+    "addDescription": "Tạo mẫu thiết bị mới tại đây.",
+    "clickSaveHint": "Nhấn lưu khi bạn hoàn tất.",
+    "selectType": "Chọn một loại",
+    "manufacturer": "Nhà sản xuất",
+    "icon": "Biểu tượng",
+    "iconPlaceholder": "URL hình ảnh (không bắt buộc)",
+    "iconHint": "Để trống để dùng biểu tượng mặc định cho loại thiết bị này.",
+    "descriptionPlaceholder": "Mẫu thiết bị này đại diện cho...",
+    "telemetryFields": "Trường Telemetry",
+    "key": "khóa",
+    "unit": "đơn vị",
+    "addField": "Thêm trường",
+    "channels": "Kênh",
+    "toggle": "Bật/Tắt",
+    "button": "Nút",
+    "onValue": "giá trị bật",
+    "offValue": "giá trị tắt",
+    "addChannel": "Thêm kênh"
+  },
+  "primaryButtons": {
+    "addTemplate": "Thêm mẫu thiết bị"
+  },
+  "deleteDialog": {
+    "deleted": "Đã xóa mẫu thiết bị",
+    "title": "Xóa mẫu thiết bị",
+    "confirmPrefix": "Bạn có chắc chắn muốn xóa",
+    "warning": "Hành động này sẽ xóa vĩnh viễn mẫu thiết bị khỏi hệ thống. Các mẫu vẫn đang được thiết bị sử dụng không thể bị xóa. Hành động này không thể hoàn tác.",
+    "name": "Tên:",
+    "confirmPlaceholder": "Nhập tên mẫu thiết bị để xác nhận xóa.",
+    "warningTitle": "Cảnh báo!",
+    "warningDescription": "Hãy cẩn thận, hành động này không thể hoàn tác."
+  }
+}

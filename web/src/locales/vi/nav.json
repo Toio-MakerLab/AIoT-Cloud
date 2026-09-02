@@ -1,0 +1,62 @@
+{
+  "groups": {
+    "iot": "IoT",
+    "other": "Khác"
+  },
+  "items": {
+    "dashboard": "Tổng quan",
+    "devices": "Thiết bị",
+    "deviceTemplates": "Mẫu thiết bị",
+    "deviceSecrets": "Khóa bí mật thiết bị",
+    "users": "Người dùng",
+    "factories": "Nhà máy",
+    "myAccount": "Tài khoản của tôi",
+    "settings": "Cài đặt",
+    "settingsProfile": "Hồ sơ",
+    "settingsAccount": "Tài khoản",
+    "settingsAppearance": "Giao diện",
+    "settingsNotifications": "Thông báo",
+    "settingsRoles": "Vai trò & Phân quyền",
+    "helpCenter": "Trung tâm trợ giúp"
+  },
+  "commandMenu": {
+    "placeholder": "Nhập lệnh hoặc tìm kiếm...",
+    "noResults": "Không tìm thấy kết quả.",
+    "theme": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống"
+  },
+  "profileDropdown": {
+    "loggedOut": "Đăng xuất thành công",
+    "defaultUser": "Người dùng",
+    "noEmail": "Chưa có email",
+    "profile": "Hồ sơ",
+    "settings": "Cài đặt",
+    "logOut": "Đăng xuất"
+  },
+  "factorySwitcher": {
+    "allFactories": "Tất cả nhà máy",
+    "loading": "Đang tải…",
+    "none": "Chưa gán nhà máy",
+    "guest": "Khách (chỉ xem)",
+    "unassigned": "Chưa gán",
+    "factory": "Nhà máy",
+    "manageFactories": "Quản lý nhà máy"
+  },
+  "comingSoon": {
+    "title": "Sắp ra mắt",
+    "line1": "Trang này chưa được tạo.",
+    "line2": "Hãy đón chờ nhé!"
+  },
+  "skipToMain": "Chuyển đến nội dung chính",
+  "themeSwitch": {
+    "toggleTheme": "Chuyển đổi giao diện",
+    "toggleLanguage": "Chuyển đổi ngôn ngữ"
+  },
+  "sidebar": {
+    "title": "Thanh điều hướng",
+    "description": "Hiển thị thanh điều hướng trên di động.",
+    "toggle": "Đóng/Mở thanh điều hướng"
+  }
+}

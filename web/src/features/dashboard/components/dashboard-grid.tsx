@@ -1,5 +1,6 @@
 import { GridLayout, type Layout, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
+import { useTranslation } from 'react-i18next';
 import { useIsGuest } from '@/hooks/use-is-guest';
 import type { ResolvedTimeRange } from '@/lib/time-range';
 import type { IDashboardWidget, IDevice } from '../api/types';
@@ -75,6 +76,7 @@ function scaleToTablet(widget: IDashboardWidget): Layout[number] {
  * `gridConfig` prop in v2 instead of flat props.
  */
 export function DashboardGrid({ widgets, devices, liveData, timeRange, onLayoutChange, onRemoveWidget }: Props) {
+  const { t } = useTranslation('dashboard');
   const { width, containerRef, mounted } = useContainerWidth();
   const isGuest = useIsGuest();
   const tier = getTier(width);
@@ -125,7 +127,7 @@ export function DashboardGrid({ widgets, devices, liveData, timeRange, onLayoutC
   if (widgets.length === 0) {
     return (
       <div className="text-muted-foreground flex h-64 items-center justify-center rounded-lg border border-dashed">
-        No panels yet. Click "Add Panel" to get started.
+        {t('grid.emptyState', { addPanel: t('addPanel.title') })}
       </div>
     );
   }

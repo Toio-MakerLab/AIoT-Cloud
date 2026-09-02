@@ -1,5 +1,6 @@
 import { IconBolt, IconCpu, IconDeviceUnknown, IconRouter, IconServer2, IconX } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -38,11 +39,12 @@ const TEMPLATE_TYPE_ICONS: Record<string, typeof IconCpu> = {
 
 /** Small image/icon that visually represents a device, based on its template. */
 function DeviceImage({ template }: { template: IDeviceTemplate | undefined }) {
+  const { t } = useTranslation('dashboard');
   const icon = template?.icon;
   const isImageUrl = !!icon && (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('/'));
 
   if (isImageUrl) {
-    return <img src={icon} alt={template?.name ?? 'Device'} className="h-8 w-8 shrink-0 rounded object-cover" />;
+    return <img src={icon} alt={template?.name ?? t('panel.device')} className="h-8 w-8 shrink-0 rounded object-cover" />;
   }
 
   const FallbackIcon = (template?.type && TEMPLATE_TYPE_ICONS[template.type]) || IconDeviceUnknown;
@@ -70,6 +72,7 @@ function formatValue(value: unknown): string {
 }
 
 export function DevicePanel({ widget, device, latest, history, actionResult, seedHistory, timeRange, onRemove }: Props) {
+  const { t } = useTranslation('dashboard');
   // Seed the rolling history buffer once fetched — combined with any live telemetry already
   // appended by the WebSocket live-data source, this gives charts both history and a live tail.
   // Bounded by the dashboard's time-range filter (see @/lib/time-range); `timeRange.key` is what lets
@@ -136,7 +139,9 @@ export function DevicePanel({ widget, device, latest, history, actionResult, see
     if (!actionResult || actionResult.key !== field || actionResult.status !== 'error') return;
     if (optimisticValue === null) return;
     setOptimisticValue(null);
-    toast.error(actionResult.error ? `${actionDef?.label ?? field}: ${actionResult.error}` : `Failed to apply ${actionDef?.label ?? field}`);
+    toast.error(
+      actionResult.error ? `${actionDef?.label ?? field}: ${actionResult.error}` : t('panel.failedToApply', { label: actionDef?.label ?? field }),
+    );
   }, [actionResult?.changedAt]);
 
   const handleTrigger = (value: string) => {
@@ -149,7 +154,7 @@ export function DevicePanel({ widget, device, latest, history, actionResult, see
         onError: (error) => {
           // Command never even made it out — nothing to wait a confirmation for, revert right away.
           setOptimisticValue(null);
-          toast.error(error instanceof Error ? error.message : 'Failed to send action');
+          toast.error(error instanceof Error ? error.message : t('panel.failedToSendAction'));
         },
       },
     );
@@ -174,7 +179,7 @@ export function DevicePanel({ widget, device, latest, history, actionResult, see
 
   // Same name -> same color every render/reload, so panels stay visually distinct from each other
   // without color reshuffling on you between page loads.
-  const panelName = widget.title || device?.name || 'Panel';
+  const panelName = widget.title || device?.name || t('panel.panel');
   const chartColor = getChartColor(panelName);
 
   return (
@@ -185,17 +190,17 @@ export function DevicePanel({ widget, device, latest, history, actionResult, see
           <div className="min-w-0">
             <CardTitle className="truncate text-sm font-medium">{panelName}</CardTitle>
             <p className="text-muted-foreground truncate text-xs">
-              {device?.name ?? widget.deviceId} · {(widget.widgetType === 'ACTION' ? actionDef?.label : field) || 'no field'}
+              {device?.name ?? widget.deviceId} · {(widget.widgetType === 'ACTION' ? actionDef?.label : field) || t('panel.noField')}
             </p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span
             className={cn('h-2 w-2 rounded-full', isOnline ? 'bg-green-500' : 'bg-muted-foreground/40')}
-            title={isOnline ? 'Online' : 'Offline'}
+            title={isOnline ? t('panel.online') : t('panel.offline')}
           />
           {!isGuest && (
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove} aria-label="Remove panel">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove} aria-label={t('panel.removePanel')}>
               <IconX className="h-4 w-4" />
             </Button>
           )}
@@ -220,27 +225,27 @@ export function DevicePanel({ widget, device, latest, history, actionResult, see
                     disabled={isGuest || !isOnline || triggerAction.isPending}
                     onClick={() => handleTrigger(actionDef.onValue ?? 'ON')}
                   >
-                    On
+                    {t('panel.on')}
                   </Button>
                   <Button
                     variant="outline"
                     disabled={isGuest || !isOnline || triggerAction.isPending}
                     onClick={() => handleTrigger(actionDef.offValue ?? 'OFF')}
                   >
-                    Off
+                    {t('panel.off')}
                   </Button>
                 </div>
               )
             ) : (
-              <span className="text-muted-foreground text-xs">Channel not found on device template</span>
+              <span className="text-muted-foreground text-xs">{t('panel.channelNotFound')}</span>
             )}
-            {!isOnline && <span className="text-muted-foreground text-xs">Device is offline</span>}
+            {!isOnline && <span className="text-muted-foreground text-xs">{t('panel.deviceOffline')}</span>}
           </div>
         ) : widget.widgetType === 'VALUE' ? (
           <div className="flex h-full flex-col items-center justify-center gap-1">
             <span className="text-3xl font-bold">{formatValue(currentValue)}</span>
             <span className="text-muted-foreground text-xs">
-              {lastUpdated ? `Updated ${new Date(lastUpdated).toLocaleTimeString()}` : 'No data yet'}
+              {lastUpdated ? t('panel.updated', { time: new Date(lastUpdated).toLocaleTimeString() }) : t('panel.noDataYet')}
             </span>
           </div>
         ) : (

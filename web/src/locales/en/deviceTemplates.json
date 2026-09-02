@@ -1,0 +1,60 @@
+{
+  "list": {
+    "title": "Device Templates",
+    "subtitle": "Manage device templates used to provision devices."
+  },
+  "columns": {
+    "manufacturer": "Manufacturer"
+  },
+  "toolbar": {
+    "filterPlaceholder": "Filter templates..."
+  },
+  "types": {
+    "sensorNode": "Sensor Node",
+    "relayNode": "Relay Node",
+    "relayCurrentNode": "Relay + Current Node",
+    "gateway": "Gateway",
+    "other": "Other"
+  },
+  "actionDialog": {
+    "nameRequired": "Name is required.",
+    "channelN": "Channel {{index}}",
+    "fieldN": "Field {{index}}",
+    "updated": "Device template updated",
+    "created": "Device template created",
+    "editTitle": "Edit Template",
+    "addTitle": "Add Template",
+    "editDescription": "Update the device template here.",
+    "addDescription": "Create a new device template here.",
+    "clickSaveHint": "Click save when you're done.",
+    "selectType": "Select a type",
+    "manufacturer": "Manufacturer",
+    "icon": "Icon",
+    "iconPlaceholder": "Optional image URL",
+    "iconHint": "Leave blank to use the default icon for this device type.",
+    "descriptionPlaceholder": "What this template represents...",
+    "telemetryFields": "Telemetry Fields",
+    "key": "key",
+    "unit": "unit",
+    "addField": "Add Field",
+    "channels": "Channels",
+    "toggle": "Toggle",
+    "button": "Button",
+    "onValue": "on value",
+    "offValue": "off value",
+    "addChannel": "Add Channel"
+  },
+  "primaryButtons": {
+    "addTemplate": "Add Template"
+  },
+  "deleteDialog": {
+    "deleted": "Device template deleted",
+    "title": "Delete Device Template",
+    "confirmPrefix": "Are you sure you want to delete",
+    "warning": "This action will permanently remove the template from the system. Templates still referenced by devices cannot be deleted. This cannot be undone.",
+    "name": "Name:",
+    "confirmPlaceholder": "Enter template name to confirm deletion.",
+    "warningTitle": "Warning!",
+    "warningDescription": "Please be careful, this operation cannot be rolled back."
+  }
+}

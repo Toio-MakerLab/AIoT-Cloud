@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { type HTMLAttributes, useTransition } from 'react';
+import { type HTMLAttributes, useMemo, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { PasswordInput } from '@/components/password-input';
@@ -14,51 +15,61 @@ import { cn } from '@/lib/utils';
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>;
 
-const formSchema = z
-  .object({
-    username: z.string().min(3, { message: 'Username must be at least 3 characters' }).max(32, { message: 'Username must be at most 32 characters' }),
-    firstName: z.string().min(1, { message: 'Please enter your first name' }),
-    lastName: z.string().min(1, { message: 'Please enter your last name' }),
-    email: z.string().min(1, { message: 'Please enter your email' }).email({ message: 'Invalid email address' }),
-    password: z
-      .string()
-      .min(1, {
-        message: 'Please enter your password',
-      })
-      .min(6, {
-        message: 'Password must be at least 6 characters long',
-      }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
-    path: ['confirmPassword'],
-  });
+function buildFormSchema(t: (key: string, options?: Record<string, unknown>) => string) {
+  return z
+    .object({
+      username: z
+        .string()
+        .min(3, { message: t('signUp.usernameMin') })
+        .max(32, { message: t('signUp.usernameMax') }),
+      firstName: z.string().min(1, { message: t('signUp.firstNameRequired') }),
+      lastName: z.string().min(1, { message: t('signUp.lastNameRequired') }),
+      email: z
+        .string()
+        .min(1, { message: t('signUp.emailRequired') })
+        .email({ message: t('signUp.emailInvalid') }),
+      password: z
+        .string()
+        .min(1, {
+          message: t('signUp.passwordRequired'),
+        })
+        .min(6, {
+          message: t('signUp.passwordMin'),
+        }),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('signUp.passwordsDontMatch'),
+      path: ['confirmPassword'],
+    });
+}
 
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('auth');
   const [isLoading, startTransition] = useTransition();
+  const formSchema = useMemo(() => buildFormSchema(t), [t]);
 
   const { mutate: register, isPending } = useMutation({
     mutationFn: authApi.register,
     onSuccess: (res, variables) => {
       if (res.error !== 0) {
         if (res.message === 'error.userAlreadyExists') {
-          toast.error('Username or email already in use');
+          toast.error(t('signUp.usernameOrEmailInUse'));
           return;
         }
-        toast.error('Failed to create account');
+        toast.error(t('signUp.createAccountFailed'));
         return;
       }
 
-      toast.success('Account created — check your email to verify it');
+      toast.success(t('signUp.accountCreated'));
       navigate({
         to: '/verify-email',
         search: { email: variables.email },
       });
     },
     onError: () => {
-      toast.error('Failed to create account');
+      toast.error(t('signUp.createAccountFailed'));
     },
   });
 
@@ -88,7 +99,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>{t('signUp.username')}</FormLabel>
               <FormControl>
                 <Input placeholder="johndoe" {...field} />
               </FormControl>
@@ -102,7 +113,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First name</FormLabel>
+                <FormLabel>{t('signUp.firstName')}</FormLabel>
                 <FormControl>
                   <Input placeholder="John" {...field} />
                 </FormControl>
@@ -115,7 +126,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last name</FormLabel>
+                <FormLabel>{t('signUp.lastName')}</FormLabel>
                 <FormControl>
                   <Input placeholder="Doe" {...field} />
                 </FormControl>
@@ -129,7 +140,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('signUp.email')}</FormLabel>
               <FormControl>
                 <Input placeholder="name@example.com" {...field} />
               </FormControl>
@@ -142,7 +153,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t('signUp.password')}</FormLabel>
               <FormControl>
                 <PasswordInput placeholder="********" {...field} />
               </FormControl>
@@ -155,7 +166,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel>{t('signUp.confirmPassword')}</FormLabel>
               <FormControl>
                 <PasswordInput placeholder="********" {...field} />
               </FormControl>
@@ -164,7 +175,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           )}
         />
         <Button className="mt-2" disabled={isPending && isLoading}>
-          Create Account
+          {t('signUp.createAccount')}
         </Button>
       </form>
     </Form>

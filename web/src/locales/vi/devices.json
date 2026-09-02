@@ -1,0 +1,192 @@
+{
+  "list": {
+    "title": "Thiết bị của tôi",
+    "subtitle": "Quản lý các thiết bị IoT liên kết với tài khoản của bạn."
+  },
+  "detail": {
+    "backToDevices": "Quay lại danh sách thiết bị",
+    "loading": "Đang tải thiết bị…",
+    "notFound": "Không tìm thấy thiết bị.",
+    "overview": "Tổng quan",
+    "template": "Mẫu thiết bị",
+    "pushChannel": "Kênh truyền",
+    "lastSeen": "Lần cuối online",
+    "never": "Chưa bao giờ"
+  },
+  "columns": {
+    "viewConfig": "Xem cấu hình",
+    "editConfig": "Sửa cấu hình",
+    "name": "Tên",
+    "deviceId": "ID thiết bị",
+    "template": "Mẫu thiết bị",
+    "status": "Trạng thái",
+    "lastSeen": "Lần cuối online",
+    "never": "Chưa bao giờ",
+    "online": "trực tuyến",
+    "offline": "ngoại tuyến",
+    "deviceCountTotal": "Tổng số {{count}} thiết bị.",
+    "filterPlaceholder": "Lọc thiết bị...",
+    "noDevicesYet": "Chưa có thiết bị nào."
+  },
+  "primaryButtons": {
+    "addDevice": "Thêm thiết bị"
+  },
+  "deleteDialog": {
+    "deleted": "Đã xóa thiết bị",
+    "title": "Xóa thiết bị",
+    "confirmPrefix": "Bạn có chắc chắn muốn xóa",
+    "warning": "Điều này sẽ xóa vĩnh viễn thiết bị (ID: {{deviceId}}) khỏi tài khoản của bạn. Hành động này không thể hoàn tác.",
+    "deviceName": "Tên thiết bị:",
+    "confirmPlaceholder": "Nhập tên thiết bị để xác nhận xóa."
+  },
+  "telemetryHistory": {
+    "title": "Lịch sử Telemetry",
+    "description": "Giá trị đã ghi nhận của một trường theo thời gian.",
+    "field": "Trường",
+    "export": "Xuất",
+    "exportXml": "Xuất dạng XML",
+    "exportExcel": "Xuất dạng Excel",
+    "loading": "Đang tải lịch sử…",
+    "noData": "Không có dữ liệu telemetry trong khoảng thời gian này."
+  },
+  "addDialog": {
+    "templateRequired": "Vui lòng chọn một mẫu thiết bị.",
+    "nameRequired": "Tên thiết bị là bắt buộc.",
+    "deviceAdded": "Đã thêm thiết bị",
+    "configSaved": "Đã lưu cấu hình thiết bị",
+    "title": "Thêm thiết bị",
+    "description": "Chọn mẫu thiết bị và đặt tên cho thiết bị, sau đó quét mã QR.",
+    "template": "Mẫu thiết bị",
+    "loadingTemplates": "Đang tải mẫu thiết bị...",
+    "selectTemplate": "Chọn một mẫu thiết bị",
+    "deviceName": "Tên thiết bị",
+    "nextScanQrCode": "Tiếp theo: Quét mã QR",
+    "scanTitle": "Quét mã QR thiết bị",
+    "scanDescription": "Quét mã QR in trên thiết bị thực tế, hoặc nhập ID thủ công.",
+    "typeIdInstead": "Nhập ID thay thế",
+    "useCameraInstead": "Dùng camera thay thế",
+    "cameraAccessError": "Không thể truy cập camera.",
+    "useManualEntry": "Hãy nhập thủ công bên dưới.",
+    "deviceIdManual": "ID thiết bị (nhập thủ công)",
+    "deviceIdPlaceholder": "Nhập ID vật lý của thiết bị",
+    "useThisId": "Dùng ID này",
+    "back": "Quay lại",
+    "configureTitle": "Cấu hình thiết bị (không bắt buộc)",
+    "configureDescription": "Đặt các tham số mạng thiết bị này sẽ lấy khi khởi động, hoặc bỏ qua và cấu hình sau.",
+    "skip": "Bỏ qua",
+    "saveAndFinish": "Lưu & Hoàn tất"
+  },
+  "actionsPanel": {
+    "failedToSend": "Gửi lệnh thất bại",
+    "on": "Bật",
+    "off": "Tắt",
+    "sent": "Đã gửi {{label}}",
+    "trigger": "Kích hoạt",
+    "title": "Hành động",
+    "description": "Gửi lệnh đến thiết bị này. Việc gửi diễn ra theo thời gian thực — thiết bị phải trực tuyến để nhận được.",
+    "channelUnsupported": "Hành động không được hỗ trợ với kênh truyền của thiết bị này"
+  },
+  "configDialog": {
+    "updated": "Đã cập nhật cấu hình thiết bị",
+    "pushSent": "Đã gửi — thiết bị sẽ lấy lại cấu hình v{{version}}",
+    "pushDisabledHint": "Chỉ thiết bị dùng kênh KAFKA (gateway) mới nhận được lệnh đồng bộ cấu hình.",
+    "title": "Cấu hình thiết bị",
+    "description": "Cấu hình các tham số mạng thiết bị này lấy khi khởi động.",
+    "pushToDevice": "Gửi đến thiết bị"
+  },
+  "configFields": {
+    "active": "Hoạt động",
+    "apiEndpoint": "API Endpoint",
+    "pushChannel": "Kênh truyền",
+    "selectChannel": "Chọn một kênh",
+    "broker": "Broker",
+    "port": "Cổng",
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "telemetryTopic": "Topic Telemetry",
+    "commandTopic": "Topic Lệnh",
+    "statusTopic": "Topic Trạng thái",
+    "channelLabel": "Kênh {{index}} ({{label}})",
+    "pushUrl": "URL gửi",
+    "brokers": "Brokers",
+    "topics": "Topics",
+    "clientId": "Client ID",
+    "alertRulesLabel": "Quy tắc cảnh báo — mỗi dòng một quy tắc, \"<field><operator><threshold>:<actionKey>=<actionValue>\"",
+    "failsafe": "Chế độ an toàn",
+    "failsafeRulesLabel": "Hành động an toàn — mỗi dòng một hành động, \"<actionKey>=<actionValue>\""
+  },
+  "configViewDialog": {
+    "title": "Cấu hình thiết bị",
+    "description": "Các tham số mạng hiện tại được cung cấp từ endpoint cấu hình khởi động.",
+    "alertRules": "Quy tắc cảnh báo",
+    "enabledNoActions": "đã bật (không có hành động)",
+    "disabled": "đã tắt"
+  },
+  "lifecyclePanel": {
+    "stages": {
+      "new": "Mới",
+      "active": "Đang hoạt động",
+      "aging": "Đã cũ",
+      "maintenanceDue": "Cần bảo trì",
+      "endOfLife": "Hết vòng đời",
+      "decommissioned": "Đã ngừng sử dụng"
+    },
+    "title": "Đánh giá vòng đời",
+    "loading": "Đang tải…",
+    "settingsSaved": "Đã lưu cài đặt vòng đời",
+    "decommissioned": "Đã đánh dấu thiết bị ngừng sử dụng",
+    "description": "Điểm sức khỏe được tính từ tuổi thiết bị, kết nối, và các lần vượt ngưỡng cảnh báo telemetry.",
+    "healthScore": "/ 100 điểm sức khỏe",
+    "age": "Tuổi",
+    "ageMonths": "{{age}} / {{expected}} tháng",
+    "remainingLifespan": "Thời gian sử dụng còn lại",
+    "remainingMonths": "{{months}} tháng",
+    "pastExpectedLifespan": "Đã vượt tuổi thọ dự kiến",
+    "lastAssessed": "Đánh giá lần cuối",
+    "decommissionedOn": "Đã ngừng sử dụng vào {{date}}.",
+    "installedOn": "Ngày lắp đặt",
+    "expectedLifespanMonths": "Tuổi thọ dự kiến (tháng)",
+    "save": "Lưu",
+    "decommission": "Ngừng sử dụng",
+    "decommissionTitle": "Ngừng sử dụng thiết bị",
+    "decommissionDesc": "Điều này sẽ đánh dấu thiết bị đã ngừng sử dụng và không còn tính toán lại vòng đời. Không thể hoàn tác từ đây."
+  },
+  "gatewayAutomation": {
+    "alertRulesSaved": "Đã lưu quy tắc cảnh báo",
+    "failsafeSaved": "Đã lưu cấu hình an toàn",
+    "title": "Tự động hóa Gateway",
+    "description": "Các quy tắc mà gateway tự lưu và thực thi, không cần chờ máy chủ.",
+    "saveRules": "Lưu quy tắc",
+    "failsafeDescription": "Trạng thái an toàn gateway tự áp dụng khi không kết nối được máy chủ.",
+    "saveFailsafe": "Lưu chế độ an toàn"
+  },
+  "offlineAlert": {
+    "saved": "Đã lưu quy tắc cảnh báo",
+    "title": "Quy tắc cảnh báo",
+    "description": "Thông báo khi gateway này ngoại tuyến (không có tín hiệu quá ngưỡng thời gian).",
+    "offlineAlert": "Cảnh báo ngoại tuyến",
+    "offlineAlertDescription": "Gửi thông báo ngay khi thiết bị này chuyển sang trạng thái NGOẠI TUYẾN.",
+    "notifyVia": "Thông báo qua",
+    "noChannelsHint": "Chưa chọn kênh nào: cảnh báo sẽ gửi đến tất cả kênh đã bật của bạn.",
+    "save": "Lưu"
+  },
+  "unclaimedPanel": {
+    "title": "Thiết bị chưa xác nhận",
+    "description": "Các thiết bị đang gửi dữ liệu MQTT nhưng chưa được đăng ký với tài khoản nào. Đăng ký một thiết bị để bắt đầu quản lý.",
+    "deviceId": "ID thiết bị",
+    "lastTopic": "Topic gần nhất",
+    "lastSeen": "Lần cuối online",
+    "action": "Hành động",
+    "register": "Đăng ký"
+  },
+  "warningGates": {
+    "saved": "Đã lưu ngưỡng cảnh báo cho \"{{label}}\"",
+    "enabled": "Bật",
+    "min": "Tối thiểu",
+    "max": "Tối đa",
+    "noChannelsHint": "Chưa chọn kênh nào: cảnh báo cho trường này sẽ gửi đến tất cả kênh đã bật của bạn.",
+    "save": "Lưu",
+    "title": "Ngưỡng cảnh báo",
+    "description": "Cấu hình ngưỡng tối thiểu/tối đa cho mỗi trường telemetry và các kênh thông báo sẽ nhận cảnh báo khi vượt ngưỡng."
+  }
+}

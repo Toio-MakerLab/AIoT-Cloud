@@ -1,0 +1,45 @@
+{
+  "list": {
+    "title": "Quản lý người dùng",
+    "subtitle": "Quản lý tài khoản người dùng và vai trò của họ tại đây."
+  },
+  "columns": {
+    "username": "Tên đăng nhập",
+    "email": "Email",
+    "role": "Vai trò"
+  },
+  "toolbar": {
+    "filterPlaceholder": "Lọc người dùng..."
+  },
+  "roles": {
+    "root": "Root",
+    "admin": "Quản trị viên",
+    "user": "Người dùng",
+    "guest": "Khách"
+  },
+  "actionDialog": {
+    "usernameMin": "Tên đăng nhập phải có ít nhất 3 ký tự.",
+    "passwordMin": "Mật khẩu phải có ít nhất 6 ký tự.",
+    "updated": "Đã cập nhật người dùng",
+    "created": "Đã tạo người dùng",
+    "editTitle": "Sửa người dùng",
+    "addTitle": "Thêm người dùng",
+    "editDescription": "Cập nhật thông tin người dùng tại đây.",
+    "addDescription": "Tạo tài khoản người dùng mới tại đây.",
+    "clickSaveHint": "Nhấn lưu khi bạn hoàn tất.",
+    "username": "Tên đăng nhập",
+    "password": "Mật khẩu",
+    "passwordKeepUnchanged": "(để trống để giữ nguyên)",
+    "firstName": "Tên",
+    "lastName": "Họ",
+    "email": "Email",
+    "phone": "Số điện thoại",
+    "selectRole": "Chọn một vai trò",
+    "factory": "Nhà máy",
+    "selectFactory": "Chọn một nhà máy",
+    "noFactory": "Không có nhà máy"
+  },
+  "primaryButtons": {
+    "addUser": "Thêm người dùng"
+  }
+}

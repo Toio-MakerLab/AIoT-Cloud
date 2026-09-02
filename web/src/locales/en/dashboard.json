@@ -1,0 +1,52 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Build a live view of your devices' telemetry.",
+  "selectDashboard": "Select a dashboard",
+  "newDashboard": "New Dashboard",
+  "dashboardNamePlaceholder": "Dashboard name",
+  "default": "Default",
+  "addPanelButton": "Add Panel",
+  "saving": "Saving...",
+  "save": "Save",
+  "nameRequired": "Dashboard name is required.",
+  "dashboardSaved": "Dashboard saved",
+  "panel": {
+    "device": "Device",
+    "panel": "Panel",
+    "noField": "no field",
+    "online": "Online",
+    "offline": "Offline",
+    "removePanel": "Remove panel",
+    "on": "On",
+    "off": "Off",
+    "channelNotFound": "Channel not found on device template",
+    "deviceOffline": "Device is offline",
+    "updated": "Updated {{time}}",
+    "noDataYet": "No data yet",
+    "failedToApply": "Failed to apply {{label}}",
+    "failedToSendAction": "Failed to send action"
+  },
+  "grid": {
+    "emptyState": "No panels yet. Click \"{{addPanel}}\" to get started."
+  },
+  "addPanel": {
+    "title": "Add Panel",
+    "description": "Pick a device and telemetry field to display on this dashboard.",
+    "deviceRequired": "Device is required.",
+    "fieldRequired": "Field is required.",
+    "titleRequired": "Title is required.",
+    "device": "Device",
+    "selectDevice": "Select a device",
+    "noDevices": "No devices found",
+    "widgetType": "Widget Type",
+    "value": "Value",
+    "chart": "Chart",
+    "action": "Action",
+    "channel": "Channel",
+    "selectChannel": "Select a channel",
+    "noChannels": "Selected device has no channels",
+    "telemetryField": "Telemetry Field",
+    "panelTitle": "Title",
+    "panelTitlePlaceholder": "Panel title"
+  }
+}

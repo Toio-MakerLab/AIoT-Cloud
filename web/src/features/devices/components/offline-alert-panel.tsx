@@ -1,5 +1,6 @@
 import { IconLoader2 } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ interface Props {
  * when the gateway itself is swept OFFLINE (see `DeviceStatusScheduler`/`DeviceWarningListener`).
  */
 export function OfflineAlertPanel({ deviceId, templateType, offlineAlert }: Props) {
+  const { t } = useTranslation('devices');
   const updateConfig = useUpdateDeviceConfigMutation();
   const isGuest = useIsGuest();
   const [enabled, setEnabled] = useState(offlineAlert?.enabled ?? false);
@@ -44,7 +46,7 @@ export function OfflineAlertPanel({ deviceId, templateType, offlineAlert }: Prop
         id: deviceId,
         data: { offlineAlert: { enabled, channels: channels.length > 0 ? channels : undefined } },
       });
-      toast.success('Alert rule saved');
+      toast.success(t('offlineAlert.saved'));
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -53,20 +55,20 @@ export function OfflineAlertPanel({ deviceId, templateType, offlineAlert }: Prop
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Alert Rules</CardTitle>
-        <CardDescription>Notify when this gateway goes offline (no heartbeat past the offline threshold).</CardDescription>
+        <CardTitle>{t('offlineAlert.title')}</CardTitle>
+        <CardDescription>{t('offlineAlert.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between rounded-md border p-3">
           <div className="min-w-0">
-            <span className="font-medium">Offline alert</span>
-            <p className="text-muted-foreground text-sm">Send a notification the moment this device is marked OFFLINE.</p>
+            <span className="font-medium">{t('offlineAlert.offlineAlert')}</span>
+            <p className="text-muted-foreground text-sm">{t('offlineAlert.offlineAlertDescription')}</p>
           </div>
           <Switch checked={enabled} disabled={isGuest} onCheckedChange={setEnabled} />
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-muted-foreground text-xs">Notify via</Label>
+          <Label className="text-muted-foreground text-xs">{t('offlineAlert.notifyVia')}</Label>
           <div className="flex flex-wrap gap-1.5">
             {NOTIFICATION_CHANNEL_OPTIONS.map((channel) => {
               const selected = channels.includes(channel.value);
@@ -79,13 +81,13 @@ export function OfflineAlertPanel({ deviceId, templateType, offlineAlert }: Prop
               );
             })}
           </div>
-          <p className="text-muted-foreground text-xs">No channels selected: alerts go to all your enabled channels.</p>
+          <p className="text-muted-foreground text-xs">{t('offlineAlert.noChannelsHint')}</p>
         </div>
 
         {!isGuest && (
           <Button size="sm" onClick={() => void handleSave()} disabled={updateConfig.isPending}>
             {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-            Save
+            {t('offlineAlert.save')}
           </Button>
         )}
       </CardContent>

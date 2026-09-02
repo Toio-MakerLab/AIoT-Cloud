@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -9,18 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProfileQuery, useUpdateProfileMutation } from '@/features/profile/api/queries';
 
-const profileFormSchema = z.object({
-  firstName: z.string().min(1, { message: 'First name is required.' }),
-  lastName: z.string().min(1, { message: 'Last name is required.' }),
-  username: z
-    .string()
-    .min(2, { message: 'Username must be at least 2 characters.' })
-    .max(30, { message: 'Username must not be longer than 30 characters.' }),
-  email: z.string().email(),
-  phoneNumber: z.string().optional(),
-});
+function buildFormSchema(t: (key: string) => string) {
+  return z.object({
+    firstName: z.string().min(1, { message: t('profile.form.firstNameRequired') }),
+    lastName: z.string().min(1, { message: t('profile.form.lastNameRequired') }),
+    username: z
+      .string()
+      .min(2, { message: t('profile.form.usernameMin') })
+      .max(30, { message: t('profile.form.usernameMax') }),
+    email: z.string().email(),
+    phoneNumber: z.string().optional(),
+  });
+}
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
+type ProfileFormValues = z.infer<ReturnType<typeof buildFormSchema>>;
 
 const defaultValues: ProfileFormValues = {
   firstName: '',
@@ -31,6 +34,8 @@ const defaultValues: ProfileFormValues = {
 };
 
 export default function ProfileForm() {
+  const { t } = useTranslation('settings');
+  const profileFormSchema = useMemo(() => buildFormSchema(t), [t]);
   const { data: profile, isLoading } = useProfileQuery();
   const updateProfile = useUpdateProfileMutation();
 
@@ -54,7 +59,7 @@ export default function ProfileForm() {
   const onSubmit = async (data: ProfileFormValues) => {
     try {
       await updateProfile.mutateAsync(data);
-      toast.success('Profile updated');
+      toast.success(t('profile.form.updated'));
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
     }
@@ -78,7 +83,7 @@ export default function ProfileForm() {
           name="firstName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First name</FormLabel>
+              <FormLabel>{t('profile.form.firstName')}</FormLabel>
               <FormControl>
                 <Input placeholder="John" {...field} />
               </FormControl>
@@ -91,7 +96,7 @@ export default function ProfileForm() {
           name="lastName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Last name</FormLabel>
+              <FormLabel>{t('profile.form.lastName')}</FormLabel>
               <FormControl>
                 <Input placeholder="Doe" {...field} />
               </FormControl>
@@ -104,7 +109,7 @@ export default function ProfileForm() {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>{t('profile.form.username')}</FormLabel>
               <FormControl>
                 <Input placeholder="shadcn" {...field} />
               </FormControl>
@@ -117,7 +122,7 @@ export default function ProfileForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('profile.form.email')}</FormLabel>
               <FormControl>
                 <Input placeholder="m@example.com" {...field} />
               </FormControl>
@@ -130,7 +135,7 @@ export default function ProfileForm() {
           name="phoneNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone number</FormLabel>
+              <FormLabel>{t('profile.form.phoneNumber')}</FormLabel>
               <FormControl>
                 <Input placeholder="+1 234 567 890" {...field} />
               </FormControl>
@@ -139,7 +144,7 @@ export default function ProfileForm() {
           )}
         />
         <Button type="submit" disabled={updateProfile.isPending || !form.formState.isDirty}>
-          Update profile
+          {t('profile.form.updateProfile')}
         </Button>
       </form>
     </Form>

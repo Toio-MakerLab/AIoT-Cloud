@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,13 +9,6 @@ import { RESOURCES } from '@/features/account/api/resources';
 import type { Permission } from '@/features/account/api/types';
 import { useIsRoot } from '@/features/account/hooks/use-is-root';
 import { useRolePermissionsQuery, useUpdateRolePermissionsMutation } from '../api/queries';
-
-const ACTIONS = [
-  { key: 'canRead', label: 'Read' },
-  { key: 'canCreate', label: 'Create' },
-  { key: 'canUpdate', label: 'Update' },
-  { key: 'canDelete', label: 'Delete' },
-] as const;
 
 function emptyPermissions(): Permission[] {
   return Object.values(RESOURCES).map((resource) => ({
@@ -31,6 +25,18 @@ interface Props {
 }
 
 export function RolePermissionMatrix({ role }: Props) {
+  const { t } = useTranslation('roles');
+  const { t: tCommon } = useTranslation('common');
+  const ACTIONS = useMemo(
+    () =>
+      [
+        { key: 'canRead', label: t('actions.read') },
+        { key: 'canCreate', label: t('actions.create') },
+        { key: 'canUpdate', label: t('actions.update') },
+        { key: 'canDelete', label: t('actions.delete') },
+      ] as const,
+    [t],
+  );
   const canUpdate = useIsRoot();
   const { data, isPending } = useRolePermissionsQuery(role);
   const updatePermissions = useUpdateRolePermissionsMutation(role);
@@ -60,7 +66,7 @@ export function RolePermissionMatrix({ role }: Props) {
   const handleSave = async () => {
     try {
       await updatePermissions.mutateAsync({ permissions });
-      toast.success(`Permissions updated for ${role}`);
+      toast.success(t('permissionsUpdated', { role }));
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
     }
@@ -76,7 +82,7 @@ export function RolePermissionMatrix({ role }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Resource</TableHead>
+              <TableHead>{t('resource')}</TableHead>
               {ACTIONS.map((action) => (
                 <TableHead key={action.key} className="text-center">
                   {action.label}
@@ -100,7 +106,7 @@ export function RolePermissionMatrix({ role }: Props) {
       </div>
       {canUpdate && (
         <Button onClick={handleSave} disabled={updatePermissions.isPending}>
-          Save changes
+          {tCommon('actions.saveChanges')}
         </Button>
       )}
     </div>

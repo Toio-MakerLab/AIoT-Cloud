@@ -9,9 +9,11 @@ import { getResponseCode, RESPONSE_CODE_MESSAGES, ResponseCode } from '@/lib/res
 import { useAuthStore } from '@/stores/authStore';
 import { handleServerError } from '@/utils/handle-server-error';
 import { FontProvider } from './context/font-context';
+import { Language, LanguageProvider } from './context/language-context';
 import { Theme, ThemeProvider } from './context/theme-context';
 import './index.css';
 import { loadDomainConfig } from './lib/domain-config';
+import './lib/i18n';
 // Generated Routes
 import { routeTree } from './routeTree.gen';
 
@@ -106,9 +108,11 @@ declare module '@tanstack/react-router' {
       <StrictMode>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme={Theme.Light} storageKey="vite-ui-theme">
-            <FontProvider>
-              <RouterProvider router={router} />
-            </FontProvider>
+            <LanguageProvider defaultLanguage={Language.EN} storageKey="vite-ui-language">
+              <FontProvider>
+                <RouterProvider router={router} />
+              </FontProvider>
+            </LanguageProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </StrictMode>,

@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { Link, useSearch } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { authApi } from '@/features/auth/api/auth-api';
 import AuthLayout from '../auth-layout';
 
 export default function VerifyEmail() {
+  const { t } = useTranslation('auth');
   const search = useSearch({ from: '/(auth)/verify-email' });
   const [status, setStatus] = useState<'pending' | 'success' | 'error'>('pending');
   const attempted = useRef(false);
@@ -22,12 +24,12 @@ export default function VerifyEmail() {
     mutationFn: authApi.resendVerification,
     onSuccess: (res) => {
       if (res.error === 0) {
-        toast.success('Verification email sent');
+        toast.success(t('verifyEmail.emailSent'));
       } else {
-        toast.error('Failed to resend verification email');
+        toast.error(t('verifyEmail.resendFailed'));
       }
     },
-    onError: () => toast.error('Failed to resend verification email'),
+    onError: () => toast.error(t('verifyEmail.resendFailed')),
   });
 
   useEffect(() => {
@@ -41,28 +43,28 @@ export default function VerifyEmail() {
     <AuthLayout>
       <Card className="gap-4">
         <CardHeader>
-          <CardTitle className="text-lg tracking-tight">Verify your account</CardTitle>
+          <CardTitle className="text-lg tracking-tight">{t('verifyEmail.title')}</CardTitle>
           <CardDescription>
             {search.token
               ? isPending
-                ? 'Verifying your email...'
+                ? t('verifyEmail.verifying')
                 : status === 'success'
-                  ? 'Your email has been verified. You can now sign in.'
+                  ? t('verifyEmail.success')
                   : status === 'error'
-                    ? 'This verification link is invalid or has expired.'
+                    ? t('verifyEmail.error')
                     : null
-              : `We sent a verification link to ${search.email ?? 'your email'}. Click it to activate your account.`}
+              : t('verifyEmail.linkSent', { email: search.email ?? t('verifyEmail.yourEmail') })}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {status === 'success' ? (
             <Button asChild>
-              <Link to="/sign-in">Go to sign in</Link>
+              <Link to="/sign-in">{t('verifyEmail.goToSignIn')}</Link>
             </Button>
           ) : (
             search.email && (
               <Button variant="outline" disabled={isResending} onClick={() => resend({ email: search.email! })}>
-                Resend verification email
+                {t('verifyEmail.resendEmail')}
               </Button>
             )
           )}

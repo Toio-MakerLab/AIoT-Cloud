@@ -1,5 +1,6 @@
 import { IconFileExport } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getChartColor } from '@/lib/chart-colors';
 import { downloadFile } from '@/lib/download';
-import { resolveTimeRange, TIME_RANGE_OPTIONS, type TimeRangePreset } from '@/lib/time-range';
+import { getTimeRangeOptions, resolveTimeRange, type TimeRangePreset } from '@/lib/time-range';
 import { useDeviceTelemetryQuery } from '../api/queries';
 import { buildTelemetryHistoryExcel } from '../api/telemetry-excel';
 import type { ITelemetryExportParams } from '../api/telemetry-export';
@@ -33,11 +34,14 @@ const TELEMETRY_FETCH_LIMIT = 500;
  * useDeviceTelemetryQuery) and re-fetches whenever the field or time range changes.
  */
 export function TelemetryHistoryPanel({ deviceId, deviceCode, deviceName, telemetrySchema }: Props) {
+  const { t } = useTranslation('devices');
+  const { t: tCommon } = useTranslation('common');
   const fields = telemetrySchema ?? [];
   const [fieldKey, setFieldKey] = useState<string | undefined>(fields[0]?.key);
   const [rangePreset, setRangePreset] = useState<TimeRangePreset>('24h');
   // Fixed at selection time rather than sliding with "now" every render — see lib/time-range.ts.
   const timeRange = useMemo(() => resolveTimeRange(rangePreset), [rangePreset]);
+  const timeRangeOptions = useMemo(() => getTimeRangeOptions(tCommon), [tCommon]);
 
   const selectedField = fields.find((f) => f.key === fieldKey) ?? fields[0];
   const { data, isLoading } = useDeviceTelemetryQuery(deviceId, { limit: TELEMETRY_FETCH_LIMIT, from: timeRange.from, to: timeRange.to });
@@ -82,13 +86,13 @@ export function TelemetryHistoryPanel({ deviceId, deviceCode, deviceName, teleme
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
         <div>
-          <CardTitle>Telemetry History</CardTitle>
-          <CardDescription>Recorded values for one field over time.</CardDescription>
+          <CardTitle>{t('telemetryHistory.title')}</CardTitle>
+          <CardDescription>{t('telemetryHistory.description')}</CardDescription>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedField?.key} onValueChange={setFieldKey}>
             <SelectTrigger className="w-44">
-              <SelectValue placeholder="Field" />
+              <SelectValue placeholder={t('telemetryHistory.field')} />
             </SelectTrigger>
             <SelectContent>
               {fields.map((field) => (
@@ -101,10 +105,10 @@ export function TelemetryHistoryPanel({ deviceId, deviceCode, deviceName, teleme
           </Select>
           <Select value={rangePreset} onValueChange={(value) => setRangePreset(value as TimeRangePreset)}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Time range" />
+              <SelectValue placeholder={tCommon('timeRange.placeholder')} />
             </SelectTrigger>
             <SelectContent>
-              {TIME_RANGE_OPTIONS.map((option) => (
+              {timeRangeOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -115,21 +119,21 @@ export function TelemetryHistoryPanel({ deviceId, deviceCode, deviceName, teleme
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" disabled={isLoading || telemetry.length === 0}>
                 <IconFileExport className="mr-2 h-4 w-4" />
-                Export
+                {t('telemetryHistory.export')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExport('xml')}>Export as XML</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('excel')}>Export as Excel</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('xml')}>{t('telemetryHistory.exportXml')}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>{t('telemetryHistory.exportExcel')}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </CardHeader>
       <CardContent className="h-64">
         {isLoading ? (
-          <p className="text-muted-foreground text-sm">Loading history…</p>
+          <p className="text-muted-foreground text-sm">{t('telemetryHistory.loading')}</p>
         ) : chartData.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No telemetry recorded in this time range.</p>
+          <p className="text-muted-foreground text-sm">{t('telemetryHistory.noData')}</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData}>

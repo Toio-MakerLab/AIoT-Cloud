@@ -1,0 +1,62 @@
+{
+  "groups": {
+    "iot": "IoT",
+    "other": "Other"
+  },
+  "items": {
+    "dashboard": "Dashboard",
+    "devices": "Devices",
+    "deviceTemplates": "Device Templates",
+    "deviceSecrets": "Device Secrets",
+    "users": "Users",
+    "factories": "Factories",
+    "myAccount": "My Account",
+    "settings": "Settings",
+    "settingsProfile": "Profile",
+    "settingsAccount": "Account",
+    "settingsAppearance": "Appearance",
+    "settingsNotifications": "Notifications",
+    "settingsRoles": "Roles & Permissions",
+    "helpCenter": "Help Center"
+  },
+  "commandMenu": {
+    "placeholder": "Type a command or search...",
+    "noResults": "No results found.",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "profileDropdown": {
+    "loggedOut": "Logged out successfully",
+    "defaultUser": "User",
+    "noEmail": "No email",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logOut": "Log out"
+  },
+  "factorySwitcher": {
+    "allFactories": "All Factories",
+    "loading": "Loading…",
+    "none": "No factory assigned",
+    "guest": "Guest (read-only)",
+    "unassigned": "Unassigned",
+    "factory": "Factory",
+    "manageFactories": "Manage factories"
+  },
+  "comingSoon": {
+    "title": "Coming Soon",
+    "line1": "This page has not been created yet.",
+    "line2": "Stay tuned though!"
+  },
+  "skipToMain": "Skip to Main",
+  "themeSwitch": {
+    "toggleTheme": "Toggle theme",
+    "toggleLanguage": "Toggle language"
+  },
+  "sidebar": {
+    "title": "Sidebar",
+    "description": "Displays the mobile sidebar.",
+    "toggle": "Toggle Sidebar"
+  }
+}

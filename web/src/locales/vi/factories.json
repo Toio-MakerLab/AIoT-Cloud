@@ -1,0 +1,37 @@
+{
+  "list": {
+    "title": "Nhà máy",
+    "subtitle": "Quản lý nhà máy và người dùng/thiết bị/dashboard được gán cho chúng."
+  },
+  "toolbar": {
+    "filterPlaceholder": "Lọc nhà máy..."
+  },
+  "columns": {
+    "address": "Địa chỉ"
+  },
+  "actionDialog": {
+    "nameRequired": "Tên là bắt buộc.",
+    "updated": "Đã cập nhật nhà máy",
+    "created": "Đã tạo nhà máy",
+    "editTitle": "Sửa nhà máy",
+    "addTitle": "Thêm nhà máy",
+    "editDescription": "Cập nhật nhà máy tại đây.",
+    "addDescription": "Tạo nhà máy mới tại đây.",
+    "clickSaveHint": "Nhấn lưu khi bạn hoàn tất.",
+    "address": "Địa chỉ",
+    "descriptionPlaceholder": "Nhà máy này đại diện cho..."
+  },
+  "primaryButtons": {
+    "addFactory": "Thêm nhà máy"
+  },
+  "deleteDialog": {
+    "deleted": "Đã xóa nhà máy",
+    "title": "Xóa nhà máy",
+    "confirmPrefix": "Bạn có chắc chắn muốn xóa",
+    "warning": "Hành động này sẽ xóa vĩnh viễn nhà máy khỏi hệ thống. Các nhà máy vẫn được gán cho người dùng hoặc thiết bị không thể bị xóa. Hành động này không thể hoàn tác.",
+    "name": "Tên:",
+    "confirmPlaceholder": "Nhập tên nhà máy để xác nhận xóa.",
+    "warningTitle": "Cảnh báo!",
+    "warningDescription": "Hãy cẩn thận, hành động này không thể hoàn tác."
+  }
+}

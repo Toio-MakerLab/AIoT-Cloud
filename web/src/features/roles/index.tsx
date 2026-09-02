@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitch } from '@/components/language-switch';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { NotificationsNav } from '@/components/notifications-nav';
@@ -14,6 +16,7 @@ import { useRolesQuery } from './api/queries';
 import { RolePermissionMatrix } from './components/role-permission-matrix';
 
 export default function Roles() {
+  const { t } = useTranslation('roles');
   const isRoot = useIsRoot();
   const { data, isPending } = useRolesQuery();
   const [role, setRole] = useState<string | null>(null);
@@ -31,6 +34,7 @@ export default function Roles() {
         <Search />
         <div className="ms-auto flex items-center space-x-4">
           <ThemeSwitch />
+          <LanguageSwitch />
           <NotificationsNav />
           <ProfileDropdown />
         </div>
@@ -39,15 +43,15 @@ export default function Roles() {
         <div className="space-y-6 px-2 py-2">
           <Card>
             <CardHeader>
-              <CardTitle>Roles & Permissions</CardTitle>
-              <CardDescription>Control which resources each role can read, create, update, or delete.</CardDescription>
+              <CardTitle>{t('title')}</CardTitle>
+              <CardDescription>{t('description')}</CardDescription>
             </CardHeader>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Permission Matrix</CardTitle>
-              <CardDescription>Select a role, then toggle access per resource.</CardDescription>
+              <CardTitle className="text-lg">{t('permissionMatrix')}</CardTitle>
+              <CardDescription>{t('selectRoleHint')}</CardDescription>
             </CardHeader>
             <CardContent>
               {isPending ? (

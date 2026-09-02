@@ -1,0 +1,96 @@
+{
+  "actions": {
+    "save": "Lưu",
+    "saveChanges": "Lưu thay đổi",
+    "cancel": "Hủy",
+    "continue": "Tiếp tục",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "add": "Thêm",
+    "create": "Tạo mới",
+    "update": "Cập nhật",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "previous": "Trước đó",
+    "confirm": "Xác nhận",
+    "search": "Tìm kiếm",
+    "filter": "Bộ lọc",
+    "clear": "Xóa",
+    "clearFilters": "Xóa bộ lọc",
+    "reset": "Đặt lại",
+    "refresh": "Làm mới",
+    "export": "Xuất",
+    "import": "Nhập",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép",
+    "view": "Xem",
+    "download": "Tải xuống",
+    "retry": "Thử lại",
+    "loading": "Đang tải...",
+    "openMenu": "Mở menu",
+    "selectAll": "Chọn tất cả",
+    "clearSelection": "Bỏ chọn"
+  },
+  "words": {
+    "yes": "Có",
+    "no": "Không",
+    "name": "Tên",
+    "label": "nhãn",
+    "description": "Mô tả",
+    "type": "Loại",
+    "status": "Trạng thái",
+    "active": "Hoạt động",
+    "inactive": "Ngừng hoạt động",
+    "createdAt": "Ngày tạo",
+    "updatedAt": "Ngày cập nhật",
+    "optional": "Không bắt buộc",
+    "required": "Bắt buộc",
+    "unknown": "Không xác định",
+    "none": "Không có",
+    "all": "Tất cả"
+  },
+  "table": {
+    "noResults": "Không có kết quả.",
+    "noResultsFound": "Không tìm thấy kết quả.",
+    "selectedCount": "Đã chọn {{count}}",
+    "rowsSelected": "Đã chọn {{selected}} / {{total}} dòng.",
+    "rowsPerPage": "Số dòng mỗi trang",
+    "pageOf": "Trang {{page}} / {{pageCount}}",
+    "goToFirstPage": "Về trang đầu",
+    "goToPreviousPage": "Về trang trước",
+    "goToNextPage": "Đến trang sau",
+    "goToLastPage": "Đến trang cuối",
+    "toggleColumns": "Ẩn/hiện cột",
+    "columns": "Cột",
+    "sortAsc": "Tăng dần",
+    "sortDesc": "Giảm dần",
+    "hideColumn": "Ẩn"
+  },
+  "confirmDialog": {
+    "defaultTitle": "Bạn có chắc chắn không?",
+    "defaultDesc": "Hành động này không thể hoàn tác."
+  },
+  "errors": {
+    "somethingWentWrong": "Đã xảy ra lỗi!",
+    "genericTitle": "Rất tiếc! Đã xảy ra lỗi",
+    "genericDesc": "Chúng tôi xin lỗi vì sự bất tiện này. Vui lòng thử lại sau."
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc."
+  },
+  "select": {
+    "placeholder": "Chọn"
+  },
+  "authGuard": {
+    "settingUpAccount": "Đang thiết lập tài khoản của bạn..."
+  },
+  "timeRange": {
+    "placeholder": "Khoảng thời gian",
+    "lastHour": "1 giờ qua",
+    "last6Hours": "6 giờ qua",
+    "last24Hours": "24 giờ qua",
+    "last7Days": "7 ngày qua",
+    "last30Days": "30 ngày qua"
+  }
+}

@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { type HTMLAttributes, useTransition } from 'react';
+import { type HTMLAttributes, useMemo, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { PasswordInput } from '@/components/password-input';
@@ -15,17 +16,19 @@ import { useAuthStore } from '@/stores/authStore';
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
 
-const formSchema = z.object({
-  usernameOrEmail: z.string().min(1, { message: 'Please enter your username or email' }),
-  password: z.string().min(1, {
-    message: 'Please enter your password',
-  }),
-});
+function buildFormSchema(t: (key: string, options?: Record<string, unknown>) => string) {
+  return z.object({
+    usernameOrEmail: z.string().min(1, { message: t('signIn.usernameOrEmailRequired') }),
+    password: z.string().min(1, { message: t('signIn.passwordRequired') }),
+  });
+}
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('auth');
   const { setAccessToken, setUser } = useAuthStore((state) => state.auth);
   const [isLoading, startTransition] = useTransition();
+  const formSchema = useMemo(() => buildFormSchema(t), [t]);
 
   const { mutate: login, isPending } = useMutation({
     mutationFn: authApi.login,
@@ -34,15 +37,15 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         if (res.message === 'error.emailNotVerified') {
           const email = variables.usernameOrEmail.includes('@') ? variables.usernameOrEmail : undefined;
 
-          toast.error('Please verify your email before signing in', {
+          toast.error(t('signIn.emailNotVerified'), {
             action: email
               ? {
-                  label: 'Resend email',
+                  label: t('signIn.resendEmail'),
                   onClick: () => {
                     void authApi
                       .resendVerification({ email })
-                      .then(() => toast.success('Verification email sent'))
-                      .catch(() => toast.error('Failed to resend email'));
+                      .then(() => toast.success(t('signIn.verificationEmailSent')))
+                      .catch(() => toast.error(t('signIn.resendEmailFailed')));
                   },
                 }
               : undefined,
@@ -51,11 +54,11 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         }
 
         if (res.message === 'error.userDeactivated') {
-          toast.error('Your account has been deactivated');
+          toast.error(t('signIn.accountDeactivated'));
           return;
         }
 
-        toast.error('Invalid username/email or password');
+        toast.error(t('signIn.invalidCredentials'));
         return;
       }
 
@@ -65,11 +68,11 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         fullName: [res.data.user.firstName, res.data.user.lastName].filter(Boolean).join(' ') || res.data.user.username,
         picture: res.data.user.avatar,
       });
-      toast.success('Login successful');
+      toast.success(t('signIn.loginSuccessful'));
       navigate({ to: '/' });
     },
     onError: () => {
-      toast.error('Invalid username/email or password');
+      toast.error(t('signIn.invalidCredentials'));
     },
   });
 
@@ -95,7 +98,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           name="usernameOrEmail"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username or Email</FormLabel>
+              <FormLabel>{t('signIn.usernameOrEmail')}</FormLabel>
               <FormControl>
                 <Input placeholder="jdoe or name@example.com" {...field} />
               </FormControl>
@@ -109,9 +112,9 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           render={({ field }) => (
             <FormItem>
               <div className="flex items-center justify-between">
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t('signIn.password')}</FormLabel>
                 <Link to="/forgot-password" className="text-muted-foreground text-sm hover:opacity-75">
-                  Forgot password?
+                  {t('signIn.forgotPassword')}
                 </Link>
               </div>
               <FormControl>
@@ -122,7 +125,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           )}
         />
         <Button className="mt-2" disabled={isPending && isLoading}>
-          Login
+          {t('signIn.login')}
         </Button>
       </form>
     </Form>

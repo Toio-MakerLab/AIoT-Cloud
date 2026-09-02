@@ -14,6 +14,7 @@ import {
   type VisibilityState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Device } from '../data/schema';
 import { DataTablePagination } from './data-table-pagination';
@@ -32,6 +33,7 @@ interface DataTableProps {
 }
 
 export function DevicesTable({ columns, data }: DataTableProps) {
+  const { t } = useTranslation('devices');
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -85,7 +87,7 @@ export function DevicesTable({ columns, data }: DataTableProps) {
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No devices yet.
+                  {t('columns.noDevicesYet')}
                 </TableCell>
               </TableRow>
             )}

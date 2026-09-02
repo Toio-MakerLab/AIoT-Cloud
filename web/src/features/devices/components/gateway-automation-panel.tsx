@@ -1,5 +1,6 @@
 import { IconLoader2 } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ function parseRuleLines(text: string): string[] {
  * the cloud only stores and ships them down via boot-config, see DeviceAlertRule/DeviceFailsafeConfig.
  */
 export function GatewayAutomationPanel({ deviceId, templateType, alertRules, failsafe }: Props) {
+  const { t } = useTranslation('devices');
   const updateConfig = useUpdateDeviceConfigMutation();
   const isGuest = useIsGuest();
   const [rulesText, setRulesText] = useState((alertRules ?? []).join('\n'));
@@ -47,7 +49,7 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
     const rules = parseRuleLines(rulesText);
     try {
       await updateConfig.mutateAsync({ id: deviceId, data: { alertRules: rules.length > 0 ? rules : null } });
-      toast.success('Alert rules saved');
+      toast.success(t('gatewayAutomation.alertRulesSaved'));
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -60,7 +62,7 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
         id: deviceId,
         data: { failsafe: { enabled: failsafeEnabled, rules: rules.length > 0 ? rules : undefined } },
       });
-      toast.success('Failsafe config saved');
+      toast.success(t('gatewayAutomation.failsafeSaved'));
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -69,13 +71,13 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Gateway Automation</CardTitle>
-        <CardDescription>Rules the gateway itself caches and acts on, without a cloud round-trip.</CardDescription>
+        <CardTitle>{t('gatewayAutomation.title')}</CardTitle>
+        <CardDescription>{t('gatewayAutomation.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-1.5">
           <Label htmlFor="alert-rules" className="text-muted-foreground text-xs">
-            Alert rules — one per line, "&lt;field&gt;&lt;operator&gt;&lt;threshold&gt;:&lt;actionKey&gt;=&lt;actionValue&gt;"
+            {t('configFields.alertRulesLabel')}
           </Label>
           <Textarea
             id="alert-rules"
@@ -89,7 +91,7 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
           {!isGuest && (
             <Button size="sm" onClick={() => void handleSaveRules()} disabled={updateConfig.isPending}>
               {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-              Save rules
+              {t('gatewayAutomation.saveRules')}
             </Button>
           )}
         </div>
@@ -97,14 +99,14 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
         <div className="space-y-3 rounded-md border p-3">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <span className="font-medium">Failsafe</span>
-              <p className="text-muted-foreground text-sm">Safe state the gateway applies on its own when it can't reach the cloud.</p>
+              <span className="font-medium">{t('configFields.failsafe')}</span>
+              <p className="text-muted-foreground text-sm">{t('gatewayAutomation.failsafeDescription')}</p>
             </div>
             <Switch checked={failsafeEnabled} disabled={isGuest} onCheckedChange={setFailsafeEnabled} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="failsafe-rules" className="text-muted-foreground text-xs">
-              Actions — one per line, "&lt;actionKey&gt;=&lt;actionValue&gt;"
+              {t('configFields.failsafeRulesLabel')}
             </Label>
             <Textarea
               id="failsafe-rules"
@@ -119,7 +121,7 @@ export function GatewayAutomationPanel({ deviceId, templateType, alertRules, fai
           {!isGuest && (
             <Button size="sm" onClick={() => void handleSaveFailsafe()} disabled={updateConfig.isPending}>
               {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-              Save failsafe
+              {t('gatewayAutomation.saveFailsafe')}
             </Button>
           )}
         </div>

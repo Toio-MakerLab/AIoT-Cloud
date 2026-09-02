@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getDevicePushChannelLabel } from '../data/data';
 import type { Device } from '../data/schema';
@@ -18,49 +19,57 @@ function Row({ label, value }: { label: string; value?: string | null }) {
 }
 
 export function DeviceConfigViewDialog({ currentRow, open, onOpenChange }: Props) {
+  const { t } = useTranslation('devices');
   const { config, pushChannel, alertRules, failsafe, template } = currentRow;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader className="text-left">
-          <DialogTitle>Device Config</DialogTitle>
-          <DialogDescription>Current network parameters served from the boot-config endpoint.</DialogDescription>
+          <DialogTitle>{t('configViewDialog.title')}</DialogTitle>
+          <DialogDescription>{t('configViewDialog.description')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <Row label="API Endpoint" value={config?.apiEndpoint} />
-          <Row label="Push Channel" value={getDevicePushChannelLabel(pushChannel)} />
+          <Row label={t('configFields.apiEndpoint')} value={config?.apiEndpoint} />
+          <Row label={t('configFields.pushChannel')} value={getDevicePushChannelLabel(pushChannel)} />
 
           {pushChannel === 'MQTT' ? (
             <>
-              <Row label="Broker" value={config?.mqtt?.broker} />
-              <Row label="Port" value={config?.mqtt?.port ? String(config.mqtt.port) : undefined} />
-              <Row label="Username" value={config?.mqtt?.username} />
-              <Row label="Telemetry Topic" value={config?.mqtt?.topics?.telemetry} />
-              <Row label="Command Topic" value={config?.mqtt?.topics?.command} />
-              <Row label="Status Topic" value={config?.mqtt?.topics?.status} />
+              <Row label={t('configFields.broker')} value={config?.mqtt?.broker} />
+              <Row label={t('configFields.port')} value={config?.mqtt?.port ? String(config.mqtt.port) : undefined} />
+              <Row label={t('configFields.username')} value={config?.mqtt?.username} />
+              <Row label={t('configFields.telemetryTopic')} value={config?.mqtt?.topics?.telemetry} />
+              <Row label={t('configFields.commandTopic')} value={config?.mqtt?.topics?.command} />
+              <Row label={t('configFields.statusTopic')} value={config?.mqtt?.topics?.status} />
               {config?.mqtt?.topics?.channels?.map((channel) => (
-                <Row key={channel.index} label={`Ch.${channel.index} (${channel.label})`} value={channel.topic} />
+                <Row
+                  key={channel.index}
+                  label={t('configFields.channelLabel', { index: channel.index, label: channel.label })}
+                  value={channel.topic}
+                />
               ))}
             </>
           ) : null}
 
-          {pushChannel === 'HTTP' ? <Row label="Push URL" value={config?.http?.url} /> : null}
+          {pushChannel === 'HTTP' ? <Row label={t('configFields.pushUrl')} value={config?.http?.url} /> : null}
 
           {pushChannel === 'KAFKA' ? (
             <>
-              <Row label="Brokers" value={config?.kafka?.brokers} />
-              <Row label="Topics" value={config?.kafka?.topics?.join(', ')} />
-              <Row label="Command Topic" value={config?.kafka?.commandTopic} />
-              <Row label="Client ID" value={config?.kafka?.clientId} />
-              <Row label="Username" value={config?.kafka?.username} />
+              <Row label={t('configFields.brokers')} value={config?.kafka?.brokers} />
+              <Row label={t('configFields.topics')} value={config?.kafka?.topics?.join(', ')} />
+              <Row label={t('configFields.commandTopic')} value={config?.kafka?.commandTopic} />
+              <Row label={t('configFields.clientId')} value={config?.kafka?.clientId} />
+              <Row label={t('configFields.username')} value={config?.kafka?.username} />
             </>
           ) : null}
 
           {template?.type === 'GATEWAY' ? (
             <>
-              <Row label="Alert rules" value={alertRules?.join(', ')} />
-              <Row label="Failsafe" value={failsafe?.enabled ? failsafe.rules?.join(', ') || 'enabled (no actions)' : 'disabled'} />
+              <Row label={t('configViewDialog.alertRules')} value={alertRules?.join(', ')} />
+              <Row
+                label={t('configFields.failsafe')}
+                value={failsafe?.enabled ? failsafe.rules?.join(', ') || t('configViewDialog.enabledNoActions') : t('configViewDialog.disabled')}
+              />
             </>
           ) : null}
         </div>

@@ -1,0 +1,18 @@
+{
+  "myAccount": "My Account",
+  "subtitle": "Your current account information.",
+  "profile": "Profile",
+  "description": "Information tied to your account.",
+  "loading": "Loading...",
+  "username": "Username",
+  "role": "Role",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "email": "Email",
+  "verified": "Verified",
+  "notVerified": "Not verified",
+  "phone": "Phone",
+  "resendVerificationEmail": "Resend verification email",
+  "verificationEmailSent": "Verification email sent",
+  "resendFailed": "Failed to resend verification email"
+}

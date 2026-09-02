@@ -1,0 +1,9 @@
+{
+  "nav": {
+    "title": "Thông báo",
+    "markAllAsRead": "Đánh dấu tất cả đã đọc",
+    "loading": "Đang tải…",
+    "caughtUp": "Bạn đã xem hết thông báo.",
+    "failedToDeliver": "Gửi thất bại"
+  }
+}

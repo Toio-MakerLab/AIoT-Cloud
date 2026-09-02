@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitch } from '@/components/language-switch';
 import { Header } from '@/components/layout/header';
 import { Main } from '@/components/layout/main';
 import { NotificationsNav } from '@/components/notifications-nav';
@@ -6,7 +8,7 @@ import { Search } from '@/components/search';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { useDeviceTemplatesQuery } from './api/queries';
 import { mapIDeviceTemplateToDeviceTemplate } from './api/utils';
-import { columns } from './components/device-templates-columns';
+import { useDeviceTemplatesColumns } from './components/device-templates-columns';
 import { DeviceTemplatesDialogs } from './components/device-templates-dialogs';
 import { DeviceTemplatesPrimaryButtons } from './components/device-templates-primary-buttons';
 import { DeviceTemplatesTable } from './components/device-templates-table';
@@ -18,8 +20,10 @@ import DeviceTemplatesProvider from './context/device-templates-context';
 // are expected to be small; if this grows past 50 rows, switch to real
 // server-driven pagination wired to page/take/q instead.
 export default function DeviceTemplates() {
+  const { t } = useTranslation('deviceTemplates');
   const { data } = useDeviceTemplatesQuery({ take: 50, order: 'ASC' });
   const templateList = data?.data?.map(mapIDeviceTemplateToDeviceTemplate) ?? [];
+  const columns = useDeviceTemplatesColumns();
 
   return (
     <DeviceTemplatesProvider>
@@ -27,6 +31,7 @@ export default function DeviceTemplates() {
         <Search />
         <div className="ml-auto flex items-center space-x-4">
           <ThemeSwitch />
+          <LanguageSwitch />
           <NotificationsNav />
           <ProfileDropdown />
         </div>
@@ -35,8 +40,8 @@ export default function DeviceTemplates() {
       <Main>
         <div className="mb-2 flex flex-wrap items-center justify-between space-y-2">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Device Templates</h2>
-            <p className="text-muted-foreground">Manage device templates used to provision devices.</p>
+            <h2 className="text-2xl font-bold tracking-tight">{t('list.title')}</h2>
+            <p className="text-muted-foreground">{t('list.subtitle')}</p>
           </div>
           <DeviceTemplatesPrimaryButtons />
         </div>

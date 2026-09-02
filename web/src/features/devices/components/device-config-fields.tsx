@@ -1,4 +1,5 @@
 import type { Control } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { PasswordInput } from '@/components/password-input';
 import { SelectDropdown } from '@/components/select-dropdown';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function DeviceConfigFields({ control, pushChannel, channelTopics, templateType }: Props) {
+  const { t } = useTranslation('devices');
   return (
     <>
       <FormField
@@ -26,7 +28,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <FormLabel>Active</FormLabel>
+              <FormLabel>{t('configFields.active')}</FormLabel>
             </div>
             <FormControl>
               <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -39,7 +41,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
         name="apiEndpoint"
         render={({ field }) => (
           <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-            <FormLabel className="col-span-2 text-right">API Endpoint</FormLabel>
+            <FormLabel className="col-span-2 text-right">{t('configFields.apiEndpoint')}</FormLabel>
             <FormControl className="col-span-4">
               <Input placeholder="https://api.example.com" {...field} />
             </FormControl>
@@ -52,11 +54,11 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
         name="pushChannel"
         render={({ field }) => (
           <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-            <FormLabel className="col-span-2 text-right">Push Channel</FormLabel>
+            <FormLabel className="col-span-2 text-right">{t('configFields.pushChannel')}</FormLabel>
             <SelectDropdown
               defaultValue={field.value}
               onValueChange={field.onChange}
-              placeholder="Select a channel"
+              placeholder={t('configFields.selectChannel')}
               className="col-span-4"
               items={devicePushChannels.map(({ label, value }) => ({
                 label,
@@ -75,7 +77,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="mqttBroker"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Broker</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.broker')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input placeholder="mqtt://broker.example.com" {...field} />
                 </FormControl>
@@ -88,7 +90,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="mqttPort"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Port</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.port')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input placeholder="1883" {...field} />
                 </FormControl>
@@ -101,7 +103,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="mqttUsername"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Username</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.username')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input {...field} />
                 </FormControl>
@@ -114,7 +116,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="mqttPassword"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Password</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.password')}</FormLabel>
                 <FormControl className="col-span-4">
                   <PasswordInput {...field} />
                 </FormControl>
@@ -127,7 +129,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="mqttTelemetryTopic"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Telemetry Topic</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.telemetryTopic')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input placeholder="devices/{deviceId}/telemetry" {...field} />
                 </FormControl>
@@ -140,7 +142,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="mqttCommandTopic"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Command Topic</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.commandTopic')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input placeholder="devices/{deviceId}/command" {...field} />
                 </FormControl>
@@ -153,7 +155,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="mqttStatusTopic"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Status Topic</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.statusTopic')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input placeholder="devices/{deviceId}/status" {...field} />
                 </FormControl>
@@ -171,7 +173,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
                   <FormLabel className="col-span-2 text-right">
-                    Ch.{index + 1} ({channel.label})
+                    {t('configFields.channelLabel', { index: index + 1, label: channel.label })}
                   </FormLabel>
                   <FormControl className="col-span-4">
                     <Input placeholder={`devices/{deviceId}/channel/${index + 1}/command`} {...field} />
@@ -190,7 +192,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
           name="httpUrl"
           render={({ field }) => (
             <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-              <FormLabel className="col-span-2 text-right">Push URL</FormLabel>
+              <FormLabel className="col-span-2 text-right">{t('configFields.pushUrl')}</FormLabel>
               <FormControl className="col-span-4">
                 <Input placeholder="https://example.com/ingest" {...field} />
               </FormControl>
@@ -207,7 +209,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="kafkaBrokers"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Brokers</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.brokers')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input placeholder="broker1:9092,broker2:9092" {...field} />
                 </FormControl>
@@ -220,7 +222,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="kafkaTopics"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Topics</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.topics')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input placeholder="devices.telemetry, devices.status" {...field} />
                 </FormControl>
@@ -233,7 +235,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="kafkaCommandTopic"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Command Topic</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.commandTopic')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input placeholder="devices.commands" {...field} />
                 </FormControl>
@@ -246,7 +248,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="kafkaClientId"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Client ID</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.clientId')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input {...field} />
                 </FormControl>
@@ -259,7 +261,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="kafkaUsername"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Username</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.username')}</FormLabel>
                 <FormControl className="col-span-4">
                   <Input {...field} />
                 </FormControl>
@@ -272,7 +274,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="kafkaPassword"
             render={({ field }) => (
               <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
-                <FormLabel className="col-span-2 text-right">Password</FormLabel>
+                <FormLabel className="col-span-2 text-right">{t('configFields.password')}</FormLabel>
                 <FormControl className="col-span-4">
                   <PasswordInput {...field} />
                 </FormControl>
@@ -290,9 +292,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="alertRules"
             render={({ field }) => (
               <FormItem className="space-y-1.5">
-                <FormLabel className="text-muted-foreground text-xs">
-                  Alert rules — one per line, "&lt;field&gt;&lt;operator&gt;&lt;threshold&gt;:&lt;actionKey&gt;=&lt;actionValue&gt;"
-                </FormLabel>
+                <FormLabel className="text-muted-foreground text-xs">{t('configFields.alertRulesLabel')}</FormLabel>
                 <FormControl>
                   <Textarea rows={4} placeholder="amps.value>10:relay_2=OFF" className="font-mono text-sm" {...field} />
                 </FormControl>
@@ -306,7 +306,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             render={({ field }) => (
               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                 <div className="space-y-0.5">
-                  <FormLabel>Failsafe</FormLabel>
+                  <FormLabel>{t('configFields.failsafe')}</FormLabel>
                 </div>
                 <FormControl>
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -319,9 +319,7 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
             name="failsafeRules"
             render={({ field }) => (
               <FormItem className="space-y-1.5">
-                <FormLabel className="text-muted-foreground text-xs">
-                  Failsafe actions — one per line, "&lt;actionKey&gt;=&lt;actionValue&gt;"
-                </FormLabel>
+                <FormLabel className="text-muted-foreground text-xs">{t('configFields.failsafeRulesLabel')}</FormLabel>
                 <FormControl>
                   <Textarea rows={3} placeholder="relay_2=OFF" className="font-mono text-sm" {...field} />
                 </FormControl>

@@ -1,0 +1,14 @@
+{
+  "title": "Roles & Permissions",
+  "description": "Control which resources each role can read, create, update, or delete.",
+  "permissionMatrix": "Permission Matrix",
+  "selectRoleHint": "Select a role, then toggle access per resource.",
+  "resource": "Resource",
+  "permissionsUpdated": "Permissions updated for {{role}}",
+  "actions": {
+    "read": "Read",
+    "create": "Create",
+    "update": "Update",
+    "delete": "Delete"
+  }
+}

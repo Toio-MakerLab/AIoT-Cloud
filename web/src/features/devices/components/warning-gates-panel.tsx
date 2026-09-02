@@ -1,5 +1,6 @@
 import { IconLoader2 } from '@tabler/icons-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,7 @@ function GateRow({
   deviceId: string;
   warningOverrides: Record<string, IDeviceWarningThreshold> | null | undefined;
 }) {
+  const { t } = useTranslation('devices');
   const updateConfig = useUpdateDeviceConfigMutation();
   const isGuest = useIsGuest();
   const [draft, setDraft] = useState<FieldDraft>(() => draftFromOverride(field, override));
@@ -79,7 +81,7 @@ function GateRow({
           },
         },
       });
-      toast.success(`Warning gate for "${field.label}" saved`);
+      toast.success(t('warningGates.saved', { label: field.label }));
     } catch (error) {
       toast.error(getResponseMessage(error));
     }
@@ -94,7 +96,7 @@ function GateRow({
         </div>
         <div className="flex items-center gap-2">
           <Label htmlFor={`enabled-${field.key}`} className="text-muted-foreground text-sm">
-            Enabled
+            {t('warningGates.enabled')}
           </Label>
           <Switch
             id={`enabled-${field.key}`}
@@ -108,7 +110,7 @@ function GateRow({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="space-y-1">
           <Label htmlFor={`min-${field.key}`} className="text-muted-foreground text-xs">
-            Min
+            {t('warningGates.min')}
           </Label>
           <Input
             id={`min-${field.key}`}
@@ -121,7 +123,7 @@ function GateRow({
         </div>
         <div className="space-y-1">
           <Label htmlFor={`max-${field.key}`} className="text-muted-foreground text-xs">
-            Max
+            {t('warningGates.max')}
           </Label>
           <Input
             id={`max-${field.key}`}
@@ -135,7 +137,7 @@ function GateRow({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-muted-foreground text-xs">Notify via</Label>
+        <Label className="text-muted-foreground text-xs">{t('offlineAlert.notifyVia')}</Label>
         <div className="flex flex-wrap gap-1.5">
           {NOTIFICATION_CHANNEL_OPTIONS.map((channel) => {
             const selected = draft.channels.includes(channel.value);
@@ -148,13 +150,13 @@ function GateRow({
             );
           })}
         </div>
-        <p className="text-muted-foreground text-xs">No channels selected: warnings for this field go to all your enabled channels.</p>
+        <p className="text-muted-foreground text-xs">{t('warningGates.noChannelsHint')}</p>
       </div>
 
       {!isGuest && (
         <Button size="sm" onClick={() => void handleSave()} disabled={updateConfig.isPending}>
           {updateConfig.isPending && <IconLoader2 className="h-4 w-4 animate-spin" />}
-          Save
+          {t('warningGates.save')}
         </Button>
       )}
     </div>
@@ -162,6 +164,7 @@ function GateRow({
 }
 
 export function WarningGatesPanel({ deviceId, telemetrySchema, warningOverrides }: Props) {
+  const { t } = useTranslation('devices');
   if (!telemetrySchema || telemetrySchema.length === 0) {
     return null;
   }
@@ -169,8 +172,8 @@ export function WarningGatesPanel({ deviceId, telemetrySchema, warningOverrides 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Warning Gates</CardTitle>
-        <CardDescription>Configure min/max thresholds per telemetry field and which notification channels a breach should send to.</CardDescription>
+        <CardTitle>{t('warningGates.title')}</CardTitle>
+        <CardDescription>{t('warningGates.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {telemetrySchema.map((field) => (

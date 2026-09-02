@@ -1,4 +1,5 @@
 import { IconPower } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ interface Props {
 }
 
 function ToggleAction({ action, deviceId }: { action: IDeviceActionFieldDefinition; deviceId: string }) {
+  const { t } = useTranslation('devices');
   const trigger = useTriggerDeviceActionMutation(deviceId);
   const isGuest = useIsGuest();
   const onValue = action.onValue ?? 'ON';
@@ -25,7 +27,7 @@ function ToggleAction({ action, deviceId }: { action: IDeviceActionFieldDefiniti
       await trigger.mutateAsync({ key: action.key, value });
       toast.success(`${action.label} -> ${value}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to send action');
+      toast.error(error instanceof Error ? error.message : t('actionsPanel.failedToSend'));
     }
   };
 
@@ -37,10 +39,10 @@ function ToggleAction({ action, deviceId }: { action: IDeviceActionFieldDefiniti
       </div>
       <div className="flex gap-2">
         <Button size="sm" variant="outline" disabled={isGuest || trigger.isPending} onClick={() => void send(onValue)}>
-          On
+          {t('actionsPanel.on')}
         </Button>
         <Button size="sm" variant="outline" disabled={isGuest || trigger.isPending} onClick={() => void send(offValue)}>
-          Off
+          {t('actionsPanel.off')}
         </Button>
       </div>
     </div>
@@ -48,15 +50,16 @@ function ToggleAction({ action, deviceId }: { action: IDeviceActionFieldDefiniti
 }
 
 function ButtonAction({ action, deviceId }: { action: IDeviceActionFieldDefinition; deviceId: string }) {
+  const { t } = useTranslation('devices');
   const trigger = useTriggerDeviceActionMutation(deviceId);
   const isGuest = useIsGuest();
 
   const send = async () => {
     try {
       await trigger.mutateAsync({ key: action.key, value: action.key });
-      toast.success(`${action.label} sent`);
+      toast.success(t('actionsPanel.sent', { label: action.label }));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to send action');
+      toast.error(error instanceof Error ? error.message : t('actionsPanel.failedToSend'));
     }
   };
 
@@ -64,13 +67,14 @@ function ButtonAction({ action, deviceId }: { action: IDeviceActionFieldDefiniti
     <div className="flex items-center justify-between rounded-md border p-3">
       <span className="font-medium">{action.label}</span>
       <Button size="sm" disabled={isGuest || trigger.isPending} onClick={() => void send()}>
-        Trigger
+        {t('actionsPanel.trigger')}
       </Button>
     </div>
   );
 }
 
 export function DeviceActionsPanel({ deviceId, actionSchema, channelSupported }: Props) {
+  const { t } = useTranslation('devices');
   if (!actionSchema || actionSchema.length === 0) {
     return null;
   }
@@ -78,13 +82,13 @@ export function DeviceActionsPanel({ deviceId, actionSchema, channelSupported }:
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Actions</CardTitle>
-        <CardDescription>Send a command to this device. Delivery is a live round-trip — the device must be online to receive it.</CardDescription>
+        <CardTitle>{t('actionsPanel.title')}</CardTitle>
+        <CardDescription>{t('actionsPanel.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {!channelSupported ? (
           <Badge variant="outline" className="mb-1">
-            Actions are unsupported for this device's push channel
+            {t('actionsPanel.channelUnsupported')}
           </Badge>
         ) : (
           actionSchema.map((action) =>

@@ -1,7 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { PasswordInput } from '@/components/password-input';
@@ -14,7 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { RoleType } from '@/constants/role-type';
 import { useFactoriesQuery } from '@/features/factories/api/queries';
 import { useCreateUserMutation, useUpdateUserMutation } from '../api/queries';
-import { userRoles } from '../data/data';
+import { getUserRoles } from '../data/data';
 import type { User } from '../data/schema';
 import { userRoleSchema } from '../data/schema';
 
@@ -22,23 +24,29 @@ import { userRoleSchema } from '../data/schema';
 // represented by this sentinel and mapped to `null` on submit.
 const NO_FACTORY_VALUE = 'none';
 
-const baseSchema = {
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
-  phone: z.string().optional(),
-  role: userRoleSchema.optional(),
-  factoryId: z.string().optional(),
-};
+function buildFormSchema(t: (key: string, options?: Record<string, unknown>) => string) {
+  const baseSchema = {
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    email: z.string().email().optional().or(z.literal('')),
+    phone: z.string().optional(),
+    role: userRoleSchema.optional(),
+    factoryId: z.string().optional(),
+  };
 
-const userFormSchema = z.object({
-  username: z.string().min(3, { message: 'Username must be at least 3 characters.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }).optional().or(z.literal('')),
-  isActive: z.boolean().optional(),
-  ...baseSchema,
-});
+  return z.object({
+    username: z.string().min(3, { message: t('actionDialog.usernameMin') }),
+    password: z
+      .string()
+      .min(6, { message: t('actionDialog.passwordMin') })
+      .optional()
+      .or(z.literal('')),
+    isActive: z.boolean().optional(),
+    ...baseSchema,
+  });
+}
 
-type UserForm = z.infer<typeof userFormSchema>;
+type UserForm = z.infer<ReturnType<typeof buildFormSchema>>;
 
 interface Props {
   currentRow?: User;
@@ -47,13 +55,17 @@ interface Props {
 }
 
 export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
+  const { t } = useTranslation('users');
+  const { t: tCommon } = useTranslation('common');
   const isEdit = !!currentRow;
+  const userFormSchema = useMemo(() => buildFormSchema(t), [t]);
+  const userRoles = useMemo(() => getUserRoles(t), [t]);
   const createUser = useCreateUserMutation();
   const updateUser = useUpdateUserMutation();
   const isSubmitting = createUser.isPending || updateUser.isPending;
   const { data: factoriesPage, isPending: isFactoriesPending } = useFactoriesQuery({ take: 50, order: 'ASC' });
   const factoryItems = [
-    { label: 'No factory', value: NO_FACTORY_VALUE },
+    { label: t('actionDialog.noFactory'), value: NO_FACTORY_VALUE },
     ...(factoriesPage?.data.map((factory) => ({ label: factory.name, value: factory.id })) ?? []),
   ];
 
@@ -86,7 +98,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
   const onSubmit = async (values: UserForm) => {
     if (!isEdit && !values.password) {
       form.setError('password', {
-        message: 'Password must be at least 6 characters.',
+        message: t('actionDialog.passwordMin'),
       });
       return;
     }
@@ -101,13 +113,13 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
 
       if (isEdit && currentRow) {
         await updateUser.mutateAsync({ id: currentRow.id, data: payload });
-        toast.success('User updated');
+        toast.success(t('actionDialog.updated'));
       } else {
         await createUser.mutateAsync({
           ...payload,
           password: payload.password!,
         });
-        toast.success('User created');
+        toast.success(t('actionDialog.created'));
       }
       form.reset();
       onOpenChange(false);
@@ -116,7 +128,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
       // HTTP 200 with a non-zero `error` code, so they surface here as a
       // thrown Error rather than an AxiosError the global mutation error
       // handler can parse — toast the message explicitly.
-      toast.error(error instanceof Error ? error.message : 'Something went wrong!');
+      toast.error(error instanceof Error ? error.message : tCommon('errors.somethingWentWrong'));
     }
   };
 
@@ -130,9 +142,9 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit User' : 'Add User'}</DialogTitle>
+          <DialogTitle>{isEdit ? t('actionDialog.editTitle') : t('actionDialog.addTitle')}</DialogTitle>
           <DialogDescription>
-            {isEdit ? "Update the user's details here." : 'Create a new user account here.'} Click save when you're done.
+            {isEdit ? t('actionDialog.editDescription') : t('actionDialog.addDescription')} {t('actionDialog.clickSaveHint')}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -143,7 +155,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Username <span className="text-red-500">*</span>
+                    {t('actionDialog.username')} <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="jdoe" {...field} disabled={isEdit} />
@@ -158,7 +170,8 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Password{isEdit ? ' (leave blank to keep unchanged)' : ''} {!isEdit && <span className="text-red-500">*</span>}
+                    {t('actionDialog.password')}
+                    {isEdit ? ` ${t('actionDialog.passwordKeepUnchanged')}` : ''} {!isEdit && <span className="text-red-500">*</span>}
                   </FormLabel>
                   <FormControl>
                     <PasswordInput placeholder="••••••" {...field} />
@@ -173,7 +186,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First name</FormLabel>
+                    <FormLabel>{t('actionDialog.firstName')}</FormLabel>
                     <FormControl>
                       <Input placeholder="John" {...field} />
                     </FormControl>
@@ -186,7 +199,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last name</FormLabel>
+                    <FormLabel>{t('actionDialog.lastName')}</FormLabel>
                     <FormControl>
                       <Input placeholder="Doe" {...field} />
                     </FormControl>
@@ -200,7 +213,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('actionDialog.email')}</FormLabel>
                   <FormControl>
                     <Input placeholder="jdoe@example.com" {...field} />
                   </FormControl>
@@ -213,7 +226,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>{t('actionDialog.phone')}</FormLabel>
                   <FormControl>
                     <Input placeholder="+1 555 555 5555" {...field} />
                   </FormControl>
@@ -226,8 +239,13 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <SelectDropdown defaultValue={field.value} onValueChange={field.onChange} placeholder="Select a role" items={userRoles} />
+                  <FormLabel>{t('columns.role')}</FormLabel>
+                  <SelectDropdown
+                    defaultValue={field.value}
+                    onValueChange={field.onChange}
+                    placeholder={t('actionDialog.selectRole')}
+                    items={userRoles}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -237,11 +255,11 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               name="factoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Factory</FormLabel>
+                  <FormLabel>{t('actionDialog.factory')}</FormLabel>
                   <SelectDropdown
                     defaultValue={field.value}
                     onValueChange={field.onChange}
-                    placeholder="Select a factory"
+                    placeholder={t('actionDialog.selectFactory')}
                     items={factoryItems}
                     isPending={isFactoriesPending}
                   />
@@ -255,7 +273,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                 name="isActive"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
-                    <FormLabel>Active</FormLabel>
+                    <FormLabel>{tCommon('words.active')}</FormLabel>
                     <FormControl>
                       <Switch checked={field.value ?? true} onCheckedChange={field.onChange} />
                     </FormControl>
@@ -267,7 +285,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
         </Form>
         <DialogFooter>
           <Button type="submit" form="user-form" disabled={isSubmitting}>
-            Save changes
+            {tCommon('actions.saveChanges')}
           </Button>
         </DialogFooter>
       </DialogContent>

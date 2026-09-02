@@ -1,0 +1,9 @@
+{
+  "nav": {
+    "title": "Notifications",
+    "markAllAsRead": "Mark all as read",
+    "loading": "Loading…",
+    "caughtUp": "You're all caught up.",
+    "failedToDeliver": "Failed to deliver"
+  }
+}

@@ -1,6 +1,7 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import type { Row } from '@tanstack/react-table';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ interface DataTableRowActionsProps {
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
+  const { t } = useTranslation('common');
   const { setOpen, setCurrentRow } = useFactories();
   // Mutating routes (POST/PUT/DELETE) are ADMIN/ROOT only on the backend
   // (see factory.controller.ts @Auth decorators). Gate directly on role.
@@ -31,7 +33,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="data-[state=open]:bg-muted flex h-8 w-8 p-0">
           <DotsHorizontalIcon className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">{t('actions.openMenu')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
@@ -41,7 +43,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             setOpen('edit');
           }}
         >
-          Edit
+          {t('actions.edit')}
           <DropdownMenuShortcut>
             <IconEdit size={16} />
           </DropdownMenuShortcut>
@@ -54,7 +56,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           }}
           className="text-destructive"
         >
-          Delete
+          {t('actions.delete')}
           <DropdownMenuShortcut>
             <IconTrash size={16} />
           </DropdownMenuShortcut>

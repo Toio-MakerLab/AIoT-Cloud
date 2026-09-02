@@ -1,0 +1,129 @@
+{
+  "nav": {
+    "profile": "Hồ sơ",
+    "account": "Tài khoản",
+    "appearance": "Giao diện",
+    "notifications": "Thông báo"
+  },
+  "title": "Cài đặt",
+  "subtitle": "Quản lý cài đặt tài khoản và tùy chọn email của bạn.",
+  "sidebarNav": {
+    "placeholder": "Giao diện"
+  },
+  "account": {
+    "title": "Tài khoản",
+    "description": "Cập nhật cài đặt tài khoản của bạn. Đặt ngôn ngữ và múi giờ ưa thích.",
+    "dangerZone": {
+      "title": "Vùng nguy hiểm",
+      "description": "Xóa vĩnh viễn tài khoản của bạn và toàn bộ dữ liệu liên quan. Hành động này không thể hoàn tác.",
+      "deleteAccount": "Xóa tài khoản",
+      "accountDeleted": "Đã xóa tài khoản",
+      "deleteAccountTitle": "Xóa tài khoản",
+      "confirmPrefix": "Bạn có chắc chắn muốn xóa tài khoản",
+      "warning": "Điều này sẽ xóa vĩnh viễn tài khoản và toàn bộ dữ liệu liên quan. Hành động này không thể hoàn tác.",
+      "username": "Tên đăng nhập:",
+      "confirmPlaceholder": "Nhập tên đăng nhập của bạn để xác nhận xóa.",
+      "warningTitle": "Cảnh báo!",
+      "warningDescription": "Hãy cẩn thận, hành động này không thể hoàn tác."
+    },
+    "form": {
+      "nameMin": "Tên phải có ít nhất 2 ký tự.",
+      "nameMax": "Tên không được vượt quá 30 ký tự.",
+      "dobRequired": "Ngày sinh là bắt buộc.",
+      "languageRequired": "Vui lòng chọn ngôn ngữ.",
+      "languageEnglish": "Tiếng Anh",
+      "languageVietnamese": "Tiếng Việt",
+      "name": "Tên",
+      "namePlaceholder": "Tên của bạn",
+      "nameDescription": "Đây là tên sẽ hiển thị trên hồ sơ của bạn và trong email.",
+      "dob": "Ngày sinh",
+      "pickDate": "Chọn ngày",
+      "dobDescription": "Ngày sinh của bạn được dùng để tính tuổi.",
+      "language": "Ngôn ngữ",
+      "selectLanguage": "Chọn ngôn ngữ",
+      "searchLanguage": "Tìm ngôn ngữ...",
+      "noLanguageFound": "Không tìm thấy ngôn ngữ nào.",
+      "languageDescription": "Đây là ngôn ngữ sẽ được dùng trong toàn bộ ứng dụng.",
+      "update": "Cập nhật tài khoản"
+    }
+  },
+  "appearance": {
+    "title": "Giao diện",
+    "description": "Tùy chỉnh giao diện của ứng dụng. Tự động chuyển đổi giữa giao diện ngày và đêm.",
+    "form": {
+      "themeRequired": "Vui lòng chọn một giao diện.",
+      "fontInvalid": "Chọn một phông chữ",
+      "fontRequired": "Vui lòng chọn một phông chữ.",
+      "font": "Phông chữ",
+      "fontDescription": "Đặt phông chữ bạn muốn dùng trong dashboard.",
+      "theme": "Giao diện",
+      "themeDescription": "Chọn giao diện cho dashboard.",
+      "light": "Sáng",
+      "dark": "Tối",
+      "updatePreferences": "Cập nhật tùy chọn"
+    }
+  },
+  "display": {
+    "title": "Hiển thị",
+    "description": "Bật hoặc tắt các mục để kiểm soát những gì hiển thị trong ứng dụng.",
+    "form": {
+      "selectAtLeastOne": "Bạn phải chọn ít nhất một mục.",
+      "items": {
+        "recents": "Gần đây",
+        "home": "Trang chủ",
+        "applications": "Ứng dụng",
+        "desktop": "Màn hình chính",
+        "downloads": "Tải xuống",
+        "documents": "Tài liệu"
+      },
+      "sidebar": "Thanh bên",
+      "sidebarDescription": "Chọn các mục bạn muốn hiển thị trong thanh bên.",
+      "update": "Cập nhật hiển thị"
+    }
+  },
+  "profile": {
+    "title": "Hồ sơ",
+    "description": "Đây là cách người khác nhìn thấy bạn trên trang web.",
+    "form": {
+      "firstNameRequired": "Tên là bắt buộc.",
+      "lastNameRequired": "Họ là bắt buộc.",
+      "usernameMin": "Tên đăng nhập phải có ít nhất 2 ký tự.",
+      "usernameMax": "Tên đăng nhập không được vượt quá 30 ký tự.",
+      "updated": "Đã cập nhật hồ sơ",
+      "firstName": "Tên",
+      "lastName": "Họ",
+      "username": "Tên đăng nhập",
+      "email": "Email",
+      "phoneNumber": "Số điện thoại",
+      "updateProfile": "Cập nhật hồ sơ"
+    }
+  },
+  "notifications": {
+    "title": "Thông báo",
+    "description": "Cấu hình cách bạn nhận thông báo.",
+    "form": {
+      "zaloDescription": "Nhận cảnh báo thiết bị qua chat Zalo bot.",
+      "webPushLabel": "Web Push",
+      "webPushDescription": "Nhận cảnh báo thiết bị qua thông báo đẩy trên trình duyệt.",
+      "linkZalo": "Liên kết Zalo",
+      "zaloOpenBot": "Mở bot dưới đây và gửi mã này dưới dạng tin nhắn:",
+      "copyCode": "Sao chép mã",
+      "openZaloBot": "Mở Zalo bot",
+      "checkStatus": "Kiểm tra trạng thái",
+      "pollExhausted": "Đã dừng kiểm tra tự động — nhấn \"Kiểm tra trạng thái\" để thử lại.",
+      "pollingStatus": "Đang tự động kiểm tra... ({{attempts}}/{{max}})",
+      "browserUnsupported": "Trình duyệt này không hỗ trợ thông báo đẩy.",
+      "enableFailed": "Không thể bật thông báo trình duyệt. Kiểm tra cài đặt quyền và thử lại.",
+      "enabled": "Đã bật thông báo trình duyệt",
+      "enableBrowserNotifications": "Bật thông báo trình duyệt",
+      "templateSaved": "Đã lưu mẫu thông báo",
+      "testSent": "Đã gửi tin nhắn thử",
+      "linked": "Đã liên kết",
+      "notLinked": "Chưa liên kết",
+      "messageTemplate": "Mẫu thông báo",
+      "saveTemplate": "Lưu mẫu",
+      "sendTestMessage": "Gửi tin nhắn thử",
+      "deviceWarning": "Cảnh báo thiết bị"
+    }
+  }
+}

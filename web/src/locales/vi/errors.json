@@ -1,0 +1,36 @@
+{
+  "actions": {
+    "goBack": "Quay lại",
+    "backToHome": "Về trang chủ",
+    "learnMore": "Tìm hiểu thêm"
+  },
+  "forbidden": {
+    "title": "Truy cập bị từ chối",
+    "line1": "Bạn không có quyền cần thiết",
+    "line2": "để xem tài nguyên này."
+  },
+  "general": {
+    "message": "Rất tiếc! Đã xảy ra lỗi",
+    "line1": "Chúng tôi xin lỗi vì sự bất tiện này.",
+    "line2": "Vui lòng thử lại sau."
+  },
+  "maintenance": {
+    "title": "Website đang bảo trì!",
+    "line1": "Trang web hiện không khả dụng.",
+    "line2": "Chúng tôi sẽ sớm hoạt động trở lại."
+  },
+  "notFound": {
+    "title": "Rất tiếc! Không tìm thấy trang!",
+    "line1": "Có vẻ như trang bạn đang tìm kiếm",
+    "line2": "không tồn tại hoặc đã bị gỡ bỏ."
+  },
+  "accessDenied": {
+    "title": "Truy cập bị từ chối",
+    "desc": "Bạn không có quyền truy cập trang này."
+  },
+  "unauthorized": {
+    "title": "Truy cập chưa được xác thực",
+    "line1": "Vui lòng đăng nhập với thông tin phù hợp",
+    "line2": "để truy cập tài nguyên này."
+  }
+}
