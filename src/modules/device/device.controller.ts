@@ -54,9 +54,12 @@ export class DeviceController {
   }
 
   /**
-   * Server-Sent Events feed for the dashboard: streams `telemetry` and `status` events (plus a
-   * periodic `ping` heartbeat) for the devices listed in `ids`, filtered to ones the user owns
-   * (or, for GUEST, unfiltered — every device system-wide).
+   * Server-Sent Events feed for the dashboard: streams `telemetry`, `status`, `channelState`, and
+   * `actionResult` events (plus a periodic `ping` heartbeat) for the devices listed in `ids`,
+   * filtered to ones the user owns (or, for GUEST, unfiltered — every device system-wide).
+   * `channelState`/`actionResult` fire whenever a relay/channel state changes (a `devices.cloud.events`
+   * message applied via `DeviceService.handleDeviceChannelEvent`) — the SSE-transport counterpart
+   * of what `AppGateway` forwards over socket.io.
    * `ids` is a comma-separated list of device ids (same ids `GET /devices/:id` uses).
    */
   @Sse('stream')

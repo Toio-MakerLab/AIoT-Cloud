@@ -98,7 +98,7 @@ export class DeviceDto extends AbstractDto {
     // instead of the encoded blob (which would otherwise get double-encoded on the next save).
     this.config = entity.config && {
       ...entity.config,
-      mqtt: entity.config.mqtt && { ...entity.config.mqtt, password: entity.config.mqtt.password },
+      mqtt: entity.config.mqtt && { ...entity.config.mqtt, password: decodeBase64(entity.config.mqtt.password) },
       kafka: entity.config.kafka && { ...entity.config.kafka, password: decodeBase64(entity.config.kafka.password) },
     };
     this.isActive = entity.isActive;

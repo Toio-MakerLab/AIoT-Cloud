@@ -273,10 +273,11 @@ export class DeviceService {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
     }
 
-    // Broker passwords are stored base64-encoded rather than plaintext — decoded back out
-    // wherever they're actually needed (getBootConfig, for the device itself; DeviceDto, for the
-    // admin dashboard's edit form).
-    const mqtt = dto.mqtt !== undefined && dto.mqtt !== null ? { ...dto.mqtt, password: dto.mqtt.password } : dto.mqtt;
+    // Broker passwords are stored base64-encoded rather than plaintext — decoded back out for the
+    // client in `DeviceDto` (the dashboard's edit form reads it from there). `getBootConfig` /
+    // `resolveKafkaConfig` — the device/gateway's own boot-config fetch — deliberately do NOT
+    // decode before handing this value out; left exactly as-is there, not an oversight here.
+    const mqtt = dto.mqtt !== undefined && dto.mqtt !== null ? { ...dto.mqtt, password: encodeBase64(dto.mqtt.password) } : dto.mqtt;
     const kafka = dto.kafka !== undefined && dto.kafka !== null ? { ...dto.kafka, password: encodeBase64(dto.kafka.password) } : dto.kafka;
 
     device.config = {
@@ -524,11 +525,15 @@ export class DeviceService {
   }
 
   /**
-   * Live SSE feed for the dashboard: telemetry + status updates for the given device ids,
-   * scoped to devices the caller can access (`scope: null` means unrestricted — GUEST sees every
-   * device). `deviceIds` are entity ids (the same ids the REST device endpoints use), which this
-   * resolves to the physical device ids that `device.telemetry` / `device.status` events key on,
-   * then maps back to entity ids in the emitted payload.
+   * Live SSE feed for the dashboard: telemetry + status + channel-state/action-result updates for
+   * the given device ids, scoped to devices the caller can access (`scope: null` means
+   * unrestricted — GUEST sees every device). `deviceIds` are entity ids (the same ids the REST
+   * device endpoints use), which this resolves to the physical device ids that
+   * `device.telemetry`/`device.status`/`device.channelState`/`device.actionResult` events key on,
+   * then maps back to entity ids in the emitted payload. Mirrors what `AppGateway` (the websocket
+   * transport) forwards for the same four domain events, so a dashboard on either transport sees a
+   * relay/channel state change the moment `handleDeviceChannelEvent` applies it, not just telemetry
+   * and online/offline.
    */
   streamDeviceEvents(scope: AccessScope, deviceIds: string[]): Observable<MessageEvent> {
     return defer(() => from(this.resolveEntityIdByPhysicalDeviceId(scope, deviceIds))).pipe(
@@ -563,11 +568,51 @@ export class DeviceService {
           ),
         );
 
+        // Persisted channel state (relay/actuator) — see `handleDeviceChannelEvent`'s
+        // `status: "ok"` path. Mirrors `AppGateway.handleDeviceChannelState`'s `channelState`
+        // socket.io event.
+        const channelState$ = fromEvent<DeviceChannelStateEvent>(this.eventEmitter, 'device.channelState').pipe(
+          filter((event) => entityIdByPhysicalDeviceId.has(event.deviceId)),
+          map(
+            (event) =>
+              ({
+                type: 'channelState',
+                data: {
+                  deviceId: entityIdByPhysicalDeviceId.get(event.deviceId),
+                  channelStates: event.channelStates,
+                  changedAt: event.changedAt,
+                },
+              }) satisfies MessageEvent,
+          ),
+        );
+
+        // Point-in-time relay/channel command result, success or failure — see
+        // `DeviceActionResultEvent`'s doc comment. Mirrors `AppGateway.handleDeviceActionResult`'s
+        // `actionResult` socket.io event, for an SSE-only ACTION panel to resolve its own
+        // optimistic value without waiting out its confirmation timeout.
+        const actionResult$ = fromEvent<DeviceActionResultEvent>(this.eventEmitter, 'device.actionResult').pipe(
+          filter((event) => entityIdByPhysicalDeviceId.has(event.deviceId)),
+          map(
+            (event) =>
+              ({
+                type: 'actionResult',
+                data: {
+                  deviceId: entityIdByPhysicalDeviceId.get(event.deviceId),
+                  key: event.key,
+                  value: event.value,
+                  status: event.status,
+                  error: event.error,
+                  changedAt: event.changedAt,
+                },
+              }) satisfies MessageEvent,
+          ),
+        );
+
         const heartbeat$ = interval(SSE_HEARTBEAT_MS).pipe(
           map(() => ({ type: 'ping', data: { now: new Date().toISOString() } }) satisfies MessageEvent),
         );
 
-        return merge(telemetry$, status$, heartbeat$);
+        return merge(telemetry$, status$, channelState$, actionResult$, heartbeat$);
       }),
     );
   }
