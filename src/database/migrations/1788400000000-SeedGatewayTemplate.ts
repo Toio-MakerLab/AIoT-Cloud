@@ -11,7 +11,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 export class SeedGatewayTemplate1788400000000 implements MigrationInterface {
   name = 'SeedGatewayTemplate1788400000000';
 
-  private readonly templateName = 'AIoT Gateway';
+  private readonly templateName = 'Edge AI Gateway';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     const existing = await queryRunner.query(`SELECT id FROM "device_templates" WHERE "name" = $1`, [this.templateName]);
