@@ -4,11 +4,13 @@ import { useIsGuest } from '@/hooks/use-is-guest';
 import type { ResolvedTimeRange } from '@/lib/time-range';
 import type { IDashboardWidget, IDevice } from '../api/types';
 import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
+import type { ActionResultEventPayload } from '../hooks/use-device-socket';
 import { DevicePanel } from './device-panel';
 
 export interface DeviceLiveData {
   latestByDevice: Map<string, ILatestTelemetry>;
   historyByDevice: Map<string, ITelemetryPoint[]>;
+  actionResultByDevice: Map<string, ActionResultEventPayload>;
   seedHistory: (deviceId: string, points: ITelemetryPoint[], key: string) => void;
 }
 
@@ -153,6 +155,7 @@ export function DashboardGrid({ widgets, devices, liveData, timeRange, onLayoutC
                   device={device}
                   latest={liveData.latestByDevice.get(widget.deviceId)}
                   history={liveData.historyByDevice.get(widget.deviceId) ?? []}
+                  actionResult={liveData.actionResultByDevice.get(widget.deviceId)}
                   seedHistory={liveData.seedHistory}
                   timeRange={timeRange}
                   onRemove={() => onRemoveWidget(widget.id)}

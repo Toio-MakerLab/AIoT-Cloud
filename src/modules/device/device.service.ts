@@ -60,6 +60,22 @@ export interface DeviceChannelStateEvent {
   changedAt: Date;
 }
 
+/**
+ * Fired for every `devices.cloud.events` message that names a channel (`key`), whether the
+ * command it confirms actually applied or not — unlike `device.channelState` above (persisted
+ * state, success only), this is a point-in-time result meant for a dashboard ACTION panel to
+ * revert its optimistic value on immediately, instead of waiting out its own confirmation
+ * timeout, so it's dispatched even on `status: "error"`.
+ */
+export interface DeviceActionResultEvent {
+  deviceId: string;
+  key: string;
+  value?: string;
+  status: 'ok' | 'error';
+  error?: string;
+  changedAt: Date;
+}
+
 /** Payload of a `devices.cloud.events` message, deviceId already stripped off by the Kafka consumer. */
 export interface DeviceChannelEventPayload {
   key?: string;
@@ -657,9 +673,12 @@ export class DeviceService {
    * On `status: "ok"`, `key`/`value` describe the channel's newly-applied actuator state and are
    * merged into the device's persisted `channelStates`, broadcast to the dashboard as a
    * `device.channelState` event. On `status: "error"` the command wasn't applied — `channelStates`
-   * is left untouched and `error` is just logged, since surfacing it there would show a state the
-   * device never actually reached. Either way, receiving the event at all proves the gateway is
-   * actively bridging the device, so it's still marked ONLINE.
+   * is left untouched, since surfacing it there would show a state the device never actually
+   * reached. Either way (as long as a `key` was named), also dispatches `device.actionResult` — a
+   * lighter, point-in-time event an ACTION panel uses to resolve its own optimistic value
+   * immediately instead of waiting out its confirmation timeout, success or failure alike.
+   * Receiving the event at all proves the gateway is actively bridging the device, so it's still
+   * marked ONLINE regardless of outcome.
    */
   async handleDeviceChannelEvent(deviceId: string, event: DeviceChannelEventPayload): Promise<void> {
     const device = await this.deviceRepository.findOneBy({ deviceId });
@@ -680,11 +699,34 @@ export class DeviceService {
         `Device ${deviceId} failed to apply channel command ${event.key ?? '?'}=${String(event.value ?? '?')}: ${event.error ?? 'unknown error'}`,
       );
       await this.deviceRepository.update(device.id, { lastSeenAt: changedAt, status: DeviceStatus.ONLINE });
+
+      if (event.key) {
+        this.eventEmitter.emit('device.actionResult', {
+          deviceId,
+          key: event.key,
+          value: event.value !== undefined ? String(event.value) : undefined,
+          status: 'error',
+          error: event.error,
+          changedAt,
+        } satisfies DeviceActionResultEvent);
+      }
     } else if (event.key) {
-      const channelStates = { ...(device.channelStates ?? {}), [event.key]: String(event.value ?? '') };
+      const value = String(event.value ?? '');
+      const channelStates = { ...(device.channelStates ?? {}), [event.key]: value };
 
       await this.deviceRepository.update(device.id, { channelStates, lastSeenAt: changedAt, status: DeviceStatus.ONLINE });
       this.eventEmitter.emit('device.channelState', { deviceId, channelStates, changedAt } satisfies DeviceChannelStateEvent);
+      // Dispatched alongside `device.channelState` (not folded into it) so an ACTION panel can
+      // react to "my command specifically was confirmed" without re-deriving that from a
+      // `channelStates` snapshot that may bundle other channels' updates too — see
+      // `DeviceActionResultEvent`'s doc comment.
+      this.eventEmitter.emit('device.actionResult', {
+        deviceId,
+        key: event.key,
+        value,
+        status: 'ok',
+        changedAt,
+      } satisfies DeviceActionResultEvent);
     } else {
       this.logger.warn(`Ignoring unrecognized device event from ${deviceId}: ${JSON.stringify(event)}`);
 

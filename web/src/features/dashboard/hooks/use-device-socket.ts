@@ -23,6 +23,19 @@ interface ChannelStateEventPayload {
   changedAt: string;
 }
 
+// Mirrors backend `DeviceActionResultEvent` — a point-in-time result for one channel command,
+// dispatched whether it succeeded or failed. Distinct from `channelState` above (persisted state,
+// success only): an ACTION panel uses this to resolve its own optimistic value immediately,
+// success or failure alike, instead of waiting out its own confirmation timeout.
+export interface ActionResultEventPayload {
+  deviceId: string;
+  key: string;
+  value?: string;
+  status: 'ok' | 'error';
+  error?: string;
+  changedAt: string;
+}
+
 /**
  * Opens a single socket.io connection for the whole dashboard page, subscribes to the given
  * device ids, and fans out incoming `telemetry` events by deviceId. Used for every dashboard
@@ -36,6 +49,8 @@ interface ChannelStateEventPayload {
  * - `historyByDevice`: Map<deviceId, ITelemetryPoint[]> — rolling in-memory buffer (last N
  *   points) per device, seeded from any history passed via `seedHistory` and appended to as
  *   live telemetry arrives.
+ * - `actionResultByDevice`: Map<deviceId, ActionResultEventPayload> — latest per-channel command
+ *   result per device (success or failure), for an ACTION panel to resolve its optimistic value on.
  * - `seedHistory(deviceId, points, key)`: install fetched history (e.g. from
  *   GET /api/devices/:id/telemetry) as a device's buffer — see its own doc comment for what `key` is for.
  * - `connected`: whether the socket is currently connected.
@@ -48,6 +63,9 @@ export function useDeviceSocket(deviceIds: string[]) {
   const [connected, setConnected] = useState(false);
   const [latestByDevice, setLatestByDevice] = useState<Map<string, ILatestTelemetry>>(new Map());
   const [historyByDevice, setHistoryByDevice] = useState<Map<string, ITelemetryPoint[]>>(new Map());
+  // Latest `actionResult` per device only (not queued) — a panel matches it against its own
+  // `key`/`changedAt`, see device-panel.tsx.
+  const [actionResultByDevice, setActionResultByDevice] = useState<Map<string, ActionResultEventPayload>>(new Map());
 
   const accessToken = useAuthStore((state) => state.auth.accessToken);
 
@@ -126,16 +144,29 @@ export function useDeviceSocket(deviceIds: string[]) {
       });
     };
 
+    // Point-in-time success/failure for one channel command — kept separate from
+    // `latestByDevice`/`handleChannelState` above, which only ever reflects state the device
+    // actually reached; an ACTION panel reads this to resolve its own optimistic value right away.
+    const handleActionResult = (event: ActionResultEventPayload) => {
+      setActionResultByDevice((prev) => {
+        const next = new Map(prev);
+        next.set(event.deviceId, event);
+        return next;
+      });
+    };
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('telemetry', handleTelemetry);
     socket.on('channelState', handleChannelState);
+    socket.on('actionResult', handleActionResult);
 
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('telemetry', handleTelemetry);
       socket.off('channelState', handleChannelState);
+      socket.off('actionResult', handleActionResult);
       socket.disconnect();
       socketRef.current = null;
       subscribedRef.current.clear();
@@ -186,5 +217,5 @@ export function useDeviceSocket(deviceIds: string[]) {
     });
   };
 
-  return { connected, latestByDevice, historyByDevice, seedHistory };
+  return { connected, latestByDevice, historyByDevice, actionResultByDevice, seedHistory };
 }

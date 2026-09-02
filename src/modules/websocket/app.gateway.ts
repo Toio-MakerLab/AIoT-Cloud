@@ -8,7 +8,7 @@ import type { Server, Socket } from 'socket.io';
 import type { AccessScope } from '../../common/access-scope.util.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import { TokenType } from '../../constants/token-type.ts';
-import type { DeviceChannelStateEvent, DeviceStatusEvent, DeviceTelemetryEvent } from '../device/device.service.ts';
+import type { DeviceActionResultEvent, DeviceChannelStateEvent, DeviceStatusEvent, DeviceTelemetryEvent } from '../device/device.service.ts';
 import { DeviceService } from '../device/device.service.ts';
 import type { NotificationCreatedEvent } from '../notification/notification.service.ts';
 
@@ -131,6 +131,13 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDeviceChannelState(event: DeviceChannelStateEvent): void {
     const deviceId = this.physicalToEntityId.get(event.deviceId) ?? event.deviceId;
     this.server.to(deviceRoom(event.deviceId)).emit('channelState', { ...event, deviceId });
+  }
+
+  /** Lets an ACTION panel resolve its optimistic value the instant the gateway confirms/denies it, rather than waiting out its own timeout. */
+  @OnEvent('device.actionResult')
+  handleDeviceActionResult(event: DeviceActionResultEvent): void {
+    const deviceId = this.physicalToEntityId.get(event.deviceId) ?? event.deviceId;
+    this.server.to(deviceRoom(event.deviceId)).emit('actionResult', { ...event, deviceId });
   }
 
   /** Forwards every alert (see `NotificationService.sendWarning`) to the owner's user room, so the frontend can toast it on any page. */

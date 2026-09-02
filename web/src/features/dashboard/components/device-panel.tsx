@@ -12,12 +12,14 @@ import { cn } from '@/lib/utils';
 import { useDeviceTelemetryHistoryQuery, useTriggerDeviceActionMutation } from '../api/queries';
 import type { IDashboardWidget, IDevice, IDeviceTemplate } from '../api/types';
 import type { ILatestTelemetry, ITelemetryPoint } from '../hooks/telemetry-types';
+import type { ActionResultEventPayload } from '../hooks/use-device-socket';
 
 interface Props {
   widget: IDashboardWidget;
   device: IDevice | undefined;
   latest: ILatestTelemetry | undefined;
   history: ITelemetryPoint[];
+  actionResult: ActionResultEventPayload | undefined;
   seedHistory: (deviceId: string, points: ITelemetryPoint[], key: string) => void;
   timeRange: ResolvedTimeRange;
   onRemove: () => void;
@@ -67,7 +69,7 @@ function formatValue(value: unknown): string {
   return String(value);
 }
 
-export function DevicePanel({ widget, device, latest, history, seedHistory, timeRange, onRemove }: Props) {
+export function DevicePanel({ widget, device, latest, history, actionResult, seedHistory, timeRange, onRemove }: Props) {
   // Seed the rolling history buffer once fetched — combined with any live telemetry already
   // appended by the WebSocket live-data source, this gives charts both history and a live tail.
   // Bounded by the dashboard's time-range filter (see @/lib/time-range); `timeRange.key` is what lets
@@ -124,6 +126,18 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, time
     const timer = setTimeout(() => setOptimisticValue(null), OPTIMISTIC_ACTION_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [optimisticValue]);
+
+  // The gateway explicitly reported this channel's command failed to apply — revert the optimistic
+  // switch position right away instead of leaving it lying until OPTIMISTIC_ACTION_TIMEOUT_MS
+  // expires. A success result needs no handling here: it lands in `currentValue` via `channelState`
+  // (see use-device-socket.ts), which the effect above already resolves against.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keying on actionResult.changedAt (not the whole object, optimisticValue, or actionDef) so this fires exactly once per pushed event.
+  useEffect(() => {
+    if (!actionResult || actionResult.key !== field || actionResult.status !== 'error') return;
+    if (optimisticValue === null) return;
+    setOptimisticValue(null);
+    toast.error(actionResult.error ? `${actionDef?.label ?? field}: ${actionResult.error}` : `Failed to apply ${actionDef?.label ?? field}`);
+  }, [actionResult?.changedAt]);
 
   const handleTrigger = (value: string) => {
     if (!actionDef) return;
