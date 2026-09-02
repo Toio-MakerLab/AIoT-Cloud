@@ -1,5 +1,4 @@
 import { AbstractDto } from '../../../common/dto/abstract.dto.ts';
-import { decodeBase64 } from '../../../common/utils.ts';
 import { DeviceLifecycleStage } from '../../../constants/device-lifecycle-stage.ts';
 import { DevicePushChannel } from '../../../constants/device-push-channel.ts';
 import { DeviceStatus } from '../../../constants/device-status.ts';
@@ -93,13 +92,15 @@ export class DeviceDto extends AbstractDto {
     this.lastSeenAt = entity.lastSeenAt;
     this.status = entity.status;
     this.pushChannel = entity.pushChannel;
-    // Broker passwords are stored base64-encoded (see DeviceService.updateDeviceConfig) — decode
-    // back to plaintext here so the admin dashboard's edit form pre-fills the real password
-    // instead of the encoded blob (which would otherwise get double-encoded on the next save).
+    // Broker passwords are stored base64-encoded (see DeviceService.updateDeviceConfig) and handed
+    // back to the client as-is, still encoded — never decoded to plaintext for a client response,
+    // so the real password never round-trips through the API/browser. The dashboard's edit form
+    // should treat this as opaque (blank the field / require re-entry to change it) rather than
+    // pre-filling and re-submitting it.
     this.config = entity.config && {
       ...entity.config,
-      mqtt: entity.config.mqtt && { ...entity.config.mqtt, password: decodeBase64(entity.config.mqtt.password) },
-      kafka: entity.config.kafka && { ...entity.config.kafka, password: decodeBase64(entity.config.kafka.password) },
+      mqtt: entity.config.mqtt && { ...entity.config.mqtt, password: entity.config.mqtt.password },
+      kafka: entity.config.kafka && { ...entity.config.kafka, password: entity.config.kafka.password },
     };
     this.isActive = entity.isActive;
     this.warningOverrides = entity.warningOverrides;

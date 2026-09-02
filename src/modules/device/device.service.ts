@@ -273,10 +273,10 @@ export class DeviceService {
       return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.deviceNotFound');
     }
 
-    // Broker passwords are stored base64-encoded rather than plaintext — decoded back out for the
-    // client in `DeviceDto` (the dashboard's edit form reads it from there). `getBootConfig` /
-    // `resolveKafkaConfig` — the device/gateway's own boot-config fetch — deliberately do NOT
-    // decode before handing this value out; left exactly as-is there, not an oversight here.
+    // Broker passwords are stored base64-encoded rather than plaintext, and never decoded back out
+    // anywhere in a response — not to the client (see `DeviceDto`, which now returns this value
+    // still encoded), and not to the device/gateway either (`getBootConfig`/`resolveKafkaConfig`,
+    // deliberately left as-is, also just pass the stored value through).
     const mqtt = dto.mqtt !== undefined && dto.mqtt !== null ? { ...dto.mqtt, password: encodeBase64(dto.mqtt.password) } : dto.mqtt;
     const kafka = dto.kafka !== undefined && dto.kafka !== null ? { ...dto.kafka, password: encodeBase64(dto.kafka.password) } : dto.kafka;
 
