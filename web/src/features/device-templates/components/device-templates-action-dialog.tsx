@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCreateDeviceTemplateMutation, useUpdateDeviceTemplateMutation } from '../api/queries';
 import { deviceTemplateTypes, getDeviceTemplateTypeMeta } from '../data/data';
 import type { DeviceTemplate } from '../data/schema';
-import { actionFieldSchema, deviceTemplateTypeSchema } from '../data/schema';
+import { actionFieldSchema, deviceTemplateTypeSchema, telemetryFieldSchema } from '../data/schema';
 
 const formSchema = z.object({
   name: z.string().min(1, { message: 'Name is required.' }),
@@ -24,6 +24,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   icon: z.string().optional(),
   isActive: z.boolean(),
+  telemetrySchema: z.array(telemetryFieldSchema),
   actionSchema: z.array(actionFieldSchema),
 });
 type DeviceTemplateForm = z.infer<typeof formSchema>;
@@ -35,6 +36,14 @@ function newChannel(index: number) {
     type: 'TOGGLE' as const,
     onValue: 'ON',
     offValue: 'OFF',
+  };
+}
+
+function newTelemetryField(index: number) {
+  return {
+    key: `field${index}`,
+    label: `Field ${index}`,
+    unit: '',
   };
 }
 
@@ -60,6 +69,7 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
           description: currentRow.description ?? '',
           icon: currentRow.icon ?? undefined,
           isActive: currentRow.isActive,
+          telemetrySchema: currentRow.telemetrySchema ?? [],
           actionSchema: currentRow.actionSchema ?? [],
         }
       : {
@@ -69,8 +79,13 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
           description: '',
           icon: '',
           isActive: true,
+          telemetrySchema: [],
           actionSchema: [],
         },
+  });
+  const telemetryFields = useFieldArray({
+    control: form.control,
+    name: 'telemetrySchema',
   });
   const actionFields = useFieldArray({
     control: form.control,
@@ -219,6 +234,64 @@ export function DeviceTemplatesActionDialog({ currentRow, open, onOpenChange }: 
                 </FormItem>
               )}
             />
+            {form.watch('type') === 'SENSOR_NODE' ? (
+              <div className="grid grid-cols-6 items-start gap-x-4 gap-y-1">
+                <FormLabel className="col-span-2 pt-2 text-right">Telemetry Fields</FormLabel>
+                <div className="col-span-4 space-y-3">
+                  {telemetryFields.fields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-2">
+                      <FormField
+                        control={form.control}
+                        name={`telemetrySchema.${index}.key`}
+                        render={({ field: keyField }) => (
+                          <FormItem className="flex-1 space-y-0">
+                            <FormControl>
+                              <Input placeholder="key" {...keyField} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`telemetrySchema.${index}.label`}
+                        render={({ field: labelField }) => (
+                          <FormItem className="flex-1 space-y-0">
+                            <FormControl>
+                              <Input placeholder="label" {...labelField} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`telemetrySchema.${index}.unit`}
+                        render={({ field: unitField }) => (
+                          <FormItem className="w-20 space-y-0">
+                            <FormControl>
+                              <Input placeholder="unit" {...unitField} value={unitField.value ?? ''} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => telemetryFields.remove(index)}>
+                        <IconTrash className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => telemetryFields.append(newTelemetryField(telemetryFields.fields.length + 1))}
+                  >
+                    <IconPlus className="size-4" />
+                    Add Field
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             {form.watch('type') === 'RELAY_NODE' ? (
               <div className="grid grid-cols-6 items-start gap-x-4 gap-y-1">
                 <FormLabel className="col-span-2 pt-2 text-right">Channels</FormLabel>
