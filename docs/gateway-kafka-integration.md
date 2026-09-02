@@ -135,6 +135,14 @@ listening on the shared bus).
   bridges, and relays `{ key, value }` to that device over its own local
   MQTT — publishing on `topic` directly rather than re-deriving it from a
   separately-cached boot-config.
+- **Consume-only for the gateway — never publish/echo back on this topic.**
+  This is the backend's own downlink bus (the backend both produces to it and
+  is the sole consumer of `devices.commands`-shaped messages); a gateway
+  publishing a confirmation here would just be replaying the command it was
+  told to send, not proving the device actually applied it, and the backend
+  doesn't parse gateway-originated messages on this topic at all — see
+  `KafkaConsumerService`, which only subscribes to the four gateway→cloud
+  topics below. Report the applied result on `devices.events` instead.
 
 ### `devices.gateway.commands` (cloud → gateway)
 

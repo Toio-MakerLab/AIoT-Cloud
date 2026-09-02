@@ -12,6 +12,12 @@ export const KAFKA_TELEMETRY_TOPIC = 'devices.cloud.telemetry';
  * topic and relays matching commands to the ESP32 over its own local MQTT broker. Each
  * message carries `{ deviceId, key, value }`, keyed/partitioned by deviceId like the
  * telemetry topic.
+ *
+ * Consume-only for the gateway, despite the `cloud` in its name (which here means "the cloud's
+ * own downlink bus", not "cloud-received") — `KafkaConsumerService` never subscribes to this
+ * topic, only produces to it (`DeviceService.triggerDeviceAction`), so a gateway publishing an
+ * echo/confirmation here would silently go nowhere. A gateway confirming a command was actually
+ * applied on the device must publish that on `KAFKA_DEVICE_EVENTS_TOPIC` instead.
  */
 export const KAFKA_COMMAND_TOPIC = 'devices.cloud.commands';
 

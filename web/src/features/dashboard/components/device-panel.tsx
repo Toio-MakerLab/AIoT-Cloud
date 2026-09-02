@@ -1,5 +1,5 @@
 import { IconBolt, IconCpu, IconDeviceUnknown, IconRouter, IconServer2, IconX } from '@tabler/icons-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -51,6 +51,12 @@ function DeviceImage({ template }: { template: IDeviceTemplate | undefined }) {
   );
 }
 
+// How long an ACTION panel shows its optimistic (just-clicked) value before giving up on a real
+// `channelState` confirmation and reverting to whatever `currentValue` actually says. Bounds how
+// long the switch can lie about the device's real state if the gateway never confirms (wrong
+// topic, offline, etc.) — see device-panel's `handleTrigger`.
+const OPTIMISTIC_ACTION_TIMEOUT_MS = 8_000;
+
 function formatValue(value: unknown): string {
   if (value === undefined || value === null) {
     return '--';
@@ -98,22 +104,50 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, time
 
   const actionDef = device?.template?.actionSchema?.find((a) => a.key === field);
   const triggerAction = useTriggerDeviceActionMutation(widget.deviceId);
+
+  // Echoes the value this panel just told the device to become, shown immediately instead of
+  // waiting out the real round trip (cloud -> Kafka -> gateway -> MQTT -> device, then back via
+  // devices.cloud.events -> channelState WS event, see use-device-socket.ts). Cleared as soon as
+  // `currentValue` itself reports the same value (real confirmation caught up) or after
+  // OPTIMISTIC_ACTION_TIMEOUT_MS with no confirmation — must not leave the switch showing a value
+  // the device never actually confirmed applying.
+  const [optimisticValue, setOptimisticValue] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (optimisticValue !== null && currentValue !== undefined && String(currentValue) === optimisticValue) {
+      setOptimisticValue(null);
+    }
+  }, [currentValue, optimisticValue]);
+
+  useEffect(() => {
+    if (optimisticValue === null) return;
+    const timer = setTimeout(() => setOptimisticValue(null), OPTIMISTIC_ACTION_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [optimisticValue]);
+
   const handleTrigger = (value: string) => {
     if (!actionDef) return;
+    setOptimisticValue(value);
     triggerAction.mutate(
       { key: actionDef.key, value },
       {
         onSuccess: () => toast.success(`${actionDef.label} -> ${value}`),
-        onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to send action'),
+        onError: (error) => {
+          // Command never even made it out — nothing to wait a confirmation for, revert right away.
+          setOptimisticValue(null);
+          toast.error(error instanceof Error ? error.message : 'Failed to send action');
+        },
       },
     );
   };
 
   // Relay nodes (and other devices whose action is a stateful on/off, not a momentary press) use a
-  // real toggle switch instead of separate On/Off buttons — its position reflects the latest
-  // telemetry/action value reported for this channel.
+  // real toggle switch instead of separate On/Off buttons — its position reflects the optimistic
+  // value right after a click, falling back to the latest confirmed telemetry/channelState value.
+  const displayValue = optimisticValue ?? currentValue;
   const isToggleAction = actionDef?.type === 'TOGGLE';
-  const isToggleOn = isToggleAction && currentValue !== undefined && String(currentValue) === String(actionDef?.onValue ?? 'ON');
+  const isToggleOn = isToggleAction && displayValue !== undefined && String(displayValue) === String(actionDef?.onValue ?? 'ON');
+  const isAwaitingConfirmation = optimisticValue !== null;
   const handleToggle = (checked: boolean) => {
     if (!actionDef) return;
     handleTrigger(checked ? (actionDef.onValue ?? 'ON') : (actionDef.offValue ?? 'OFF'));
@@ -160,7 +194,10 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, time
               isToggleAction ? (
                 <div className="flex flex-col items-center gap-1">
                   <Switch checked={isToggleOn} disabled={isGuest || !isOnline || triggerAction.isPending} onCheckedChange={handleToggle} />
-                  <span className="text-muted-foreground text-xs">{isToggleOn ? (actionDef.onValue ?? 'ON') : (actionDef.offValue ?? 'OFF')}</span>
+                  <span className={cn('text-muted-foreground text-xs', isAwaitingConfirmation && 'animate-pulse')}>
+                    {isToggleOn ? (actionDef.onValue ?? 'ON') : (actionDef.offValue ?? 'OFF')}
+                    {isAwaitingConfirmation && ' …'}
+                  </span>
                 </div>
               ) : (
                 <div className="flex gap-2">
