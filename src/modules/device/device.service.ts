@@ -12,7 +12,7 @@ import { Transactional } from 'typeorm-transactional';
 import type { AccessScope } from '../../common/access-scope.util.ts';
 import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
-import { decodeBase64, encodeBase64 } from '../../common/utils.ts';
+import { encodeBase64 } from '../../common/utils.ts';
 import { DeviceActionType } from '../../constants/device-action-type.ts';
 import { DevicePushChannel } from '../../constants/device-push-channel.ts';
 import { DEVICE_OFFLINE_THRESHOLD_MS, DeviceStatus } from '../../constants/device-status.ts';
