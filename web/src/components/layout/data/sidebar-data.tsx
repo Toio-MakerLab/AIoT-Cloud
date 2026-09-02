@@ -242,11 +242,11 @@ export const sidebarData: SidebarData = {
               url: '/settings/notifications',
               icon: IconNotification,
             },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: IconBrowserCheck,
-            },
+            // {
+            //   title: 'Display',
+            //   url: '/settings/display',
+            //   icon: IconBrowserCheck,
+            // },
             {
               title: 'Roles & Permissions',
               url: '/settings/roles',
