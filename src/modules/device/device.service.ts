@@ -332,7 +332,7 @@ export class DeviceService {
     // be pointed at its own topic (e.g. "device.gateway.command"). Falls back to the shared bus
     // topic for devices with no Kafka config of their own (e.g. MQTT-only relay nodes, which are
     // bridged by a separate gateway device that IS listening on the shared bus).
-    const kafkaTopic = device.config?.kafka?.commandTopic ?? KAFKA_COMMAND_TOPIC;
+    const kafkaTopic = device.config?.kafka?.commandTopic ?? KAFKA_GATEWAY_COMMANDS_TOPIC;
     const publishedAt = new Date();
 
     try {
