@@ -1,14 +1,24 @@
+import { IconFileExport } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getChartColor } from '@/lib/chart-colors';
+import { downloadFile } from '@/lib/download';
 import { resolveTimeRange, TIME_RANGE_OPTIONS, type TimeRangePreset } from '@/lib/time-range';
 import { useDeviceTelemetryQuery } from '../api/queries';
+import { buildTelemetryHistoryExcel } from '../api/telemetry-excel';
+import type { ITelemetryExportParams } from '../api/telemetry-export';
+import { buildTelemetryHistoryXml } from '../api/telemetry-xml';
 import type { ITelemetryFieldDefinition } from '../api/types';
 
 interface Props {
   deviceId: string;
+  /** Human-readable device identifier, for the exported file's name/metadata — falls back to `deviceId`. */
+  deviceCode?: string;
+  deviceName?: string;
   telemetrySchema: ITelemetryFieldDefinition[] | null | undefined;
 }
 
@@ -22,7 +32,7 @@ const TELEMETRY_FETCH_LIMIT = 500;
  * continuously-updating view. This panel just queries `GET /devices/:id/telemetry` directly (see
  * useDeviceTelemetryQuery) and re-fetches whenever the field or time range changes.
  */
-export function TelemetryHistoryPanel({ deviceId, telemetrySchema }: Props) {
+export function TelemetryHistoryPanel({ deviceId, deviceCode, deviceName, telemetrySchema }: Props) {
   const fields = telemetrySchema ?? [];
   const [fieldKey, setFieldKey] = useState<string | undefined>(fields[0]?.key);
   const [rangePreset, setRangePreset] = useState<TimeRangePreset>('24h');
@@ -44,6 +54,25 @@ export function TelemetryHistoryPanel({ deviceId, telemetrySchema }: Props) {
   // Same field name -> same color every render/reload, and it changes along with the field picker
   // below so switching fields is visually obvious, not just a label change.
   const chartColor = getChartColor(selectedField?.label ?? 'field');
+
+  // Exports everything currently loaded (every schema field, not just the one plotted) for the
+  // selected time range — the chart only narrows to one field for legibility, the export doesn't
+  // need to.
+  const handleExport = (format: 'xml' | 'excel') => {
+    const params: ITelemetryExportParams = { deviceId, deviceCode, deviceName, fields, telemetry, timeRange };
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filenameBase = `telemetry-history-${deviceCode ?? deviceId}-${rangePreset}-${stamp}`;
+    switch (format) {
+      case 'xml':
+        downloadFile(buildTelemetryHistoryXml(params), `${filenameBase}.xml`, 'application/xml');
+        break;
+      case 'excel':
+        downloadFile(buildTelemetryHistoryExcel(params), `${filenameBase}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        break;
+      default:
+        format satisfies never;
+    }
+  };
 
   if (fields.length === 0) {
     return null;
@@ -82,6 +111,18 @@ export function TelemetryHistoryPanel({ deviceId, telemetrySchema }: Props) {
               ))}
             </SelectContent>
           </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isLoading || telemetry.length === 0}>
+                <IconFileExport className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('xml')}>Export as XML</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('excel')}>Export as Excel</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
       <CardContent className="h-64">

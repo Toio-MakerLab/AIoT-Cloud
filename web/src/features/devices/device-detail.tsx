@@ -78,7 +78,12 @@ export default function DeviceDetail() {
               channelSupported={device.pushChannel === 'MQTT' || device.pushChannel === 'KAFKA'}
             />
 
-            <TelemetryHistoryPanel deviceId={device.id} telemetrySchema={device.template?.telemetrySchema} />
+            <TelemetryHistoryPanel
+              deviceId={device.id}
+              deviceCode={device.deviceId}
+              deviceName={device.name}
+              telemetrySchema={device.template?.telemetrySchema}
+            />
 
             <WarningGatesPanel deviceId={device.id} telemetrySchema={device.template?.telemetrySchema} warningOverrides={device.warningOverrides} />
 
