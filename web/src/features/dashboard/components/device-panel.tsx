@@ -88,7 +88,11 @@ export function DevicePanel({ widget, device, latest, history, seedHistory, time
 
   const field = widget.field ?? '';
   const lastPoint = history[history.length - 1];
-  const currentValue = latest?.payload[field] ?? lastPoint?.payload[field];
+  // Priority: live WS data (telemetry or a channelState confirmation, whichever arrived last —
+  // both land in `latest.payload`, see use-device-socket.ts) > last fetched history point > the
+  // device's persisted `channelStates` from its last confirmed action, so an ACTION panel shows
+  // the real last-applied value on first load instead of "--" until the next live event.
+  const currentValue = latest?.payload[field] ?? lastPoint?.payload[field] ?? device?.channelStates?.[field];
   const lastUpdated = latest?.recordedAt ?? lastPoint?.recordedAt;
   const isOnline = device?.status === 'ONLINE';
 

@@ -13,6 +13,16 @@ interface TelemetryEventPayload {
   recordedAt: string;
 }
 
+// Mirrors backend `DeviceChannelStateEvent` (see app.gateway.ts) — the gateway's confirmation
+// that a `devices.commands` actuator command actually landed on the device, as opposed to a
+// periodic telemetry sample. `channelStates` is the device's full accumulated map (every channel
+// reported so far, not just the one that just changed).
+interface ChannelStateEventPayload {
+  deviceId: string;
+  channelStates: Record<string, string>;
+  changedAt: string;
+}
+
 /**
  * Opens a single socket.io connection for the whole dashboard page, subscribes to the given
  * device ids, and fans out incoming `telemetry` events by deviceId. Used for every dashboard
@@ -99,14 +109,33 @@ export function useDeviceSocket(deviceIds: string[]) {
       });
     };
 
+    // Confirms an ACTION panel's command actually took effect on the device — distinct from
+    // `telemetry` (periodic samples), so it's merged onto the same `latestByDevice` snapshot
+    // (ACTION/VALUE panels read off it) without touching `historyByDevice`/charts, which should
+    // only ever reflect real telemetry samples.
+    const handleChannelState = (event: ChannelStateEventPayload) => {
+      setLatestByDevice((prev) => {
+        const next = new Map(prev);
+        const previousPayload = prev.get(event.deviceId)?.payload;
+        next.set(event.deviceId, {
+          deviceId: event.deviceId,
+          payload: previousPayload ? { ...previousPayload, ...event.channelStates } : event.channelStates,
+          recordedAt: event.changedAt,
+        });
+        return next;
+      });
+    };
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     socket.on('telemetry', handleTelemetry);
+    socket.on('channelState', handleChannelState);
 
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off('telemetry', handleTelemetry);
+      socket.off('channelState', handleChannelState);
       socket.disconnect();
       socketRef.current = null;
       subscribedRef.current.clear();

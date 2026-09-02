@@ -42,6 +42,11 @@ export interface IDevice {
   userId: string;
   lastSeenAt?: string | null;
   status: DeviceStatus;
+  // Last-known applied state per action channel (e.g. `{ relay1: "OFF" }`), reported by the
+  // gateway/device confirming a command actually landed — see `devices.events` in
+  // docs/gateway-kafka-integration.md. Used as the initial value for ACTION panels before any
+  // live `channelState` WS event has arrived this session.
+  channelStates?: Record<string, string> | null;
   createdAt: string;
   updatedAt: string;
 }
