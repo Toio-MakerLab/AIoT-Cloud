@@ -222,6 +222,7 @@ export function DevicePanel({ widget, device, latest, history, actionResult, see
                 <div className="flex gap-2">
                   <Button
                     variant="default"
+                    size={"lg"}
                     disabled={isGuest || !isOnline || triggerAction.isPending}
                     onClick={() => handleTrigger(actionDef.onValue ?? 'ON')}
                   >
@@ -229,6 +230,7 @@ export function DevicePanel({ widget, device, latest, history, actionResult, see
                   </Button>
                   <Button
                     variant="outline"
+                    size={"lg"}
                     disabled={isGuest || !isOnline || triggerAction.isPending}
                     onClick={() => handleTrigger(actionDef.offValue ?? 'OFF')}
                   >

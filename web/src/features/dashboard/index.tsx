@@ -14,11 +14,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useIsGuest } from '@/hooks/use-is-guest';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { getTimeRangeOptions, resolveTimeRange, type TimeRangePreset } from '@/lib/time-range';
 import { useCreateDashboardMutation, useDashboardDevicesQuery, useDashboardsQuery, useUpdateDashboardMutation } from './api/queries';
 import type { IDashboard, IDashboardWidget } from './api/types';
 import { AddPanelDialog } from './components/add-panel-dialog';
 import { DashboardGrid } from './components/dashboard-grid';
+import { DashboardMobile } from './components/dashboard-mobile';
 import { useDeviceSocket } from './hooks/use-device-socket';
 
 const NEW_DASHBOARD_VALUE = '__new__';
@@ -50,6 +52,7 @@ export default function Dashboard() {
   const [hasSelectedInitial, setHasSelectedInitial] = useState(false);
   const [timeRangePreset, setTimeRangePreset] = useState<TimeRangePreset>('24h');
   const isGuest = useIsGuest();
+  const isMobile = useIsMobile();
 
   const dashboards = useMemo(() => dashboardsQuery.data ?? [], [dashboardsQuery.data]);
   const devices = useMemo(() => devicesQuery.data ?? [], [devicesQuery.data]);
@@ -238,14 +241,18 @@ export default function Dashboard() {
           )}
         </div>
 
-        <DashboardGrid
-          widgets={draft.widgets}
-          devices={devices}
-          liveData={socket}
-          timeRange={timeRange}
-          onLayoutChange={handleLayoutChange}
-          onRemoveWidget={handleRemoveWidget}
-        />
+        {isMobile ? (
+          <DashboardMobile widgets={draft.widgets} devices={devices} liveData={socket} timeRange={timeRange} onRemoveWidget={handleRemoveWidget} />
+        ) : (
+          <DashboardGrid
+            widgets={draft.widgets}
+            devices={devices}
+            liveData={socket}
+            timeRange={timeRange}
+            onLayoutChange={handleLayoutChange}
+            onRemoveWidget={handleRemoveWidget}
+          />
+        )}
       </Main>
 
       <AddPanelDialog open={addPanelOpen} onOpenChange={setAddPanelOpen} devices={devices} nextSlot={nextSlot} onAdd={handleAddWidget} />
