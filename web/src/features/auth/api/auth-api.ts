@@ -1,6 +1,6 @@
 import type { Response } from '@/core/types';
 import apiClient from '@/lib/api-client';
-import type { AuthUser, LoginInput, LoginResponse, RegisterInput, ResendVerificationInput, VerifyEmailInput } from './types';
+import type { AuthUser, ChangePasswordInput, LoginInput, LoginResponse, RegisterInput, ResendVerificationInput, VerifyEmailInput } from './types';
 
 export type { AuthUser } from './types';
 
@@ -28,6 +28,11 @@ export const authApi = {
   // Get current user info
   me: async () => {
     const response = await apiClient.get<AuthUser>('/v1/auth/me');
+    return response.data;
+  },
+
+  changePassword: async (data: ChangePasswordInput) => {
+    const response = await apiClient.post<Response<null>>('/v1/auth/change-password', data);
     return response.data;
   },
 };

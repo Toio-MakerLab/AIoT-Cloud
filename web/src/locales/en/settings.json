@@ -13,6 +13,21 @@
   "account": {
     "title": "Account",
     "description": "Update your account settings. Set your preferred language and timezone.",
+    "changePassword": {
+      "title": "Change password",
+      "description": "Update your password. You'll need to enter your current password first.",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "currentPasswordRequired": "Current password is required.",
+      "newPasswordMin": "New password must be at least 6 characters.",
+      "confirmPasswordRequired": "Please confirm your new password.",
+      "passwordsDoNotMatch": "Passwords do not match.",
+      "currentPasswordIncorrect": "Current password is incorrect.",
+      "changeFailed": "Failed to change password. Please try again.",
+      "changed": "Password changed successfully",
+      "update": "Update password"
+    },
     "dangerZone": {
       "title": "Danger zone",
       "description": "Permanently delete your account and all associated data. This action cannot be undone.",

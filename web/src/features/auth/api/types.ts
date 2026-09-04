@@ -43,3 +43,8 @@ export type VerifyEmailInput = {
 export type ResendVerificationInput = {
   email: string;
 };
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+};

@@ -159,7 +159,7 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transformIgnorePatterns": [
-      "/node_modules/(?!(parse-duration)/)"
+      "/node_modules/(?!.*parse-duration)"
     ],
     "transform": {
       "^.+\\.(t|j)s$": [

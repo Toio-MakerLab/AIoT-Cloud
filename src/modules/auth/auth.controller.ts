@@ -11,6 +11,7 @@ import { UserDto } from '../user/dtos/user.dto.ts';
 import { UserEntity } from '../user/user.entity.ts';
 import { UserService } from '../user/user.service.ts';
 import { AuthService } from './auth.service.ts';
+import { ChangePasswordDto } from './dto/change-password.dto.ts';
 import { LoginPayloadDto } from './dto/login-payload.dto.ts';
 import { ResendVerificationDto } from './dto/resend-verification.dto.ts';
 import { UserLoginDto } from './dto/user-login.dto.ts';
@@ -84,5 +85,14 @@ export class AuthController {
   @ApiOkResponse({ type: UserDto, description: 'current user info' })
   getCurrentUser(@AuthUser() user: UserEntity): UserDto {
     return user.toDto();
+  }
+
+  @Version('1')
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT, RoleType.GUEST])
+  @ApiOkResponse({ description: 'Change current user password' })
+  changePassword(@AuthUser() user: UserEntity, @Body() dto: ChangePasswordDto): Promise<ResponseCore<null>> {
+    return this.userService.changePassword(user.id, dto);
   }
 }

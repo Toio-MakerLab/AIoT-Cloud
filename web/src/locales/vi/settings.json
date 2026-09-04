@@ -13,6 +13,21 @@
   "account": {
     "title": "Tài khoản",
     "description": "Cập nhật cài đặt tài khoản của bạn. Đặt ngôn ngữ và múi giờ ưa thích.",
+    "changePassword": {
+      "title": "Đổi mật khẩu",
+      "description": "Cập nhật mật khẩu của bạn. Bạn cần nhập mật khẩu hiện tại trước.",
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu mới",
+      "currentPasswordRequired": "Mật khẩu hiện tại là bắt buộc.",
+      "newPasswordMin": "Mật khẩu mới phải có ít nhất 6 ký tự.",
+      "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu mới.",
+      "passwordsDoNotMatch": "Mật khẩu không khớp.",
+      "currentPasswordIncorrect": "Mật khẩu hiện tại không đúng.",
+      "changeFailed": "Đổi mật khẩu thất bại. Vui lòng thử lại.",
+      "changed": "Đổi mật khẩu thành công",
+      "update": "Cập nhật mật khẩu"
+    },
     "dangerZone": {
       "title": "Vùng nguy hiểm",
       "description": "Xóa vĩnh viễn tài khoản của bạn và toàn bộ dữ liệu liên quan. Hành động này không thể hoàn tác.",

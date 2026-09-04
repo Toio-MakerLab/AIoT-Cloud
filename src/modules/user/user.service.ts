@@ -8,12 +8,14 @@ import { Transactional } from 'typeorm-transactional';
 
 import type { PageDto } from '../../common/dto/page.dto.ts';
 import { ResponseCore } from '../../common/dto/response-core.dto.ts';
+import { validateHash } from '../../common/utils.ts';
 import { ErrorCode } from '../../constants/error-code.ts';
 import { RoleType } from '../../constants/role-type.ts';
 import type { IFile } from '../../interfaces/IFile.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { MailService } from '../../shared/services/mail.service.ts';
 import type { Reference } from '../../types.ts';
+import type { ChangePasswordDto } from '../auth/dto/change-password.dto.ts';
 import { UserRegisterDto } from '../auth/dto/user-register.dto.ts';
 import { CreateSettingsCommand } from './commands/create-settings.command.ts';
 import { CreateSettingsDto } from './dtos/create-settings.dto.ts';
@@ -167,6 +169,31 @@ export class UserService {
     } catch (error: any) {
       return ResponseCore.fail(ErrorCode.INTERNAL_SERVER_ERROR, error.message || 'error.internalServerError');
     }
+  }
+
+  /**
+   * Self-service password change: requires proving the current password (unlike admin-driven
+   * `updateUser`, which can set a new password with no such check). Setting `user.password` to
+   * the new plaintext and saving is enough — `UserSubscriber.beforeUpdate` hashes it.
+   */
+  @Transactional()
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<ResponseCore<null>> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.userNotFound');
+    }
+
+    const isCurrentPasswordValid = await validateHash(dto.currentPassword, user.password);
+
+    if (!isCurrentPasswordValid) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.currentPasswordIncorrect');
+    }
+
+    user.password = dto.newPassword;
+    await this.userRepository.save(user);
+
+    return ResponseCore.ok(null, 'success.passwordChanged');
   }
 
   @Transactional()
