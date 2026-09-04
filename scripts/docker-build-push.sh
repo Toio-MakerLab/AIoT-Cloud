@@ -52,6 +52,6 @@ done
 
 echo "Creating multi-arch manifest ${IMAGE}:${VERSION} and ${IMAGE}:latest"
 docker buildx imagetools create -t "${IMAGE}:${VERSION}" "${arch_refs[@]}"
-# docker buildx imagetools create -t "${IMAGE}:latest" "${arch_refs[@]}"
+docker buildx imagetools create -t "${IMAGE}:latest" "${arch_refs[@]}"
 
 echo "Done: ${IMAGE}:${VERSION} and ${IMAGE}:latest for ${PLATFORMS[*]}"
