@@ -397,10 +397,6 @@ export class DeviceService {
     const channelTopic = device.config?.mqtt?.topics?.channels?.find((channel) => channel.key === dto.key)?.topic;
     const deviceMqttTopic = channelTopic ?? device.config?.mqtt?.topics?.command ?? undefined;
 
-    if (device.pushChannel === DevicePushChannel.MQTT) {
-      return this.triggerDeviceActionViaMqtt(device, dto, deviceMqttTopic);
-    }
-
     // The actual Kafka topic the command is published on. A gateway (or any device configured
     // directly on the KAFKA push channel) gets its own dedicated commandTopic — accept whatever
     // is configured on the device instead of always hardcoding the shared bus, so a gateway can
@@ -418,6 +414,9 @@ export class DeviceService {
         { deviceId: device.deviceId, key: dto.key, value: dto.value, topic: deviceMqttTopic },
         device.deviceId,
       );
+      // if (device.pushChannel === DevicePushChannel.MQTT) {
+      //   await this.triggerDeviceActionViaMqtt(device, dto, deviceMqttTopic);
+      // }
     } catch (error) {
       this.logger.error(
         `Failed to publish action ${dto.key}=${dto.value} to ${kafkaTopic}: ${error instanceof Error ? error.message : String(error)}`,
@@ -479,6 +478,13 @@ export class DeviceService {
   ): Promise<ResponseCore<{ key: string; value: string; topic: string; publishedAt: Date }>> {
     if (!deviceMqttTopic) {
       return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceActionTopicNotConfigured');
+    }
+
+    // MqttProducerService never connects when MQTT_ENABLED is false (see its onModuleInit), so
+    // publish() would only ever throw "not connected" here — fail fast with a message that points
+    // at the actual cause instead of logging it as an unexpected internal error every time.
+    if (!this.apiConfigService.mqttEnabled) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.mqttDisabled');
     }
 
     const publishedAt = new Date();
