@@ -26,11 +26,20 @@ import {
   KAFKA_STATUS_TOPIC,
   KAFKA_TELEMETRY_TOPIC,
 } from '../../constants/kafka-topics.ts';
-import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from '../../constants/mqtt-topics.ts';
+import {
+  defaultChannelCommandTopic,
+  defaultCommandTopic,
+  defaultEventTopic,
+  defaultStatusTopic,
+  defaultTelemetryTopic,
+} from '../../constants/mqtt-topics.ts';
 import { NotificationChannelType } from '../../constants/notification-channel-type.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
 import { KafkaProducerService } from '../kafka/kafka-producer.service.ts';
+import { MqttProducerService } from '../mqtt/mqtt-producer.service.ts';
+import type { MqttTopicRole, ResolvedMqttTopic } from '../mqtt/mqtt-topic-registry.service.ts';
+import { MqttTopicRegistryService } from '../mqtt/mqtt-topic-registry.service.ts';
 import { DeviceEntity } from './device.entity.ts';
 import { DeviceTelemetryEntity } from './device-telemetry.entity.ts';
 import type { DeviceDto } from './dtos/device.dto.ts';
@@ -123,6 +132,8 @@ export class DeviceService {
     private eventEmitter: EventEmitter2,
     private apiConfigService: ApiConfigService,
     private kafkaProducerService: KafkaProducerService,
+    private mqttProducerService: MqttProducerService,
+    private mqttTopicRegistryService: MqttTopicRegistryService,
   ) {}
 
   /** `factoryId` is copied from the registering user's own `UserEntity.factoryId`, so the device
@@ -188,10 +199,20 @@ export class DeviceService {
             telemetry: defaultTelemetryTopic(device.deviceId),
             command: defaultCommandTopic(device.deviceId),
             status: defaultStatusTopic(device.deviceId),
+            event: defaultEventTopic(device.deviceId),
           },
         };
 
-    const mqtt = device.pushChannel === DevicePushChannel.MQTT ? { ...mqttBase, topics: this.buildMqttTopics(device, mqttBase.topics) } : null;
+    // `event` falls back to the derived default even for a stored (user-configured) `mqttBase`,
+    // so a device config saved before this field existed still gets an ack topic without needing
+    // a re-save.
+    const mqtt =
+      device.pushChannel === DevicePushChannel.MQTT
+        ? {
+            ...mqttBase,
+            topics: this.buildMqttTopics(device, { ...mqttBase.topics, event: mqttBase.topics.event ?? defaultEventTopic(device.deviceId) }),
+          }
+        : null;
 
     const kafka = device.pushChannel === DevicePushChannel.KAFKA ? await this.resolveKafkaConfig(device) : null;
 
@@ -332,6 +353,13 @@ export class DeviceService {
 
     await this.deviceRepository.save(device);
 
+    // A device's custom topic overrides (`mqtt.topics.*`) may have just changed, which would
+    // stale-out MqttTopicRegistryService's cache — see its doc comment. Cheap to just clear the
+    // whole (small) cache rather than track per-device invalidation.
+    if (dto.mqtt !== undefined) {
+      this.mqttTopicRegistryService.clear();
+    }
+
     return ResponseCore.ok(device.toDto());
   }
 
@@ -360,13 +388,18 @@ export class DeviceService {
       return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceActionChannelUnsupported');
     }
 
-    // The device's own downlink topic for this specific action/channel, used by whatever
-    // gateway/bridge relays the message onto the device's local MQTT — the per-channel topic
+    // The device's own downlink topic for this specific action/channel — the per-channel topic
     // (`config.mqtt.topics.channels[].topic`) if the template defines one for this key, else
-    // falling back to the device's general MQTT command topic. Carried in the outbound payload
-    // so the gateway relays to the right place without re-deriving it from a cached boot-config.
+    // falling back to the device's general MQTT command topic. For a KAFKA-push device this is
+    // carried in the outbound payload so whatever gateway/bridge relays the message onto its own
+    // local MQTT knows where to publish; for an MQTT-push device it IS the topic we publish to
+    // directly below (the device is connected straight to this broker, no gateway involved).
     const channelTopic = device.config?.mqtt?.topics?.channels?.find((channel) => channel.key === dto.key)?.topic;
     const deviceMqttTopic = channelTopic ?? device.config?.mqtt?.topics?.command ?? undefined;
+
+    if (device.pushChannel === DevicePushChannel.MQTT) {
+      return this.triggerDeviceActionViaMqtt(device, dto, deviceMqttTopic);
+    }
 
     // The actual Kafka topic the command is published on. A gateway (or any device configured
     // directly on the KAFKA push channel) gets its own dedicated commandTopic — accept whatever
@@ -425,6 +458,50 @@ export class DeviceService {
     }
 
     return ResponseCore.ok({ key: dto.key, value: dto.value, topic: kafkaTopic, publishedAt });
+  }
+
+  /**
+   * Downlink path for a device connected straight to this broker (`pushChannel: MQTT`, no
+   * gateway in between) — publishes `{ key, value }` directly onto the device's own command
+   * topic via `MqttProducerService`, the direct-broker counterpart to the Kafka gateway-relay
+   * path above. There's no round trip through a gateway to bounce an optimistic update off, so
+   * `channelStates` is applied in-process right after the publish succeeds (same effect as the
+   * Kafka path's self-publish onto `KAFKA_DEVICE_EVENTS_TOPIC`, just a direct call instead of a
+   * broker round-trip). The device itself can still publish an authoritative confirmation (or
+   * `status: "error"`) on its `event` topic afterwards — see `MqttController`/`EVENT_TOPIC_REGEX`
+   * — which re-applies via the same `handleDeviceChannelEvent` and can flip an optimistic "ok"
+   * back to an error if the command didn't actually land.
+   */
+  private async triggerDeviceActionViaMqtt(
+    device: DeviceEntity,
+    dto: TriggerDeviceActionDto,
+    deviceMqttTopic: string | undefined,
+  ): Promise<ResponseCore<{ key: string; value: string; topic: string; publishedAt: Date }>> {
+    if (!deviceMqttTopic) {
+      return ResponseCore.fail(ErrorCode.BAD_REQUEST, 'error.deviceActionTopicNotConfigured');
+    }
+
+    const publishedAt = new Date();
+
+    try {
+      await this.mqttProducerService.publish(deviceMqttTopic, { deviceId: device.deviceId, key: dto.key, value: dto.value });
+    } catch (error) {
+      this.logger.error(
+        `Failed to publish action ${dto.key}=${dto.value} to ${deviceMqttTopic}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+
+      return ResponseCore.fail(ErrorCode.INTERNAL_SERVER_ERROR, 'error.deviceActionPublishFailed');
+    }
+
+    try {
+      await this.handleDeviceChannelEvent(device.deviceId, { key: dto.key, value: dto.value, status: 'ok' });
+    } catch (error) {
+      this.logger.warn(
+        `Failed to apply optimistic channel state for ${dto.key}=${dto.value}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    return ResponseCore.ok({ key: dto.key, value: dto.value, topic: deviceMqttTopic, publishedAt });
   }
 
   /**
@@ -686,6 +763,53 @@ export class DeviceService {
   /** Used by notification warning checks, which need the template's telemetry schema alongside the device. */
   async findByDeviceIdWithTemplate(deviceId: string): Promise<DeviceEntity | null> {
     return this.deviceRepository.findOne({ where: { deviceId }, relations: ['template'] });
+  }
+
+  /**
+   * Reverse-lookup for `MqttController.handleAny`: given a topic that didn't match any of the
+   * default `devices/{deviceId}/...` shapes, find the `MQTT`-push device (if any) that has it
+   * configured as a custom override in `config.mqtt.topics` — `telemetry`/`status`/`event` (all
+   * uplink) or `command`/`channels[].topic` (downlink, whose result is just "ignore, it's our
+   * own echo" — see `MqttController`). A device's own JSONB column is queried directly rather
+   * than kept in an application-side index, since overrides are rare and this only ever runs for
+   * a topic `MqttTopicRegistryService` hasn't already cached (a hit or a recent miss).
+   */
+  async resolveCustomMqttTopic(topic: string): Promise<ResolvedMqttTopic | null> {
+    const device = await this.deviceRepository
+      .createQueryBuilder('device')
+      .where('device.pushChannel = :pushChannel', { pushChannel: DevicePushChannel.MQTT })
+      .andWhere(
+        `(
+           device.config #>> '{mqtt,topics,telemetry}' = :topic
+           OR device.config #>> '{mqtt,topics,status}' = :topic
+           OR device.config #>> '{mqtt,topics,event}' = :topic
+           OR device.config #>> '{mqtt,topics,command}' = :topic
+           OR EXISTS (
+             SELECT 1 FROM jsonb_array_elements(COALESCE(device.config #> '{mqtt,topics,channels}', '[]'::jsonb)) AS channel
+             WHERE channel ->> 'topic' = :topic
+           )
+         )`,
+        { topic },
+      )
+      .getOne();
+
+    if (!device?.config?.mqtt?.topics) {
+      return null;
+    }
+
+    const topics = device.config.mqtt.topics;
+    const role: MqttTopicRole | undefined =
+      topics.telemetry === topic
+        ? 'telemetry'
+        : topics.status === topic
+          ? 'status'
+          : topics.event === topic
+            ? 'event'
+            : topics.command === topic || topics.channels?.some((channel) => channel.topic === topic)
+              ? 'command'
+              : undefined;
+
+    return role ? { deviceId: device.deviceId, role } : null;
   }
 
   async recordTelemetry(deviceId: string, payload: unknown): Promise<void> {

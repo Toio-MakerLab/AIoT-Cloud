@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DeviceTemplateEntity } from '../device-template/device-template.entity.ts';
 import { KafkaModule } from '../kafka/kafka.module.ts';
+import { MqttModule } from '../mqtt/mqtt.module.ts';
 import { DeviceController } from './device.controller.ts';
 import { DeviceEntity } from './device.entity.ts';
 import { DeviceService } from './device.service.ts';
@@ -25,6 +26,9 @@ import { UnclaimedDeviceEntity } from './unclaimed-device.entity.ts';
     // DeviceService can inject it. KafkaModule also owns the inbound Kafka consumer and needs
     // DeviceService back, so forwardRef() on both sides breaks the resulting circular import.
     forwardRef(() => KafkaModule),
+    // Same circular-import shape as KafkaModule above: MqttProducerService lives in MqttModule,
+    // and MqttModule's own MqttController needs DeviceService back.
+    forwardRef(() => MqttModule),
   ],
   controllers: [DeviceController, DeviceProvisioningController, DeviceSecretController, DeviceLifecycleController],
   exports: [DeviceService],

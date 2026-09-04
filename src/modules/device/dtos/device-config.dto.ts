@@ -44,6 +44,7 @@ export class MqttChannelTopicDto implements DeviceMqttChannelTopic {
  * telemetry: device -> backend (ingested via recordTelemetry)
  * command:   backend -> device (downlink; device subscribes)
  * status:    device -> backend (online/offline / LWT announcements)
+ * event:     device -> backend (ack for a downlink command; see defaultEventTopic)
  * channels:  backend -> device (per-channel downlink, auto-derived from the template's actionSchema)
  */
 export class MqttTopicsDto implements DeviceMqttTopics {
@@ -55,6 +56,9 @@ export class MqttTopicsDto implements DeviceMqttTopics {
 
   @StringFieldOptional({ nullable: true })
   status?: string | null;
+
+  @StringFieldOptional({ nullable: true })
+  event?: string | null;
 
   @ClassFieldOptional(() => MqttChannelTopicDto, { nullable: true, each: true, isArray: true })
   channels?: MqttChannelTopicDto[] | null;

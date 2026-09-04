@@ -8,7 +8,7 @@ Built with **NestJS 11 + TypeScript + PostgreSQL (TypeORM) + Redis**, paired wit
 
 - **JWT auth** (access/refresh tokens, role-based guards: `USER` / `ADMIN` / `ROOT`).
 - **Device management** — registration/claiming, per-device config, device templates (telemetry schema + action channels), telemetry history.
-- **MQTT & Kafka ingestion** — telemetry published by devices/gateways is ingested, persisted, and fanned out as `device.telemetry` / `device.status` domain events (`@nestjs/event-emitter`).
+- **MQTT & Kafka, bidirectional** — telemetry/status published by devices/gateways is ingested, persisted, and fanned out as `device.telemetry` / `device.status` domain events (`@nestjs/event-emitter`); actuator commands (`POST /devices/:id/actions`) publish back down to the device over the same channel it uplinks on — see [`mqtt-bidirectional-commands.md`](./docs/mqtt-bidirectional-commands.md) / [`gateway-kafka-integration.md`](./docs/gateway-kafka-integration.md).
 - **Live dashboard** — configurable widget grid (`VALUE` / `CHART` / `ACTION` panels) with two realtime transports, picked per widget type:
   - **SSE** (`GET /api/devices/stream`) for `CHART` panels — resilient, auto-reconnecting stream of rolling telemetry history.
   - **WebSocket** (Socket.IO, `AppGateway`) for `ACTION` / `VALUE` panels — lower-latency push for single live values and interactive device controls.
@@ -110,7 +110,7 @@ web/
 docs/                      # architecture, deployment guide, device template examples
 ```
 
-See `docs/` for a deeper dive: [`architecture.md`](./docs/architecture.md), [`deployment-guide.md`](./docs/deployment-guide.md), [`gateway-kafka-integration.md`](./docs/gateway-kafka-integration.md).
+See `docs/` for a deeper dive: [`architecture.md`](./docs/architecture.md), [`deployment-guide.md`](./docs/deployment-guide.md), [`gateway-kafka-integration.md`](./docs/gateway-kafka-integration.md), [`mqtt-bidirectional-commands.md`](./docs/mqtt-bidirectional-commands.md).
 
 ## License
 

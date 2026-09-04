@@ -14,6 +14,8 @@ export interface DeviceMqttTopics {
   telemetry: string;
   command?: string | null;
   status?: string | null;
+  /** Uplink ack topic for a downlink command's result — see `defaultEventTopic`'s doc comment. */
+  event?: string | null;
   /** Auto-generated per-channel command topics; present only for multi-channel templates (e.g. RELAY_NODE). */
   channels?: DeviceMqttChannelTopic[] | null;
 }
