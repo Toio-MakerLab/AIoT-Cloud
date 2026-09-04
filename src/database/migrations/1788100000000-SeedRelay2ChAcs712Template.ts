@@ -22,8 +22,6 @@ export class SeedRelay2ChAcs712Template1788100000000 implements MigrationInterfa
     const telemetrySchema = [
       { key: 'relay1', label: 'Relay 1', unit: 'state' },
       { key: 'relay2', label: 'Relay 2', unit: 'state' },
-      { key: 'current1', label: 'Channel 1 Current (ACS712)', unit: 'A', warningMin: 0, warningMax: 15 },
-      { key: 'current2', label: 'Channel 2 Current (ACS712)', unit: 'A', warningMin: 0, warningMax: 15 },
       { key: 'rssi', label: 'WiFi Signal', unit: 'dBm' },
     ];
 
