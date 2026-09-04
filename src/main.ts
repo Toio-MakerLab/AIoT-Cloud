@@ -55,6 +55,7 @@ export async function bootstrap(): Promise<NestExpressApplication> {
             'https://*.firebaseio.com',
             'https://www.googletagmanager.com',
             'https://www.google-analytics.com',
+            "'sha256-iiW3S6yL69elyNmyyBarnCNgJnE+lPIfEJg3jIuukDk='",
           ],
           'img-src': ["'self'", 'data:', 'blob:', '*'],
         },
