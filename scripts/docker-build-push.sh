@@ -32,7 +32,7 @@ if [[ -n "${DOCKERHUB_USERNAME:-}" && -n "${DOCKERHUB_TOKEN:-}" ]]; then
 fi
 
 if ! docker buildx inspect "${BUILDER_NAME}" >/dev/null 2>&1; then
-  docker buildx create --name "${BUILDER_NAME}" --driver docker-container --bootstrap
+  docker buildx create --name "${BUILDER_NAME}" --driver docker-container --driver-opt network=host --bootstrap
 fi
 
 arch_refs=()
