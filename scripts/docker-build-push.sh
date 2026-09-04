@@ -42,11 +42,11 @@ for platform in "${PLATFORMS[@]}"; do
   echo "Building and pushing ${IMAGE}:${arch_tag} (${platform})"
   docker buildx build \
     --builder "${BUILDER_NAME}" \
-    --driver docker-container  \
     --platform "${platform}" \
     --build-arg VITE_APP_VERSION=${VERSION} \
     -t "${IMAGE}:${arch_tag}" \
     --push \
+    --progress=plain
     .
   arch_refs+=("${IMAGE}:${arch_tag}")
 done
