@@ -1,8 +1,10 @@
-import { IconBan } from '@tabler/icons-react';
+import { IconAlertTriangle, IconBan } from '@tabler/icons-react';
 import { formatDistanceToNow, type Locale } from 'date-fns';
 import { enUS, vi } from 'date-fns/locale';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -19,10 +21,14 @@ const DATE_FNS_LOCALES: Record<Language, Locale> = { [Language.EN]: enUS, [Langu
 export function DeviceSecretsTable({ data }: Props) {
   const { t, i18n } = useTranslation('deviceSecrets');
   const revokeDeviceSecret = useRevokeDeviceSecretMutation();
+  const [pendingRevoke, setPendingRevoke] = useState<IDeviceSecret | null>(null);
 
-  const handleRevoke = async (id: string) => {
+  const handleRevoke = async () => {
+    if (!pendingRevoke) return;
+
     try {
-      await revokeDeviceSecret.mutateAsync(id);
+      await revokeDeviceSecret.mutateAsync(pendingRevoke.id);
+      setPendingRevoke(null);
       toast.success(t('table.revoked'));
     } catch {
       // Error toast is already shown by the global mutation error handler (see main.tsx).
@@ -34,43 +40,65 @@ export function DeviceSecretsTable({ data }: Props) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{t('table.label')}</TableHead>
-          <TableHead>{t('table.status')}</TableHead>
-          <TableHead>{t('table.created')}</TableHead>
-          <TableHead className="w-0" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((secret) => {
-          const isRevoked = !!secret.revokedAt;
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>{t('table.label')}</TableHead>
+            <TableHead>{t('table.status')}</TableHead>
+            <TableHead>{t('table.created')}</TableHead>
+            <TableHead className="w-0" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((secret) => {
+            const isRevoked = !!secret.revokedAt;
 
-          return (
-            <TableRow key={secret.id}>
-              <TableCell className="font-medium">{secret.label || <span className="text-muted-foreground">{t('table.untitled')}</span>}</TableCell>
-              <TableCell>
-                <Badge variant={isRevoked ? 'outline' : 'default'}>{isRevoked ? t('table.revokedBadge') : t('table.activeBadge')}</Badge>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatDistanceToNow(new Date(secret.createdAt), {
-                  addSuffix: true,
-                  locale: DATE_FNS_LOCALES[i18n.language as Language],
-                })}
-              </TableCell>
-              <TableCell>
-                {!isRevoked && (
-                  <Button variant="ghost" size="sm" onClick={() => void handleRevoke(secret.id)} disabled={revokeDeviceSecret.isPending}>
-                    <IconBan className="mr-1 h-4 w-4" />
-                    {t('table.revoke')}
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+            return (
+              <TableRow key={secret.id}>
+                <TableCell className="font-medium">{secret.label || <span className="text-muted-foreground">{t('table.untitled')}</span>}</TableCell>
+                <TableCell>
+                  <Badge variant={isRevoked ? 'outline' : 'default'}>{isRevoked ? t('table.revokedBadge') : t('table.activeBadge')}</Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDistanceToNow(new Date(secret.createdAt), {
+                    addSuffix: true,
+                    locale: DATE_FNS_LOCALES[i18n.language as Language],
+                  })}
+                </TableCell>
+                <TableCell>
+                  {!isRevoked && (
+                    <Button variant="ghost" size="sm" onClick={() => setPendingRevoke(secret)} disabled={revokeDeviceSecret.isPending}>
+                      <IconBan className="mr-1 h-4 w-4" />
+                      {t('table.revoke')}
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      <ConfirmDialog
+        open={!!pendingRevoke}
+        onOpenChange={(open) => !open && setPendingRevoke(null)}
+        handleConfirm={() => void handleRevoke()}
+        isLoading={revokeDeviceSecret.isPending}
+        title={
+          <span className="text-destructive">
+            <IconAlertTriangle className="stroke-destructive mr-1 inline-block" size={18} /> {t('table.revokeDialog.title')}
+          </span>
+        }
+        desc={
+          <p>
+            {t('table.revokeDialog.confirmPrefix')} <span className="font-bold">{pendingRevoke?.label || t('table.untitled')}</span>?
+            <br />
+            {t('table.revokeDialog.warning')}
+          </p>
+        }
+        confirmText={t('table.revoke')}
+        destructive
+      />
+    </>
   );
 }

@@ -106,11 +106,16 @@ export function PowerSwitchButton({
         className={cn('inline-flex shrink-0 overflow-hidden rounded-md border font-semibold', FOCUS_DISABLED, ROCKER_SIZES[size], className)}
         {...props}
       >
-        <span className={cn('flex flex-1 items-center justify-center transition-colors', checked ? 'bg-green-500 text-white' : 'text-muted-foreground')}>
+        <span
+          className={cn('flex flex-1 items-center justify-center transition-colors', checked ? 'bg-green-500 text-white' : 'text-muted-foreground')}
+        >
           {onLabel}
         </span>
         <span
-          className={cn('flex flex-1 items-center justify-center border-l transition-colors', !checked ? 'bg-muted text-foreground' : 'text-muted-foreground')}
+          className={cn(
+            'flex flex-1 items-center justify-center border-l transition-colors',
+            !checked ? 'bg-muted text-foreground' : 'text-muted-foreground',
+          )}
         >
           {offLabel}
         </span>
@@ -151,7 +156,11 @@ export function PowerSwitchButton({
         {offLabel}
       </span>
       <span
-        className={cn('bg-background pointer-events-none block rounded-full shadow-xs ring-0 transition-transform', s.thumb, checked ? s.translate : 'translate-x-0')}
+        className={cn(
+          'bg-background pointer-events-none block rounded-full shadow-xs ring-0 transition-transform',
+          s.thumb,
+          checked ? s.translate : 'translate-x-0',
+        )}
       />
     </button>
   );
