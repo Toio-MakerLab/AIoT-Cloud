@@ -46,7 +46,7 @@ for platform in "${PLATFORMS[@]}"; do
     --build-arg VITE_APP_VERSION=${VERSION} \
     -t "${IMAGE}:${arch_tag}" \
     --push \
-    --progress=plain
+    --progress=plain \
     .
   arch_refs+=("${IMAGE}:${arch_tag}")
 done
