@@ -42,6 +42,7 @@ for platform in "${PLATFORMS[@]}"; do
   echo "Building and pushing ${IMAGE}:${arch_tag} (${platform})"
   docker buildx build \
     --builder "${BUILDER_NAME}" \
+    --driver-opt network=host \
     --platform "${platform}" \
     --build-arg VITE_APP_VERSION=${VERSION} \
     -t "${IMAGE}:${arch_tag}" \
