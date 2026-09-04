@@ -5,7 +5,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
+import { PowerSwitchButton } from '@/components/ui/power-switch-button';
 import { useIsGuest } from '@/hooks/use-is-guest';
 import { getChartColor } from '@/lib/chart-colors';
 import type { ResolvedTimeRange } from '@/lib/time-range';
@@ -212,11 +212,16 @@ export function DevicePanel({ widget, device, latest, history, actionResult, see
             {actionDef ? (
               isToggleAction ? (
                 <div className="flex flex-col items-center gap-1">
-                  <Switch checked={isToggleOn} disabled={isGuest || !isOnline || triggerAction.isPending} onCheckedChange={handleToggle} />
-                  <span className={cn('text-muted-foreground text-xs', isAwaitingConfirmation && 'animate-pulse')}>
-                    {isToggleOn ? (actionDef.onValue ?? 'ON') : (actionDef.offValue ?? 'OFF')}
-                    {isAwaitingConfirmation && ' …'}
-                  </span>
+                  <PowerSwitchButton
+                    type="button"
+                    variant="round"
+                    checked={isToggleOn}
+                    disabled={isGuest || !isOnline || triggerAction.isPending}
+                    onCheckedChange={handleToggle}
+                    onLabel={actionDef.onValue ?? 'ON'}
+                    offLabel={actionDef.offValue ?? 'OFF'}
+                  />
+                  {isAwaitingConfirmation && <span className="text-muted-foreground animate-pulse text-xs">…</span>}
                 </div>
               ) : (
                 <div className="flex gap-2">
