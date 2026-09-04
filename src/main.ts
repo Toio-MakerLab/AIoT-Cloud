@@ -1,8 +1,8 @@
 import './boilerplate.polyfill';
 
+import { randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-
 import { ClassSerializerInterceptor, HttpStatus, UnprocessableEntityException, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
@@ -29,6 +29,20 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, new ExpressAdapter(), { cors: true, bufferLogs: true });
   app.useLogger(app.get(Logger));
   app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
+
+  // SPA fallback: client-side routed paths (no file extension, not under /api) serve
+  // the frontend's index.html so deep-links / hard refreshes work with browser-history routing.
+  app.use((request: Request, response: Response, next: NextFunction) => {
+    const indexHtml = path.join(process.cwd(), 'dist-client', 'index.html');
+
+    if (request.method === 'GET' && !request.path.startsWith('/api') && !path.extname(request.path) && fs.existsSync(indexHtml)) {
+      response.sendFile(indexHtml);
+    } else {
+      response.locals.cspNonce = randomBytes(16).toString('base64');
+      next();
+    }
+  });
+
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -37,10 +51,15 @@ export async function bootstrap(): Promise<NestExpressApplication> {
           'default-src': ["'self'"],
           'connect-src': [
             "'self'",
+            'https://static.cloudflareinsights.com',
+            'https://cdn.jsdelivr.net',
             'https://firebaseinstallations.googleapis.com',
             'https://fcm.googleapis.com',
             'https://fcmregistrations.googleapis.com',
             'https://*.firebaseio.com',
+            'https://www.googletagmanager.com',
+            'https://www.google-analytics.com',
+            (_request, response: any) => `'nonce-${response.locals.cspNonce}'`,
           ],
           'worker-src': ["'self'"],
           // Chỉ giữ nếu Cloudflare Analytics đang được nhúng trực tiếp.
@@ -55,7 +74,8 @@ export async function bootstrap(): Promise<NestExpressApplication> {
             'https://*.firebaseio.com',
             'https://www.googletagmanager.com',
             'https://www.google-analytics.com',
-            "'sha256-iiW3S6yL69elyNmyyBarnCNgJnE+lPIfEJg3jIuukDk='",
+            "'unsafe-inline'",
+            (_request, response: any) => `'nonce-${response.locals.cspNonce}'`,
           ],
           'img-src': ["'self'", 'data:', 'blob:', '*'],
         },
@@ -132,18 +152,6 @@ export async function bootstrap(): Promise<NestExpressApplication> {
   if (configService.documentationEnabled) {
     setupSwagger(app);
   }
-
-  // SPA fallback: client-side routed paths (no file extension, not under /api) serve
-  // the frontend's index.html so deep-links / hard refreshes work with browser-history routing.
-  app.use((request: Request, response: Response, next: NextFunction) => {
-    const indexHtml = path.join(process.cwd(), 'dist-client', 'index.html');
-
-    if (request.method === 'GET' && !request.path.startsWith('/api') && !path.extname(request.path) && fs.existsSync(indexHtml)) {
-      response.sendFile(indexHtml);
-    } else {
-      next();
-    }
-  });
 
   // Starts listening for shutdown hooks
   if (!configService.isDevelopment) {
