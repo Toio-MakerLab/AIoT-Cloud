@@ -414,9 +414,9 @@ export class DeviceService {
         { deviceId: device.deviceId, key: dto.key, value: dto.value, topic: deviceMqttTopic },
         device.deviceId,
       );
-      // if (device.pushChannel === DevicePushChannel.MQTT) {
-      //   await this.triggerDeviceActionViaMqtt(device, dto, deviceMqttTopic);
-      // }
+      if (device.pushChannel === DevicePushChannel.MQTT) {
+        await this.triggerDeviceActionViaMqtt(device, dto, deviceMqttTopic);
+      }
     } catch (error) {
       this.logger.error(
         `Failed to publish action ${dto.key}=${dto.value} to ${kafkaTopic}: ${error instanceof Error ? error.message : String(error)}`,
