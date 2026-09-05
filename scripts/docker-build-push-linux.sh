@@ -34,6 +34,7 @@ docker build --platform "${PLATFORMS[*]}" \
   --build-arg VITE_APP_VERSION=${VERSION} \
   -t "${IMAGE}:${VERSION}" \
   -t "${IMAGE}:latest" \
+  --network=host \
   --push \
   .
 
