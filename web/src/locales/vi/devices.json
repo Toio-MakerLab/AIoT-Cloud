@@ -106,6 +106,7 @@
     "telemetryTopic": "Topic Telemetry",
     "commandTopic": "Topic Lệnh",
     "statusTopic": "Topic Trạng thái",
+    "eventTopic": "Topic Sự kiện",
     "channelLabel": "Kênh {{index}} ({{label}})",
     "pushUrl": "URL gửi",
     "brokers": "Brokers",

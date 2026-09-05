@@ -41,6 +41,7 @@ export function DeviceConfigViewDialog({ currentRow, open, onOpenChange }: Props
               <Row label={t('configFields.telemetryTopic')} value={config?.mqtt?.topics?.telemetry} />
               <Row label={t('configFields.commandTopic')} value={config?.mqtt?.topics?.command} />
               <Row label={t('configFields.statusTopic')} value={config?.mqtt?.topics?.status} />
+              <Row label={t('configFields.eventTopic')} value={config?.mqtt?.topics?.event} />
               {config?.mqtt?.topics?.channels?.map((channel) => (
                 <Row
                   key={channel.index}

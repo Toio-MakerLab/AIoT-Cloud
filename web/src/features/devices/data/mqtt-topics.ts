@@ -6,6 +6,7 @@
 export const defaultTelemetryTopic = (deviceId: string): string => `devices/${deviceId}/telemetry`;
 export const defaultCommandTopic = (deviceId: string): string => `devices/${deviceId}/command`;
 export const defaultStatusTopic = (deviceId: string): string => `devices/${deviceId}/status`;
+export const defaultEventTopic = (deviceId: string): string => `devices/${deviceId}/event`;
 
 /**
  * Per-channel downlink topic for multi-channel devices (e.g. a relay node with N relays).

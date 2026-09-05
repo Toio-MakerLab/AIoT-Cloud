@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { IDeviceAlertRule, IDeviceFailsafeConfig, IUpdateDeviceConfig } from '../api/types';
-import { defaultChannelCommandTopic, defaultCommandTopic, defaultStatusTopic, defaultTelemetryTopic } from './mqtt-topics';
+import { defaultChannelCommandTopic, defaultCommandTopic, defaultEventTopic, defaultStatusTopic, defaultTelemetryTopic } from './mqtt-topics';
 import type { DeviceNetworkConfig, DevicePushChannel, DeviceTemplateType, MqttChannelTopic } from './schema';
 
 /** One rule per line -> trimmed, empty lines dropped. Same convention as GatewayAutomationPanel's textareas. */
@@ -38,6 +38,7 @@ const deviceConfigFormObjectSchema = z.object({
   mqttTelemetryTopic: z.string().optional(),
   mqttCommandTopic: z.string().optional(),
   mqttStatusTopic: z.string().optional(),
+  mqttEventTopic: z.string().optional(),
   /** One entry per action in the device template's `actionSchema`; only populated for channel-based templates (e.g. relay nodes). */
   channelTopics: z.array(channelTopicFormSchema).optional(),
   httpUrl: z.string().optional(),
@@ -130,6 +131,7 @@ export function deviceConfigFormDefaults(
     mqttTelemetryTopic: config?.mqtt?.topics?.telemetry ?? (deviceId ? defaultTelemetryTopic(deviceId) : ''),
     mqttCommandTopic: config?.mqtt?.topics?.command ?? (deviceId ? defaultCommandTopic(deviceId) : ''),
     mqttStatusTopic: config?.mqtt?.topics?.status ?? (deviceId ? defaultStatusTopic(deviceId) : ''),
+    mqttEventTopic: config?.mqtt?.topics?.event ?? (deviceId ? defaultEventTopic(deviceId) : ''),
     channelTopics: buildChannelTopicDefaults(deviceId, template, config?.mqtt?.topics?.channels),
     httpUrl: config?.http?.url ?? '',
     kafkaBrokers: config?.kafka?.brokers ?? 'localhost:9092',
@@ -169,6 +171,7 @@ export function deviceConfigFormToPayload(values: DeviceConfigFormValues, templa
               telemetry: values.mqttTelemetryTopic ?? '',
               command: values.mqttCommandTopic || undefined,
               status: values.mqttStatusTopic || undefined,
+              event: values.mqttEventTopic || undefined,
               channels,
             },
           }

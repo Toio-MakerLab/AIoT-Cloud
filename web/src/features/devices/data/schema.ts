@@ -27,6 +27,7 @@ const mqttTopicsSchema = z.object({
   telemetry: z.string(),
   command: z.string().nullish(),
   status: z.string().nullish(),
+  event: z.string().nullish(),
   channels: z.array(mqttChannelTopicSchema).nullish(),
 });
 export type MqttTopics = z.infer<typeof mqttTopicsSchema>;

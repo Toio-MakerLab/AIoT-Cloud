@@ -106,6 +106,7 @@
     "telemetryTopic": "Telemetry Topic",
     "commandTopic": "Command Topic",
     "statusTopic": "Status Topic",
+    "eventTopic": "Event Topic",
     "channelLabel": "Ch.{{index}} ({{label}})",
     "pushUrl": "Push URL",
     "brokers": "Brokers",

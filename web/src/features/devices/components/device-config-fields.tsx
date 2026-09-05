@@ -163,6 +163,19 @@ export function DeviceConfigFields({ control, pushChannel, channelTopics, templa
               </FormItem>
             )}
           />
+          <FormField
+            control={control}
+            name="mqttEventTopic"
+            render={({ field }) => (
+              <FormItem className="grid grid-cols-6 items-center gap-x-4 gap-y-1 space-y-0">
+                <FormLabel className="col-span-2 text-right">{t('configFields.eventTopic')}</FormLabel>
+                <FormControl className="col-span-4">
+                  <Input placeholder="devices/{deviceId}/event" {...field} />
+                </FormControl>
+                <FormMessage className="col-span-4 col-start-3" />
+              </FormItem>
+            )}
+          />
 
           {/* One command topic per action in the device template's actionSchema (e.g. one per relay). */}
           {channelTopics?.map((channel, index) => (
