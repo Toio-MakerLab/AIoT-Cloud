@@ -1,5 +1,6 @@
 import { AbstractDto } from '../../../common/dto/abstract.dto.ts';
 import { DeviceLifecycleStage } from '../../../constants/device-lifecycle-stage.ts';
+import { DeviceOtaStatus } from '../../../constants/device-ota-status.ts';
 import { DevicePushChannel } from '../../../constants/device-push-channel.ts';
 import { DeviceStatus } from '../../../constants/device-status.ts';
 import {
@@ -81,6 +82,30 @@ export class DeviceDto extends AbstractDto {
   @DateFieldOptional({ nullable: true })
   lifecycleAssessedAt?: Date | null;
 
+  @StringFieldOptional({ nullable: true })
+  firmwareVersion?: string | null;
+
+  @EnumFieldOptional(() => DeviceOtaStatus)
+  otaStatus?: DeviceOtaStatus;
+
+  @StringFieldOptional({ nullable: true })
+  otaFirmwareId?: string | null;
+
+  @StringFieldOptional({ nullable: true })
+  otaTargetVersion?: string | null;
+
+  @NumberFieldOptional({ nullable: true, int: true })
+  otaProgress?: number | null;
+
+  @StringFieldOptional({ nullable: true })
+  otaError?: string | null;
+
+  @DateFieldOptional({ nullable: true })
+  otaRequestedAt?: Date | null;
+
+  @DateFieldOptional({ nullable: true })
+  otaUpdatedAt?: Date | null;
+
   constructor(entity: DeviceEntity) {
     super(entity);
     this.deviceId = entity.deviceId;
@@ -113,5 +138,13 @@ export class DeviceDto extends AbstractDto {
     this.lifecycleStage = entity.lifecycleStage;
     this.lifecycleScore = entity.lifecycleScore;
     this.lifecycleAssessedAt = entity.lifecycleAssessedAt;
+    this.firmwareVersion = entity.firmwareVersion;
+    this.otaStatus = entity.otaStatus as DeviceOtaStatus;
+    this.otaFirmwareId = entity.otaFirmwareId;
+    this.otaTargetVersion = entity.otaTargetVersion;
+    this.otaProgress = entity.otaProgress;
+    this.otaError = entity.otaError;
+    this.otaRequestedAt = entity.otaRequestedAt;
+    this.otaUpdatedAt = entity.otaUpdatedAt;
   }
 }

@@ -7,11 +7,13 @@ import {
   KAFKA_ALERT_TOPIC,
   KAFKA_COMMAND_TOPIC,
   KAFKA_DEVICE_EVENTS_TOPIC,
+  KAFKA_OTA_STATUS_TOPIC,
   KAFKA_STATUS_TOPIC,
   KAFKA_TELEMETRY_TOPIC,
 } from '../../constants/kafka-topics.ts';
 import { ApiConfigService } from '../../shared/services/api-config.service.ts';
 import { DeviceService } from '../device/device.service.ts';
+import { DeviceOtaService } from '../device/device-ota.service.ts';
 
 interface KafkaTelemetryPayload {
   deviceId?: string;
@@ -46,6 +48,15 @@ interface KafkaAlertPayload {
   [key: string]: unknown;
 }
 
+interface KafkaOtaStatusPayload {
+  deviceId?: string;
+  status?: string;
+  version?: string;
+  progress?: number;
+  error?: string;
+  [key: string]: unknown;
+}
+
 /**
  * Raw kafkajs consumer for the five inbound gateway->cloud topics, replacing
  * @nestjs/microservices' ServerKafka + @EventPattern controller. Connects/subscribes once on app
@@ -71,6 +82,7 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly apiConfigService: ApiConfigService,
     private readonly deviceService: DeviceService,
+    private readonly deviceOtaService: DeviceOtaService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -132,7 +144,14 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.consumer.connect();
       await this.consumer.subscribe({
-        topics: [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC, KAFKA_ALERT_TOPIC],
+        topics: [
+          KAFKA_TELEMETRY_TOPIC,
+          KAFKA_STATUS_TOPIC,
+          KAFKA_DEVICE_EVENTS_TOPIC,
+          KAFKA_COMMAND_TOPIC,
+          KAFKA_ALERT_TOPIC,
+          KAFKA_OTA_STATUS_TOPIC,
+        ],
         fromBeginning: false,
       });
       await this.consumer.run({ eachMessage: (payload) => this.handleMessage(payload) });
@@ -189,6 +208,10 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
           await this.handleAlert(data);
           break;
         }
+        case KAFKA_OTA_STATUS_TOPIC: {
+          await this.handleOtaStatus(data);
+          break;
+        }
         default: {
           this.logger.warn(`Received Kafka message on unhandled topic: ${topic}`);
         }
@@ -235,6 +258,18 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
     }
 
     await this.deviceService.handleDeviceChannelEvent(deviceId, event);
+  }
+
+  private async handleOtaStatus(data: KafkaOtaStatusPayload): Promise<void> {
+    const { deviceId, ...report } = data ?? {};
+
+    if (!deviceId) {
+      this.logger.warn(`Received Kafka OTA status message without deviceId: ${JSON.stringify(data)}`);
+
+      return;
+    }
+
+    await this.deviceOtaService.handleOtaStatusReport(deviceId, report);
   }
 
   private async handleAlert(data: KafkaAlertPayload): Promise<void> {

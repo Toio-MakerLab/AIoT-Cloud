@@ -42,6 +42,7 @@
     "status": "Trạng thái",
     "active": "Hoạt động",
     "inactive": "Ngừng hoạt động",
+    "size": "Kích thước",
     "createdAt": "Ngày tạo",
     "updatedAt": "Ngày cập nhật",
     "optional": "Không bắt buộc",

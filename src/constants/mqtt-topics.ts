@@ -25,8 +25,16 @@ export const defaultEventTopic = (deviceId: string): string => `devices/${device
  */
 export const defaultChannelCommandTopic = (deviceId: string, channel: number): string => `devices/${deviceId}/channel/${channel}/command`;
 
+/** Downlink OTA update instruction: backend -> device, `{ version, url, checksum?, size? }` — see DeviceOtaService.triggerUpdate. */
+export const defaultOtaTopic = (deviceId: string): string => `devices/${deviceId}/ota`;
+
+/** Uplink OTA progress/result report: device -> backend, `{ status, version?, progress?, error? }` — see DeviceOtaService.handleOtaStatusReport. */
+export const defaultOtaStatusTopic = (deviceId: string): string => `devices/${deviceId}/ota/status`;
+
 export const TELEMETRY_TOPIC_REGEX = /^devices\/([^/]+)\/telemetry$/;
 export const COMMAND_TOPIC_REGEX = /^devices\/([^/]+)\/command$/;
 export const STATUS_TOPIC_REGEX = /^devices\/([^/]+)\/status$/;
 export const EVENT_TOPIC_REGEX = /^devices\/([^/]+)\/event$/;
 export const CHANNEL_COMMAND_TOPIC_REGEX = /^devices\/([^/]+)\/channel\/(\d+)\/command$/;
+export const OTA_TOPIC_REGEX = /^devices\/([^/]+)\/ota$/;
+export const OTA_STATUS_TOPIC_REGEX = /^devices\/([^/]+)\/ota\/status$/;

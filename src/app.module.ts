@@ -165,10 +165,19 @@ function redactSensitiveFields(body: unknown): unknown {
       imports: [SharedModule],
       inject: [ApiConfigService],
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'dist-client'), // Path to your web folder
-      exclude: ['/api/{*splat}'],
-    }),
+    ServeStaticModule.forRoot(
+      {
+        rootPath: join(process.cwd(), 'dist-client'), // Path to your web folder
+        exclude: ['/api/{*splat}', '/uploads/{*splat}'],
+      },
+      // Uploaded firmware binaries (see FirmwareService.uploadFirmware) — served back out as plain
+      // static files under /uploads so a device can download them directly by URL, same as any
+      // externally-hosted `fileUrl` would be.
+      {
+        rootPath: join(process.cwd(), 'uploads'),
+        serveRoot: '/uploads',
+      },
+    ),
     HealthCheckerModule,
   ],
   providers: [],

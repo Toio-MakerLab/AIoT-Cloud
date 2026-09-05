@@ -1,5 +1,5 @@
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
-import { IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconCpu, IconEdit, IconTrash } from '@tabler/icons-react';
 import type { Row } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ interface DataTableRowActionsProps {
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { t } = useTranslation('common');
+  const { t: tTemplates } = useTranslation('deviceTemplates');
   const { setOpen, setCurrentRow } = useDeviceTemplates();
   // Mutating routes (POST/PUT/DELETE) are ADMIN/ROOT only on the backend
   // (see device-template.controller.ts @Auth decorators). No
@@ -48,6 +49,17 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           {t('actions.edit')}
           <DropdownMenuShortcut>
             <IconEdit size={16} />
+          </DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            setCurrentRow(row.original);
+            setOpen('firmware');
+          }}
+        >
+          {tTemplates('actions.manageFirmware')}
+          <DropdownMenuShortcut>
+            <IconCpu size={16} />
           </DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

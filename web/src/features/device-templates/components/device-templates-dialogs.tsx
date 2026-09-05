@@ -1,6 +1,7 @@
 import { useDeviceTemplates } from '../context/device-templates-context';
 import { DeviceTemplatesActionDialog } from './device-templates-action-dialog';
 import { DeviceTemplatesDeleteDialog } from './device-templates-delete-dialog';
+import { FirmwareManagerDialog } from './firmware-manager-dialog';
 
 export function DeviceTemplatesDialogs() {
   const { open, setOpen, currentRow, setCurrentRow } = useDeviceTemplates();
@@ -27,6 +28,18 @@ export function DeviceTemplatesDialogs() {
             open={open === 'delete'}
             onOpenChange={() => {
               setOpen('delete');
+              setTimeout(() => {
+                setCurrentRow(null);
+              }, 500);
+            }}
+            currentRow={currentRow}
+          />
+
+          <FirmwareManagerDialog
+            key={`device-template-firmware-${currentRow.id}`}
+            open={open === 'firmware'}
+            onOpenChange={() => {
+              setOpen('firmware');
               setTimeout(() => {
                 setCurrentRow(null);
               }, 500);

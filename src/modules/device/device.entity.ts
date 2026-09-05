@@ -117,4 +117,35 @@ export class DeviceEntity extends AbstractEntity<DeviceDto> {
   /** Set once a user/admin manually decommissions the device; DeviceLifecycleService then stops recomputing its stage. */
   @Column({ nullable: true, type: 'timestamp' })
   decommissionedAt!: Date | null;
+
+  /** Last firmware version the device confirmed it's actually running — set on a `SUCCESS` OTA report, not just requested. */
+  @Column({ nullable: true, type: 'varchar' })
+  firmwareVersion!: string | null;
+
+  /** Current OTA attempt state; plain varchar for the same reason as `lifecycleStage` — see DeviceOtaStatus. */
+  @Column({ type: 'varchar', default: 'IDLE' })
+  otaStatus!: string;
+
+  /** The firmware currently (or most recently) being pushed to this device — see DeviceOtaService.triggerUpdate. */
+  @Column({ nullable: true, type: 'varchar' })
+  otaFirmwareId!: string | null;
+
+  /** The version string of `otaFirmwareId` at trigger time, cached here so status/history reads don't need a join back to `firmwares`. */
+  @Column({ nullable: true, type: 'varchar' })
+  otaTargetVersion!: string | null;
+
+  /** 0-100, as last reported by the device; `null` before any progress report comes in for the current attempt. */
+  @Column({ nullable: true, type: 'int' })
+  otaProgress!: number | null;
+
+  /** Set on a `FAILED` OTA report; cleared on the next successful attempt. */
+  @Column({ nullable: true, type: 'varchar' })
+  otaError!: string | null;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  otaRequestedAt!: Date | null;
+
+  /** Last time `otaStatus` changed, whether from a device report or a fresh trigger. */
+  @Column({ nullable: true, type: 'timestamp' })
+  otaUpdatedAt!: Date | null;
 }

@@ -16,6 +16,8 @@ export interface DeviceMqttTopics {
   status?: string | null;
   /** Uplink ack topic for a downlink command's result — see `defaultEventTopic`'s doc comment. */
   event?: string | null;
+  /** Downlink OTA update instruction topic — see `defaultOtaTopic`'s doc comment. */
+  ota?: string | null;
   /** Auto-generated per-channel command topics; present only for multi-channel templates (e.g. RELAY_NODE). */
   channels?: DeviceMqttChannelTopic[] | null;
 }

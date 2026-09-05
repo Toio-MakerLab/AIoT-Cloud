@@ -356,6 +356,52 @@ Either shape accepts an optional `channels` field:
   `NotificationService.sendWarning`. An unregistered `deviceId` is recorded as an unclaimed device
   like the other topics, rather than dropped.
 
+### `devices.cloud.ota` (gateway/device → cloud)
+
+OTA (over-the-air) firmware update progress/result — the uplink counterpart of the `ota_update`
+message on `devices.gateway.commands` above:
+
+```json
+{
+  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "status": "DOWNLOADING",
+  "progress": 42
+}
+```
+
+- `status` (string, required) — one of `PENDING` \| `DOWNLOADING` \| `INSTALLING` \| `SUCCESS` \|
+  `FAILED` (case-insensitive). An unrecognized value is logged and ignored, same as an unrecognized
+  `devices.status` payload.
+- `progress` (number, optional) — 0-100.
+- `version` (string, required on `"SUCCESS"`) — the firmware version now running; stored as the
+  device's new `firmwareVersion`.
+- `error` (string, optional, on `"FAILED"`) — what went wrong.
+- Consumed by `KafkaConsumerService.handleOtaStatus` → `DeviceOtaService.handleOtaStatusReport`,
+  which updates the device's cached `ota*` fields, the matching `device_ota_updates` history row,
+  and broadcasts a `otaStatus` websocket/SSE event.
+- A device connected directly over MQTT (not bridged by a gateway) reports the same shape on its
+  own `devices/{deviceId}/ota/status` topic instead — see `defaultOtaStatusTopic`'s doc comment.
+
+An `ota_update` instruction going the other way is carried on `devices.gateway.commands` (see
+above), distinguished by `type: "ota_update"`:
+
+```json
+{
+  "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+  "type": "ota_update",
+  "version": "1.4.2",
+  "url": "https://example.com/uploads/firmware/abc123.bin",
+  "checksum": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+  "size": 1048576
+}
+```
+
+- Published by `DeviceOtaService.triggerUpdate` when a user dispatches an update from the
+  dashboard. `url` is wherever the binary is actually hosted — this backend never proxies or
+  streams the firmware itself, only the instruction to fetch it.
+- A device can also *pull* this information itself instead of only reacting to a push — see
+  `GET devices/{deviceId}/ota/manifest` below.
+
 ## Fetching device config (REST)
 
 Before bridging a device, the gateway fetches its config to learn the push
@@ -436,6 +482,42 @@ x-device-secret: <shared secret>
   periodically and compare against its last-applied `configVersion` (bumped
   on every `PATCH /devices/:id/config`), since `config_sync` delivery isn't
   guaranteed (e.g. the gateway was offline when it was published).
+
+### Checking for an OTA update (REST, pull-based)
+
+A device/gateway can also check for a firmware update itself instead of only reacting to a
+`devices.gateway.commands` push — same auth as `boot-config`:
+
+```
+GET /devices/{deviceId}/ota/manifest
+x-device-secret: <shared secret>
+```
+
+```json
+{
+  "error": 0,
+  "message": "",
+  "data": {
+    "deviceId": "01a04142-ba64-79c2-b29c-6c8ae29af427",
+    "currentVersion": "1.4.1",
+    "updateAvailable": true,
+    "latestVersion": "1.4.2",
+    "fileUrl": "https://example.com/uploads/firmware/abc123.bin",
+    "checksum": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+    "sizeBytes": 1048576,
+    "releaseNotes": "Fixes relay debounce"
+  }
+}
+```
+
+- `updateAvailable` is true whenever the latest **active** firmware build registered for this
+  device's template (`POST /firmwares` or `POST /firmwares/upload`) has a different `version` than
+  `currentVersion` (the device's last self-reported `SUCCESS` version) — `fileUrl`/`checksum`/etc.
+  are only populated in that case.
+- Poll this on boot and/or on an interval; there's no push notification for "a new build was
+  published" the way `config_sync` exists for config changes.
+- After downloading and applying an update, report the result on `devices.cloud.ota` (or the MQTT
+  `.../ota/status` topic) so `currentVersion` advances and the dashboard reflects it.
 
 ## Unregistered devices
 

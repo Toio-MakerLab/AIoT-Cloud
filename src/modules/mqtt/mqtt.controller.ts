@@ -6,11 +6,14 @@ import {
   CHANNEL_COMMAND_TOPIC_REGEX,
   COMMAND_TOPIC_REGEX,
   EVENT_TOPIC_REGEX,
+  OTA_STATUS_TOPIC_REGEX,
+  OTA_TOPIC_REGEX,
   STATUS_TOPIC_REGEX,
   TELEMETRY_TOPIC_REGEX,
 } from '../../constants/mqtt-topics.ts';
 import type { DeviceChannelEventPayload } from '../device/device.service.ts';
 import { DeviceService } from '../device/device.service.ts';
+import { DeviceOtaService } from '../device/device-ota.service.ts';
 import type { ResolvedMqttTopic } from './mqtt-topic-registry.service.ts';
 import { MqttTopicRegistryService } from './mqtt-topic-registry.service.ts';
 
@@ -20,6 +23,7 @@ export class MqttController {
 
   constructor(
     private readonly deviceService: DeviceService,
+    private readonly deviceOtaService: DeviceOtaService,
     private readonly mqttTopicRegistryService: MqttTopicRegistryService,
   ) {}
 
@@ -62,9 +66,19 @@ export class MqttController {
       return;
     }
 
-    // Command topics are backend -> device (downlink); the broker echoes our own
+    // A device reporting OTA download/install progress or the final result — see
+    // `defaultOtaStatusTopic`'s doc comment.
+    const otaStatusDeviceId = OTA_STATUS_TOPIC_REGEX.exec(topic)?.[1];
+
+    if (otaStatusDeviceId) {
+      void this.deviceOtaService.handleOtaStatusReport(otaStatusDeviceId, data as Record<string, unknown>);
+
+      return;
+    }
+
+    // Command/OTA topics are backend -> device (downlink); the broker echoes our own
     // publishes back through this wildcard subscription, so ignore rather than re-process.
-    if (COMMAND_TOPIC_REGEX.test(topic) || CHANNEL_COMMAND_TOPIC_REGEX.test(topic)) {
+    if (COMMAND_TOPIC_REGEX.test(topic) || CHANNEL_COMMAND_TOPIC_REGEX.test(topic) || OTA_TOPIC_REGEX.test(topic)) {
       return;
     }
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import useDialogState from '@/hooks/use-dialog-state';
 import type { DeviceTemplate } from '../data/schema';
 
-type DeviceTemplatesDialogType = 'add' | 'edit' | 'delete';
+type DeviceTemplatesDialogType = 'add' | 'edit' | 'delete' | 'firmware';
 
 interface DeviceTemplatesContextType {
   open: DeviceTemplatesDialogType | null;

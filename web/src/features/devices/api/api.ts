@@ -2,9 +2,12 @@ import apiClient from '@/lib/api-client';
 import type {
   IDevice,
   IDeviceLifecycleAssessment,
+  IDeviceOtaStatus,
+  IDeviceOtaUpdate,
   IDevicesQuery,
   IDeviceTelemetry,
   IDeviceTemplateSummary,
+  IFirmwareOption,
   IPageResponse,
   IPushConfigSyncResult,
   IRegisterDevice,
@@ -12,6 +15,7 @@ import type {
   IResponseCore,
   ITriggerDeviceAction,
   ITriggerDeviceActionResult,
+  ITriggerOtaUpdate,
   IUnclaimedDevice,
   IUpdateDeviceConfig,
   IUpdateDeviceLifecycle,
@@ -83,6 +87,28 @@ export const devicesApi = {
   /** Manually retires the device; its stage stops recomputing from telemetry/connectivity after this. */
   decommissionDevice: async (id: string) => {
     const response = await apiClient.post<IResponseCore<IDeviceLifecycleAssessment>>(`/devices/${id}/lifecycle/decommission`);
+    return response.data;
+  },
+  getDeviceOtaStatus: async (id: string) => {
+    const response = await apiClient.get<IResponseCore<IDeviceOtaStatus>>(`/devices/${id}/ota`);
+    return response.data;
+  },
+  getDeviceOtaHistory: async (id: string) => {
+    const response = await apiClient.get<IResponseCore<IDeviceOtaUpdate[]>>(`/devices/${id}/ota/history`);
+    return response.data;
+  },
+  /** Dispatches an update to the device from the firmware catalog for its template. */
+  triggerOtaUpdate: async (id: string, data: ITriggerOtaUpdate) => {
+    const response = await apiClient.post<IResponseCore<IDeviceOtaStatus>>(`/devices/${id}/ota`, data);
+    return response.data;
+  },
+  /**
+   * Self-contained fetch for the "pick a firmware build" step — same "features stay
+   * self-contained" convention as `getDeviceTemplates` above, so this feature doesn't import
+   * from features/device-templates.
+   */
+  getFirmwaresForTemplate: async (templateId: string) => {
+    const response = await apiClient.get<IResponseCore<IFirmwareOption[]>>('/firmwares', { params: { templateId } });
     return response.data;
   },
 };

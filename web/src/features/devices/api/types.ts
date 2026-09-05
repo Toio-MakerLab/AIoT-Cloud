@@ -202,6 +202,14 @@ export interface IDevice {
   lifecycleStage?: DeviceLifecycleStage;
   lifecycleScore?: number | null;
   lifecycleAssessedAt?: string | null;
+  firmwareVersion?: string | null;
+  otaStatus?: DeviceOtaStatus;
+  otaFirmwareId?: string | null;
+  otaTargetVersion?: string | null;
+  otaProgress?: number | null;
+  otaError?: string | null;
+  otaRequestedAt?: string | null;
+  otaUpdatedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -238,6 +246,60 @@ export interface IDeviceLifecycleAssessment {
 export interface IUpdateDeviceLifecycle {
   installedAt?: string | null;
   expectedLifespanMonths?: number | null;
+}
+
+/** src/constants/device-ota-status.ts */
+export const DeviceOtaStatus = {
+  IDLE: 'IDLE',
+  PENDING: 'PENDING',
+  DOWNLOADING: 'DOWNLOADING',
+  INSTALLING: 'INSTALLING',
+  SUCCESS: 'SUCCESS',
+  FAILED: 'FAILED',
+} as const;
+export type DeviceOtaStatus = (typeof DeviceOtaStatus)[keyof typeof DeviceOtaStatus];
+
+/** Response for GET/POST /devices/:id/ota — src/modules/device/dtos/device-ota.dto.ts */
+export interface IDeviceOtaStatus {
+  deviceId: string;
+  status: DeviceOtaStatus;
+  currentVersion: string | null;
+  targetVersion: string | null;
+  firmwareId: string | null;
+  progress: number | null;
+  error: string | null;
+  requestedAt: string | null;
+  updatedAt: string | null;
+}
+
+/** One row of GET /devices/:id/ota/history. */
+export interface IDeviceOtaUpdate {
+  id: string;
+  deviceId: string;
+  firmwareId?: string | null;
+  fromVersion?: string | null;
+  toVersion: string;
+  status: DeviceOtaStatus;
+  progress?: number | null;
+  error?: string | null;
+  requestedAt?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ITriggerOtaUpdate {
+  firmwareId: string;
+}
+
+/** Minimal shape of a firmware catalog entry this feature consumes — device-templates feature owns the full DTO. */
+export interface IFirmwareOption {
+  id: string;
+  templateId: string;
+  version: string;
+  isActive: boolean;
+  releaseNotes?: string | null;
 }
 
 export interface IUnclaimedDevice {

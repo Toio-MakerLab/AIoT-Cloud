@@ -83,3 +83,14 @@ export const KAFKA_DEVICE_EVENTS_TOPIC = 'devices.cloud.events';
  * publishers that don't want to encode a rule.
  */
 export const KAFKA_ALERT_TOPIC = 'devices.cloud.alerts';
+
+/**
+ * Shared Kafka topic for gateway/device -> backend OTA update progress/result uplink — the
+ * counterpart of the `ota_update` message on `KAFKA_GATEWAY_COMMANDS_TOPIC` (see its doc comment).
+ * Each message carries `{ deviceId, status, version?, progress?, error? }`, keyed/partitioned by
+ * deviceId like the other topics. `status` is one of `DeviceOtaStatus` (`"DOWNLOADING"`,
+ * `"INSTALLING"`, `"SUCCESS"`, `"FAILED"`); `version` (on `"SUCCESS"`) is the firmware version now
+ * running; `progress` is 0-100; `error` (on `"FAILED"`) describes what went wrong. Consumed by
+ * `KafkaConsumerService.handleOtaStatus` -> `DeviceOtaService.handleOtaStatusReport`.
+ */
+export const KAFKA_OTA_STATUS_TOPIC = 'devices.cloud.ota';
