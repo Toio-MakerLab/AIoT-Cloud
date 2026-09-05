@@ -5,7 +5,8 @@ ARG NODE_VERSION=22-alpine
 # ---- backend deps ----------------------------------------------------------
 FROM node:${NODE_VERSION} AS backend-deps
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
+RUN npm install --global pnpm@11.22.0 \
+    && pnpm --version
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
@@ -21,7 +22,8 @@ RUN pnpm build:prod
 FROM node:${NODE_VERSION} AS frontend-build
 WORKDIR /app/web
 
-RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
+RUN npm install --global pnpm@11.22.0 \
+    && pnpm --version
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
 
 ARG VITE_APP_VERSION
