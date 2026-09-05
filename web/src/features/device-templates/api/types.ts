@@ -46,6 +46,36 @@ export interface ICreateDeviceTemplate {
 
 export type IUpdateDeviceTemplate = Partial<ICreateDeviceTemplate>;
 
+// Mirrors backend src/modules/device-template/dtos/firmware.dto.ts
+export interface IFirmware {
+  id: string;
+  templateId: string;
+  version: string;
+  fileUrl: string;
+  checksum?: string | null;
+  sizeBytes?: number | null;
+  releaseNotes?: string | null;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Registers a build already hosted elsewhere — see uploadFirmware for the multipart `.bin` upload variant. */
+export interface ICreateFirmware {
+  templateId: string;
+  version: string;
+  fileUrl: string;
+  checksum?: string | null;
+  sizeBytes?: number | null;
+  releaseNotes?: string | null;
+}
+
+export interface IUpdateFirmware {
+  releaseNotes?: string | null;
+  isActive?: boolean;
+}
+
 export interface IDeviceTemplatesQueryParams {
   page?: number;
   take?: number;

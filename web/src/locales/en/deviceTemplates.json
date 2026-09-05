@@ -47,6 +47,25 @@
   "primaryButtons": {
     "addTemplate": "Add Template"
   },
+  "actions": {
+    "manageFirmware": "Manage Firmware"
+  },
+  "firmware": {
+    "title": "Firmware — {{name}}",
+    "description": "Upload or register firmware builds devices of this template can be updated to.",
+    "version": "Version",
+    "binFile": "Firmware file (.bin)",
+    "releaseNotes": "Release notes",
+    "releaseNotesPlaceholder": "What changed in this build...",
+    "upload": "Upload",
+    "uploaded": "Firmware uploaded",
+    "loading": "Loading…",
+    "empty": "No firmware builds yet.",
+    "inactiveBadge": "{{version}} (inactive)",
+    "deleted": "Firmware deleted",
+    "deleteTitle": "Delete firmware build",
+    "deleteDesc": "Remove {{version}}? Devices already updated to it keep reporting this version, but it can no longer be pushed to any device."
+  },
   "deleteDialog": {
     "deleted": "Device template deleted",
     "title": "Delete Device Template",

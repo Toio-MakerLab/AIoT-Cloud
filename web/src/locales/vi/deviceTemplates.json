@@ -47,6 +47,25 @@
   "primaryButtons": {
     "addTemplate": "Thêm mẫu thiết bị"
   },
+  "actions": {
+    "manageFirmware": "Quản lý firmware"
+  },
+  "firmware": {
+    "title": "Firmware — {{name}}",
+    "description": "Tải lên hoặc đăng ký bản firmware mà thiết bị dùng mẫu này có thể cập nhật lên.",
+    "version": "Phiên bản",
+    "binFile": "Tệp firmware (.bin)",
+    "releaseNotes": "Ghi chú phát hành",
+    "releaseNotesPlaceholder": "Những gì đã thay đổi trong bản này...",
+    "upload": "Tải lên",
+    "uploaded": "Đã tải firmware lên",
+    "loading": "Đang tải…",
+    "empty": "Chưa có bản firmware nào.",
+    "inactiveBadge": "{{version}} (đã tắt)",
+    "deleted": "Đã xóa firmware",
+    "deleteTitle": "Xóa bản firmware",
+    "deleteDesc": "Xóa {{version}}? Các thiết bị đã cập nhật lên bản này vẫn báo cáo phiên bản đó, nhưng không thể đẩy bản này tới thiết bị nào nữa."
+  },
   "deleteDialog": {
     "deleted": "Đã xóa mẫu thiết bị",
     "title": "Xóa mẫu thiết bị",

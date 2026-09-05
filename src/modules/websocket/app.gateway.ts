@@ -10,6 +10,7 @@ import { RoleType } from '../../constants/role-type.ts';
 import { TokenType } from '../../constants/token-type.ts';
 import type { DeviceActionResultEvent, DeviceChannelStateEvent, DeviceStatusEvent, DeviceTelemetryEvent } from '../device/device.service.ts';
 import { DeviceService } from '../device/device.service.ts';
+import type { DeviceOtaStatusEvent } from '../device/device-ota.service.ts';
 import type { NotificationCreatedEvent } from '../notification/notification.service.ts';
 
 interface SocketData {
@@ -138,6 +139,13 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDeviceActionResult(event: DeviceActionResultEvent): void {
     const deviceId = this.physicalToEntityId.get(event.deviceId) ?? event.deviceId;
     this.server.to(deviceRoom(event.deviceId)).emit('actionResult', { ...event, deviceId });
+  }
+
+  /** Live progress/result of an OTA update, so a device detail page doesn't have to poll `GET .../ota`. */
+  @OnEvent('device.otaStatus')
+  handleDeviceOtaStatus(event: DeviceOtaStatusEvent): void {
+    const deviceId = this.physicalToEntityId.get(event.deviceId) ?? event.deviceId;
+    this.server.to(deviceRoom(event.deviceId)).emit('otaStatus', { ...event, deviceId });
   }
 
   /** Forwards every alert (see `NotificationService.sendWarning`) to the owner's user room, so the frontend can toast it on any page. */

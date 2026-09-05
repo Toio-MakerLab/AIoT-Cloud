@@ -1,5 +1,15 @@
 import apiClient from '@/lib/api-client';
-import type { ICreateDeviceTemplate, IDeviceTemplate, IDeviceTemplatesQueryParams, IPageDto, IResponseCore, IUpdateDeviceTemplate } from './types';
+import type {
+  ICreateDeviceTemplate,
+  ICreateFirmware,
+  IDeviceTemplate,
+  IDeviceTemplatesQueryParams,
+  IFirmware,
+  IPageDto,
+  IResponseCore,
+  IUpdateDeviceTemplate,
+  IUpdateFirmware,
+} from './types';
 import { SUCCESS_CODE } from './types';
 
 // Unwraps a ResponseCore envelope, throwing so react-query treats a
@@ -31,6 +41,33 @@ export const deviceTemplatesApi = {
   },
   deleteDeviceTemplate: async (id: string) => {
     const response = await apiClient.delete<IResponseCore<null>>(`/device-templates/${id}`);
+    return unwrap(response.data);
+  },
+  getFirmwares: async (templateId: string) => {
+    const response = await apiClient.get<IResponseCore<IFirmware[]>>('/firmwares', { params: { templateId } });
+    return unwrap(response.data);
+  },
+  /** Registers a build already hosted elsewhere — see `uploadFirmware` for the multipart `.bin` upload variant. */
+  createFirmware: async (data: ICreateFirmware) => {
+    const response = await apiClient.post<IResponseCore<IFirmware>>('/firmwares', data);
+    return unwrap(response.data);
+  },
+  uploadFirmware: async (templateId: string, version: string, file: File, releaseNotes?: string) => {
+    const formData = new FormData();
+    formData.append('templateId', templateId);
+    formData.append('version', version);
+    if (releaseNotes) formData.append('releaseNotes', releaseNotes);
+    formData.append('file', file);
+
+    const response = await apiClient.post<IResponseCore<IFirmware>>('/firmwares/upload', formData);
+    return unwrap(response.data);
+  },
+  updateFirmware: async (id: string, data: IUpdateFirmware) => {
+    const response = await apiClient.put<IResponseCore<IFirmware>>(`/firmwares/${id}`, data);
+    return unwrap(response.data);
+  },
+  deleteFirmware: async (id: string) => {
+    const response = await apiClient.delete<IResponseCore<null>>(`/firmwares/${id}`);
     return unwrap(response.data);
   },
 };

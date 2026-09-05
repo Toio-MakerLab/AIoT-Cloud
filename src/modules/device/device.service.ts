@@ -23,6 +23,7 @@ import {
   KAFKA_DEVICE_EVENTS_TOPIC,
   KAFKA_GATEWAY_COMMANDS_TOPIC,
   KAFKA_GATEWAY_EVENTS_TOPIC,
+  KAFKA_OTA_STATUS_TOPIC,
   KAFKA_STATUS_TOPIC,
   KAFKA_TELEMETRY_TOPIC,
 } from '../../constants/kafka-topics.ts';
@@ -30,6 +31,7 @@ import {
   defaultChannelCommandTopic,
   defaultCommandTopic,
   defaultEventTopic,
+  defaultOtaTopic,
   defaultStatusTopic,
   defaultTelemetryTopic,
 } from '../../constants/mqtt-topics.ts';
@@ -41,6 +43,7 @@ import { MqttProducerService } from '../mqtt/mqtt-producer.service.ts';
 import type { MqttTopicRole, ResolvedMqttTopic } from '../mqtt/mqtt-topic-registry.service.ts';
 import { MqttTopicRegistryService } from '../mqtt/mqtt-topic-registry.service.ts';
 import { DeviceEntity } from './device.entity.ts';
+import type { DeviceOtaStatusEvent } from './device-ota.service.ts';
 import { DeviceTelemetryEntity } from './device-telemetry.entity.ts';
 import type { DeviceDto } from './dtos/device.dto.ts';
 import type { DeviceConfigDto, UpdateDeviceConfigDto } from './dtos/device-config.dto.ts';
@@ -200,17 +203,22 @@ export class DeviceService {
             command: defaultCommandTopic(device.deviceId),
             status: defaultStatusTopic(device.deviceId),
             event: defaultEventTopic(device.deviceId),
+            ota: defaultOtaTopic(device.deviceId),
           },
         };
 
-    // `event` falls back to the derived default even for a stored (user-configured) `mqttBase`,
-    // so a device config saved before this field existed still gets an ack topic without needing
-    // a re-save.
+    // `event`/`ota` fall back to their derived defaults even for a stored (user-configured)
+    // `mqttBase`, so a device config saved before these fields existed still gets them without
+    // needing a re-save.
     const mqtt =
       device.pushChannel === DevicePushChannel.MQTT
         ? {
             ...mqttBase,
-            topics: this.buildMqttTopics(device, { ...mqttBase.topics, event: mqttBase.topics.event ?? defaultEventTopic(device.deviceId) }),
+            topics: this.buildMqttTopics(device, {
+              ...mqttBase.topics,
+              event: mqttBase.topics.event ?? defaultEventTopic(device.deviceId),
+              ota: mqttBase.topics.ota ?? defaultOtaTopic(device.deviceId),
+            }),
           }
         : null;
 
@@ -282,7 +290,9 @@ export class DeviceService {
 
     const kafka: DeviceKafkaConfig = {
       brokers: kafkaFallback.brokers,
-      topics: isGateway ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC] : [KAFKA_TELEMETRY_TOPIC],
+      topics: isGateway
+        ? [KAFKA_TELEMETRY_TOPIC, KAFKA_STATUS_TOPIC, KAFKA_DEVICE_EVENTS_TOPIC, KAFKA_COMMAND_TOPIC, KAFKA_OTA_STATUS_TOPIC]
+        : [KAFKA_TELEMETRY_TOPIC],
       // Only gateways consume this — they relay cloud -> device commands to whatever they bridge
       // locally, and also treat a command addressed to their own deviceId as self-directed (see
       // docs/gateway-kafka-integration.md). Standalone (non-gateway) Kafka devices have nothing to
@@ -740,11 +750,31 @@ export class DeviceService {
           ),
         );
 
+        // OTA progress/result — see `DeviceOtaStatusEvent`'s doc comment. Mirrors
+        // `AppGateway.handleDeviceOtaStatus`'s `otaStatus` socket.io event.
+        const otaStatus$ = fromEvent<DeviceOtaStatusEvent>(this.eventEmitter, 'device.otaStatus').pipe(
+          filter((event) => entityIdByPhysicalDeviceId.has(event.deviceId)),
+          map(
+            (event) =>
+              ({
+                type: 'otaStatus',
+                data: {
+                  deviceId: entityIdByPhysicalDeviceId.get(event.deviceId),
+                  status: event.status,
+                  version: event.version,
+                  progress: event.progress,
+                  error: event.error,
+                  changedAt: event.changedAt,
+                },
+              }) satisfies MessageEvent,
+          ),
+        );
+
         const heartbeat$ = interval(SSE_HEARTBEAT_MS).pipe(
           map(() => ({ type: 'ping', data: { now: new Date().toISOString() } }) satisfies MessageEvent),
         );
 
-        return merge(telemetry$, status$, channelState$, actionResult$, heartbeat$);
+        return merge(telemetry$, status$, channelState$, actionResult$, otaStatus$, heartbeat$);
       }),
     );
   }
@@ -790,6 +820,7 @@ export class DeviceService {
            OR device.config #>> '{mqtt,topics,status}' = :topic
            OR device.config #>> '{mqtt,topics,event}' = :topic
            OR device.config #>> '{mqtt,topics,command}' = :topic
+           OR device.config #>> '{mqtt,topics,ota}' = :topic
            OR EXISTS (
              SELECT 1 FROM jsonb_array_elements(COALESCE(device.config #> '{mqtt,topics,channels}', '[]'::jsonb)) AS channel
              WHERE channel ->> 'topic' = :topic
@@ -811,7 +842,10 @@ export class DeviceService {
           ? 'status'
           : topics.event === topic
             ? 'event'
-            : topics.command === topic || topics.channels?.some((channel) => channel.topic === topic)
+            : // `ota` is downlink-only, same as `command`/`channels` — reusing the 'command' role here
+              // just means "ignore the broker's echo of our own publish", not that it's actually a
+              // command topic.
+              topics.command === topic || topics.ota === topic || topics.channels?.some((channel) => channel.topic === topic)
               ? 'command'
               : undefined;
 

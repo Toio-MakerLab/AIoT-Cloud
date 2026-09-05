@@ -152,6 +152,30 @@
     "decommissionTitle": "Decommission device",
     "decommissionDesc": "This marks the device as retired and stops its lifecycle stage from being recomputed. This cannot be undone from here."
   },
+  "otaPanel": {
+    "title": "Firmware Update",
+    "description": "Push a firmware build from the template's catalog and track the update's progress.",
+    "loading": "Loading…",
+    "status": {
+      "idle": "Up to date",
+      "pending": "Dispatched",
+      "downloading": "Downloading",
+      "installing": "Installing",
+      "success": "Success",
+      "failed": "Failed"
+    },
+    "currentVersion": "Current version",
+    "targetVersion": "Target version",
+    "lastUpdated": "Last updated",
+    "unknown": "Unknown",
+    "progress": "Progress",
+    "selectFirmware": "Select a firmware build",
+    "pushUpdate": "Push update",
+    "updateDispatched": "Firmware update dispatched",
+    "noFirmwareAvailable": "No active firmware build registered for this device's template yet.",
+    "channelUnsupported": "This device's push channel doesn't support OTA updates.",
+    "history": "Recent attempts"
+  },
   "gatewayAutomation": {
     "alertRulesSaved": "Alert rules saved",
     "failsafeSaved": "Failsafe config saved",

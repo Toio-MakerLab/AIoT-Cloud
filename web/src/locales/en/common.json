@@ -42,6 +42,7 @@
     "status": "Status",
     "active": "Active",
     "inactive": "Inactive",
+    "size": "Size",
     "createdAt": "Created At",
     "updatedAt": "Updated At",
     "optional": "Optional",

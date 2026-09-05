@@ -152,6 +152,30 @@
     "decommissionTitle": "Ngừng sử dụng thiết bị",
     "decommissionDesc": "Điều này sẽ đánh dấu thiết bị đã ngừng sử dụng và không còn tính toán lại vòng đời. Không thể hoàn tác từ đây."
   },
+  "otaPanel": {
+    "title": "Cập nhật firmware",
+    "description": "Đẩy một bản firmware từ kho của mẫu thiết bị và theo dõi tiến trình cập nhật.",
+    "loading": "Đang tải…",
+    "status": {
+      "idle": "Đã cập nhật",
+      "pending": "Đã gửi lệnh",
+      "downloading": "Đang tải xuống",
+      "installing": "Đang cài đặt",
+      "success": "Thành công",
+      "failed": "Thất bại"
+    },
+    "currentVersion": "Phiên bản hiện tại",
+    "targetVersion": "Phiên bản mục tiêu",
+    "lastUpdated": "Cập nhật lần cuối",
+    "unknown": "Không rõ",
+    "progress": "Tiến trình",
+    "selectFirmware": "Chọn bản firmware",
+    "pushUpdate": "Đẩy cập nhật",
+    "updateDispatched": "Đã gửi lệnh cập nhật firmware",
+    "noFirmwareAvailable": "Chưa có bản firmware nào được kích hoạt cho mẫu thiết bị này.",
+    "channelUnsupported": "Kênh đẩy dữ liệu của thiết bị này không hỗ trợ cập nhật OTA.",
+    "history": "Lịch sử gần đây"
+  },
   "gatewayAutomation": {
     "alertRulesSaved": "Đã lưu quy tắc cảnh báo",
     "failsafeSaved": "Đã lưu cấu hình an toàn",

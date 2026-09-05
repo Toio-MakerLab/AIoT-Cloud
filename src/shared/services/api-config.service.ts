@@ -28,13 +28,16 @@ import { CreateFactoriesTable1789000000000 } from '../../database/migrations/178
 import { UpdateSensorNodeTelemetrySchema1789100000000 } from '../../database/migrations/1789100000000-UpdateSensorNodeTelemetrySchema.ts';
 import { AddNotificationMessages1789200000000 } from '../../database/migrations/1789200000000-AddNotificationMessages.ts';
 import { AddDeviceLifecycle1789300000000 } from '../../database/migrations/1789300000000-AddDeviceLifecycle.ts';
+import { AddDeviceOta1789400000000 } from '../../database/migrations/1789400000000-AddDeviceOta.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
+import { DeviceOtaUpdateEntity } from '../../modules/device/device-ota-update.entity.ts';
 import { DeviceSecretEntity } from '../../modules/device/device-secret.entity.ts';
 import { DeviceTelemetryEntity } from '../../modules/device/device-telemetry.entity.ts';
 import { UnclaimedDeviceEntity } from '../../modules/device/unclaimed-device.entity.ts';
 import { DeviceTemplateEntity } from '../../modules/device-template/device-template.entity.ts';
+import { FirmwareEntity } from '../../modules/device-template/firmware.entity.ts';
 import { FactoryEntity } from '../../modules/factory/factory.entity.ts';
 import { NotificationConfigEntity } from '../../modules/notification/notification-config.entity.ts';
 import { NotificationMessageEntity } from '../../modules/notification/notification-message.entity.ts';
@@ -125,6 +128,8 @@ export class ApiConfigService {
         NotificationConfigEntity,
         FactoryEntity,
         NotificationMessageEntity,
+        FirmwareEntity,
+        DeviceOtaUpdateEntity,
       ],
       migrations: [
         InitSchema1787210034577,
@@ -151,6 +156,7 @@ export class ApiConfigService {
         UpdateSensorNodeTelemetrySchema1789100000000,
         AddNotificationMessages1789200000000,
         AddDeviceLifecycle1789300000000,
+        AddDeviceOta1789400000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',
@@ -241,6 +247,14 @@ export class ApiConfigService {
     return {
       port: this.getString('PORT'),
     };
+  }
+
+  /** This backend's own publicly-reachable base URL — used to build absolute links a device/gateway
+   * downloads directly (e.g. a firmware `fileUrl`), as opposed to `mailConfig.appUrl`, which points
+   * at the human-facing web client. Falls back to a local dev URL so uploads still work without
+   * the env var set, just with a non-routable host outside this machine. */
+  get publicUrl(): string {
+    return this.getFallback('PUBLIC_API_URL', `http://localhost:${this.getString('PORT')}`);
   }
 
   get mailEnabled(): boolean {
