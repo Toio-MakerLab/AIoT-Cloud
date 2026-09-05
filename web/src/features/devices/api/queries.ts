@@ -49,12 +49,28 @@ export const useDeviceTemplatesQuery = () =>
     queryFn: () => devicesApi.getDeviceTemplates(),
   });
 
-export const useUnclaimedDevicesQuery = () =>
+export const useUnclaimedDevicesQuery = (options: { includeIgnored?: boolean } = {}) =>
   useQuery({
-    queryKey: [UNCLAIMED_DEVICES_QUERY_KEY],
-    queryFn: () => devicesApi.getUnclaimedDevices(),
+    queryKey: [UNCLAIMED_DEVICES_QUERY_KEY, options.includeIgnored ?? false],
+    queryFn: () => devicesApi.getUnclaimedDevices(options),
     refetchInterval: DEVICE_STATUS_POLL_INTERVAL_MS,
   });
+
+export const useIgnoreUnclaimedDeviceMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (deviceId: string) => devicesApi.ignoreUnclaimedDevice(deviceId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [UNCLAIMED_DEVICES_QUERY_KEY] }),
+  });
+};
+
+export const useUnignoreUnclaimedDeviceMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (deviceId: string) => devicesApi.unignoreUnclaimedDevice(deviceId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [UNCLAIMED_DEVICES_QUERY_KEY] }),
+  });
+};
 
 export const useRegisterDeviceMutation = () => {
   const queryClient = useQueryClient();

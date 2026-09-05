@@ -308,6 +308,7 @@ export interface IUnclaimedDevice {
   lastTopic: string;
   lastPayload: string | null;
   lastSeenAt: string;
+  ignoredAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

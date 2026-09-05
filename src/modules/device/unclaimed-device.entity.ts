@@ -19,4 +19,8 @@ export class UnclaimedDeviceEntity extends AbstractEntity<UnclaimedDeviceDto> {
 
   @Column({ type: 'timestamp' })
   lastSeenAt!: Date;
+
+  /** Set when a user/admin dismisses this device (e.g. noise from another system sharing the broker); hides it from the default listing. */
+  @Column({ nullable: true, type: 'timestamp' })
+  ignoredAt!: Date | null;
 }

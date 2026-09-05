@@ -6,7 +6,7 @@ import type { Observable } from 'rxjs';
 import { defer, from, fromEvent, interval, merge } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
 import type { Repository } from 'typeorm';
-import { Between, In, LessThan, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { Between, In, IsNull, LessThan, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
 
 import type { AccessScope } from '../../common/access-scope.util.ts';
@@ -856,8 +856,11 @@ export class DeviceService {
     const device = await this.deviceRepository.findOneBy({ deviceId });
 
     if (!device) {
-      this.logger.warn(`Ignoring telemetry for unclaimed device ${deviceId}`);
-      await this.recordUnclaimedDevice(deviceId, 'telemetry', payload);
+      const isIgnored = await this.recordUnclaimedDevice(deviceId, 'telemetry', payload);
+
+      if (!isIgnored) {
+        this.logger.warn(`Ignoring telemetry for unclaimed device ${deviceId}`);
+      }
 
       return;
     }
@@ -898,8 +901,11 @@ export class DeviceService {
     const device = await this.deviceRepository.findOneBy({ deviceId });
 
     if (!device) {
-      this.logger.warn(`Ignoring status for unclaimed device ${deviceId}`);
-      await this.recordUnclaimedDevice(deviceId, 'status', payload);
+      const isIgnored = await this.recordUnclaimedDevice(deviceId, 'status', payload);
+
+      if (!isIgnored) {
+        this.logger.warn(`Ignoring status for unclaimed device ${deviceId}`);
+      }
 
       return;
     }
@@ -945,8 +951,11 @@ export class DeviceService {
     const device = await this.deviceRepository.findOneBy({ deviceId });
 
     if (!device) {
-      this.logger.warn(`Ignoring device event for unclaimed device ${deviceId}`);
-      await this.recordUnclaimedDevice(deviceId, event.topic ?? KAFKA_DEVICE_EVENTS_TOPIC, event);
+      const isIgnored = await this.recordUnclaimedDevice(deviceId, event.topic ?? KAFKA_DEVICE_EVENTS_TOPIC, event);
+
+      if (!isIgnored) {
+        this.logger.warn(`Ignoring device event for unclaimed device ${deviceId}`);
+      }
 
       return;
     }
@@ -1010,8 +1019,11 @@ export class DeviceService {
     const device = await this.deviceRepository.findOneBy({ deviceId });
 
     if (!device) {
-      this.logger.warn(`Ignoring alert for unclaimed device ${deviceId}`);
-      await this.recordUnclaimedDevice(deviceId, 'alert', payload);
+      const isIgnored = await this.recordUnclaimedDevice(deviceId, 'alert', payload);
+
+      if (!isIgnored) {
+        this.logger.warn(`Ignoring alert for unclaimed device ${deviceId}`);
+      }
 
       return;
     }
@@ -1058,13 +1070,46 @@ export class DeviceService {
     }
   }
 
-  async listUnclaimedDevices(): Promise<ResponseCore<UnclaimedDeviceDto[]>> {
-    const devices = await this.unclaimedDeviceRepository.find({ order: { lastSeenAt: 'DESC' } });
+  /** `includeIgnored` surfaces devices previously dismissed via `ignoreUnclaimedDevice` — hidden from the default listing. */
+  async listUnclaimedDevices(includeIgnored = false): Promise<ResponseCore<UnclaimedDeviceDto[]>> {
+    const devices = await this.unclaimedDeviceRepository.find({
+      where: includeIgnored ? {} : { ignoredAt: IsNull() },
+      order: { lastSeenAt: 'DESC' },
+    });
 
     return ResponseCore.ok(devices.toDtos());
   }
 
-  private async recordUnclaimedDevice(deviceId: string, topic: string, payload: unknown): Promise<void> {
+  /** Dismisses a noisy/foreign device (e.g. another system sharing the broker) from the default unclaimed listing. */
+  async ignoreUnclaimedDevice(deviceId: string): Promise<ResponseCore<UnclaimedDeviceDto>> {
+    const entity = await this.unclaimedDeviceRepository.findOneBy({ deviceId });
+
+    if (!entity) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.unclaimedDeviceNotFound');
+    }
+
+    entity.ignoredAt = new Date();
+    await this.unclaimedDeviceRepository.update(entity.id, { ignoredAt: entity.ignoredAt });
+
+    return ResponseCore.ok(entity.toDto());
+  }
+
+  /** Reverses `ignoreUnclaimedDevice`, e.g. once the device is expected to be claimed after all. */
+  async unignoreUnclaimedDevice(deviceId: string): Promise<ResponseCore<UnclaimedDeviceDto>> {
+    const entity = await this.unclaimedDeviceRepository.findOneBy({ deviceId });
+
+    if (!entity) {
+      return ResponseCore.fail(ErrorCode.NOT_FOUND, 'error.unclaimedDeviceNotFound');
+    }
+
+    entity.ignoredAt = null;
+    await this.unclaimedDeviceRepository.update(entity.id, { ignoredAt: null });
+
+    return ResponseCore.ok(entity.toDto());
+  }
+
+  /** Upserts the sighting and reports whether the device is on the ignore list, so callers can skip the noisy per-message warn log. */
+  private async recordUnclaimedDevice(deviceId: string, topic: string, payload: unknown): Promise<boolean> {
     const lastSeenAt = new Date();
     const lastPayload = typeof payload === 'string' ? payload : JSON.stringify(payload);
 
@@ -1073,12 +1118,14 @@ export class DeviceService {
     if (existing) {
       await this.unclaimedDeviceRepository.update(existing.id, { lastTopic: topic, lastPayload, lastSeenAt });
 
-      return;
+      return existing.ignoredAt !== null;
     }
 
     const entity = this.unclaimedDeviceRepository.create({ deviceId, lastTopic: topic, lastPayload, lastSeenAt });
 
     await this.unclaimedDeviceRepository.save(entity);
+
+    return false;
   }
 
   private parseStatusPayload(payload: unknown): DeviceStatus | null {

@@ -49,8 +49,23 @@ export class DeviceController {
   @Get('unclaimed')
   @Auth([RoleType.GUEST, RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
   @HttpCode(HttpStatus.OK)
-  getUnclaimedDevices(): Promise<ResponseCore<UnclaimedDeviceDto[]>> {
-    return this.deviceService.listUnclaimedDevices();
+  getUnclaimedDevices(@Query('includeIgnored') includeIgnored?: string): Promise<ResponseCore<UnclaimedDeviceDto[]>> {
+    return this.deviceService.listUnclaimedDevices(includeIgnored === 'true');
+  }
+
+  /** Dismisses noise (e.g. another system's devices sharing the broker) from the default unclaimed listing. */
+  @Patch('unclaimed/:deviceId/ignore')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  ignoreUnclaimedDevice(@Param('deviceId') deviceId: string): Promise<ResponseCore<UnclaimedDeviceDto>> {
+    return this.deviceService.ignoreUnclaimedDevice(deviceId);
+  }
+
+  @Delete('unclaimed/:deviceId/ignore')
+  @Auth([RoleType.USER, RoleType.ADMIN, RoleType.ROOT])
+  @HttpCode(HttpStatus.OK)
+  unignoreUnclaimedDevice(@Param('deviceId') deviceId: string): Promise<ResponseCore<UnclaimedDeviceDto>> {
+    return this.deviceService.unignoreUnclaimedDevice(deviceId);
   }
 
   /**

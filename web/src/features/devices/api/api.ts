@@ -37,8 +37,19 @@ export const devicesApi = {
     const response = await apiClient.post<IResponseCore<IRegisterDeviceResult>>('/devices/register', data);
     return response.data;
   },
-  getUnclaimedDevices: async () => {
-    const response = await apiClient.get<IResponseCore<IUnclaimedDevice[]>>('/devices/unclaimed');
+  getUnclaimedDevices: async (options: { includeIgnored?: boolean } = {}) => {
+    const response = await apiClient.get<IResponseCore<IUnclaimedDevice[]>>('/devices/unclaimed', {
+      params: { includeIgnored: options.includeIgnored },
+    });
+    return response.data;
+  },
+  /** Dismisses noise (e.g. another system's devices sharing the broker) from the default unclaimed listing. */
+  ignoreUnclaimedDevice: async (deviceId: string) => {
+    const response = await apiClient.patch<IResponseCore<IUnclaimedDevice>>(`/devices/unclaimed/${deviceId}/ignore`);
+    return response.data;
+  },
+  unignoreUnclaimedDevice: async (deviceId: string) => {
+    const response = await apiClient.delete<IResponseCore<IUnclaimedDevice>>(`/devices/unclaimed/${deviceId}/ignore`);
     return response.data;
   },
   deleteDevice: async (id: string) => {

@@ -202,7 +202,11 @@
     "lastTopic": "Last Topic",
     "lastSeen": "Last Seen",
     "action": "Action",
-    "register": "Register"
+    "register": "Register",
+    "ignore": "Ignore",
+    "unignore": "Unignore",
+    "ignored": "Ignored",
+    "showIgnored": "Show ignored"
   },
   "warningGates": {
     "saved": "Warning gate for \"{{label}}\" saved",

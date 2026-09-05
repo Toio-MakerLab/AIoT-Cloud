@@ -202,7 +202,11 @@
     "lastTopic": "Topic gần nhất",
     "lastSeen": "Lần cuối online",
     "action": "Hành động",
-    "register": "Đăng ký"
+    "register": "Đăng ký",
+    "ignore": "Bỏ qua",
+    "unignore": "Bỏ ẩn",
+    "ignored": "Đã bỏ qua",
+    "showIgnored": "Hiện thiết bị đã bỏ qua"
   },
   "warningGates": {
     "saved": "Đã lưu ngưỡng cảnh báo cho \"{{label}}\"",

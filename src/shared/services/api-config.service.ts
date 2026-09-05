@@ -29,6 +29,7 @@ import { UpdateSensorNodeTelemetrySchema1789100000000 } from '../../database/mig
 import { AddNotificationMessages1789200000000 } from '../../database/migrations/1789200000000-AddNotificationMessages.ts';
 import { AddDeviceLifecycle1789300000000 } from '../../database/migrations/1789300000000-AddDeviceLifecycle.ts';
 import { AddDeviceOta1789400000000 } from '../../database/migrations/1789400000000-AddDeviceOta.ts';
+import { AddUnclaimedDeviceIgnoredAt1789500000000 } from '../../database/migrations/1789500000000-AddUnclaimedDeviceIgnoredAt.ts';
 import { UserSubscriber } from '../../entity-subscribers/user-subscriber.ts';
 import { DashboardEntity } from '../../modules/dashboard/dashboard.entity.ts';
 import { DeviceEntity } from '../../modules/device/device.entity.ts';
@@ -157,6 +158,7 @@ export class ApiConfigService {
         AddNotificationMessages1789200000000,
         AddDeviceLifecycle1789300000000,
         AddDeviceOta1789400000000,
+        AddUnclaimedDeviceIgnoredAt1789500000000,
       ],
       dropSchema: this.isTest,
       type: 'postgres',
