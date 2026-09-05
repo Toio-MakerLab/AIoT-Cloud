@@ -39,7 +39,8 @@ RUN pnpm build
 # ---- production deps (backend, no devDependencies) --------------------------
 FROM node:${NODE_VERSION} AS backend-prod-deps
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
+RUN npm install --global pnpm@11.22.0 \
+    && pnpm --version
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN npm pkg delete scripts.prepare
 RUN pnpm install --frozen-lockfile --prod
